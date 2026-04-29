@@ -6,6 +6,7 @@ import { StatusBadge } from '@/components/ui/Badge'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import OfferCard from '@/components/offers/OfferCard'
 import CloseJobButton from '@/components/jobs/CloseJobButton'
+import DeleteJobButton from '@/components/jobs/DeleteJobButton'
 
 export async function generateMetadata({ params }: { params: { id: string } }) {
   const supabase = await createClient()
@@ -26,7 +27,13 @@ export default async function JobPage({ params }: { params: { id: string } }) {
   if (!job) notFound()
 
   const isOwner = user?.id === job.customer_id
-  const isProvider = user && !isOwner
+
+  const { data: userProfile } = user
+    ? await supabase.from('users').select('role').eq('id', user.id).single()
+    : { data: null }
+
+  const isProvider = user && !isOwner && userProfile?.role === 'provider'
+  const isCustomerNotOwner = user && !isOwner && userProfile?.role === 'customer'
 
   // Kolla om denna leverantör redan skickat offert
   const existingOffer = isProvider
@@ -103,6 +110,27 @@ export default async function JobPage({ params }: { params: { id: string } }) {
             </CardBody>
           </Card>
 
+          {/* Info for customers visiting someone else's job */}
+          {isCustomerNotOwner && job.status === 'open' && (
+            <Card>
+              <CardBody className="text-center space-y-3">
+                <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center mx-auto">
+                  <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <p className="text-sm font-medium text-gray-900">Endast för leverantörer</p>
+                <p className="text-xs text-gray-500">Offerter kan bara skickas av leverantörer. Byt roll under din profil om du vill offerera på uppdrag.</p>
+                <Link
+                  href={`/profile/${user!.id}`}
+                  className="inline-flex items-center justify-center text-xs font-medium text-blue-600 hover:underline"
+                >
+                  Gå till min profil →
+                </Link>
+              </CardBody>
+            </Card>
+          )}
+
           {/* CTA for providers */}
           {isProvider && job.status === 'open' && (
             <Card>
@@ -135,6 +163,9 @@ export default async function JobPage({ params }: { params: { id: string } }) {
           {/* Owner controls — hide if an offer is already accepted/in progress */}
           {isOwner && job.status === 'open' && !job.offers?.some((o: any) => ['accepted', 'delivered'].includes(o.status)) && (
             <CloseJobButton jobId={job.id} />
+          )}
+          {isOwner && !job.offers?.some((o: any) => ['accepted', 'delivered', 'completed'].includes(o.status)) && (
+            <DeleteJobButton jobId={job.id} />
           )}
         </div>
       </div>

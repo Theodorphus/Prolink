@@ -11,13 +11,22 @@ export async function POST(request: NextRequest) {
   const body = await request.json()
   const { job_id, price, price_type, timeline, description } = body
 
-  if (!job_id || !price || !price_type || !timeline || !description) {
+  if (!job_id || !price || !price_type || !timeline || !description?.trim()) {
     return NextResponse.json({ error: 'Alla fält krävs' }, { status: 400 })
+  }
+
+  const parsedPrice = Number(price)
+  if (isNaN(parsedPrice) || parsedPrice <= 0) {
+    return NextResponse.json({ error: 'Priset måste vara ett positivt belopp' }, { status: 400 })
+  }
+
+  if (!['fixed', 'hourly'].includes(price_type)) {
+    return NextResponse.json({ error: 'Ogiltigt pristyp' }, { status: 400 })
   }
 
   const { data: offer, error } = await supabase
     .from('offers')
-    .insert({ job_id, provider_id: user.id, price: Number(price), price_type, timeline, description })
+    .insert({ job_id, provider_id: user.id, price: parsedPrice, price_type, timeline: timeline.trim(), description: description.trim() })
     .select('*, job:jobs(title, customer_id), provider:users(name)')
     .single()
 

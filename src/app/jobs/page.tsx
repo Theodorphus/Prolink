@@ -25,7 +25,7 @@ export default async function JobsPage({ searchParams }: Props) {
 
   let query = supabase
     .from('jobs')
-    .select('*, customer:users(name), offers(id)')
+    .select('*, customer:users(name), offers(id, status)')
     .eq('status', 'open')
 
   if (q) {
@@ -52,7 +52,10 @@ export default async function JobsPage({ searchParams }: Props) {
       query = query.order('created_at', { ascending: false })
   }
 
-  const { data: jobs } = await query
+  const { data: rawJobs } = await query
+  const jobs = rawJobs?.filter(
+    (job: any) => !job.offers?.some((o: any) => ['accepted', 'delivered'].includes(o.status))
+  )
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-12">
@@ -120,7 +123,7 @@ export default async function JobsPage({ searchParams }: Props) {
           <div className="text-center py-16 text-gray-500">
             {q ? (
               <p className="text-lg">Inga uppdrag matchade &ldquo;{q}&rdquo;.</p>
-            ) : (
+            ) : isCustomer ? (
               <>
                 <p className="text-lg">Inga öppna uppdrag just nu.</p>
                 <Link
@@ -130,6 +133,8 @@ export default async function JobsPage({ searchParams }: Props) {
                   Lägg ut det första uppdraget
                 </Link>
               </>
+            ) : (
+              <p className="text-lg">Inga öppna uppdrag just nu — kom tillbaka senare.</p>
             )}
           </div>
         )}

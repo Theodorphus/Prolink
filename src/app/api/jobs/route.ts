@@ -28,13 +28,18 @@ export async function POST(request: NextRequest) {
   const body = await request.json()
   const { title, description, budget } = body
 
-  if (!title || !description) {
+  if (!title?.trim() || !description?.trim()) {
     return NextResponse.json({ error: 'Titel och beskrivning krävs' }, { status: 400 })
+  }
+
+  const parsedBudget = budget ? Number(budget) : null
+  if (parsedBudget !== null && (isNaN(parsedBudget) || parsedBudget <= 0)) {
+    return NextResponse.json({ error: 'Budget måste vara ett positivt belopp' }, { status: 400 })
   }
 
   const { data, error } = await supabase
     .from('jobs')
-    .insert({ customer_id: user.id, title, description, budget: budget || null })
+    .insert({ customer_id: user.id, title: title.trim(), description: description.trim(), budget: parsedBudget })
     .select()
     .single()
 

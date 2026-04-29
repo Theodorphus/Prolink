@@ -19,11 +19,21 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 
   const { data: offer } = await supabase
     .from('offers')
-    .select('*, job:jobs(id, title, customer_id), provider:users(name)')
+    .select('*, job:jobs(id, title, status, customer_id), provider:users(name)')
     .eq('id', params.id)
     .single()
 
   if (!offer) return NextResponse.json({ error: 'Offert hittades inte' }, { status: 404 })
+
+  // Prevent accepting an offer on a closed job
+  if (status === 'accepted' && offer.job.status !== 'open') {
+    return NextResponse.json({ error: 'Uppdraget är inte längre öppet' }, { status: 409 })
+  }
+
+  // Prevent acting on an already-finalized offer
+  if (['completed', 'rejected'].includes(offer.status)) {
+    return NextResponse.json({ error: 'Offerten är redan avslutad' }, { status: 409 })
+  }
 
   const isCustomer = offer.job.customer_id === user.id
   const isProvider = offer.provider_id === user.id

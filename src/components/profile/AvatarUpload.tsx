@@ -21,6 +21,12 @@ export default function AvatarUpload({ userId, name, currentAvatarUrl }: AvatarU
     const file = e.target.files?.[0]
     if (!file) return
 
+    const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      setError('Endast JPG, PNG och WebP är tillåtna.')
+      return
+    }
+
     if (file.size > 2 * 1024 * 1024) {
       setError('Bilden får max vara 2 MB.')
       return
@@ -31,7 +37,8 @@ export default function AvatarUpload({ userId, name, currentAvatarUrl }: AvatarU
     setPreview(URL.createObjectURL(file))
 
     const supabase = createClient()
-    const ext = file.name.split('.').pop()
+    const extMap: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }
+    const ext = extMap[file.type]
     const path = `${userId}/avatar.${ext}`
 
     const { error: uploadError } = await supabase.storage

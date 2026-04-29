@@ -40,7 +40,7 @@ export default async function HomePage() {
 
           <h1 className="text-6xl md:text-8xl font-bold text-white tracking-tight leading-[1.02] mb-6">
             Hitta rätt<br />
-            <span className="text-white/50">kompetens.</span>
+            <span className="text-white/50">kompetens</span>
           </h1>
 
           <p className="text-lg md:text-2xl text-white/65 max-w-xl mx-auto mb-4 leading-relaxed font-light">
@@ -82,7 +82,8 @@ export default async function HomePage() {
       </section>
 
       {/* ── Hur det fungerar ─────────────────────────────────── */}
-      <section className="relative py-28 px-4 overflow-hidden bg-neutral-950">
+      <section className="relative py-28 px-4 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-neutral-950 via-neutral-900 to-white" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_40%_at_50%_0%,rgba(255,255,255,0.04),transparent)]" />
 
         <div className="relative max-w-5xl mx-auto">
@@ -129,15 +130,15 @@ export default async function HomePage() {
             ].map(({ n, title, desc, icon }) => (
               <div
                 key={n}
-                className="group bg-white rounded-3xl p-8 border border-neutral-200/80 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+                className="group bg-white/95 rounded-3xl p-8 border border-neutral-200 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
               >
                 <div className="flex items-start justify-between mb-7">
                   {/* Ikon i mörk container */}
-                  <div className="w-12 h-12 rounded-2xl bg-neutral-900 text-white flex items-center justify-center shadow-md group-hover:bg-neutral-800 transition-colors">
+                  <div className="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-md group-hover:bg-blue-500 transition-colors">
                     {icon}
                   </div>
                   {/* Stegbadge */}
-                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-neutral-800 text-neutral-500 text-xs font-bold tracking-wide">
+                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 text-blue-400 text-xs font-bold tracking-wide">
                     {n}
                   </span>
                 </div>
@@ -168,7 +169,7 @@ export default async function HomePage() {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {jobs.map((job: any) => (
                 <Link key={job.id} href={`/jobs/${job.id}`} className="group block">
-                  <div className="bg-white border border-neutral-200 rounded-2xl p-6 h-full hover:border-neutral-400 hover:shadow-md transition-all duration-200">
+                  <div className="bg-white border border-neutral-300 rounded-2xl p-6 h-full hover:border-neutral-500 hover:shadow-md transition-all duration-200">
                     <div className="flex items-start justify-between gap-3 mb-3">
                       <h3 className="font-semibold text-neutral-900 group-hover:text-neutral-600 transition-colors line-clamp-2 leading-snug">
                         {job.title}
@@ -179,11 +180,15 @@ export default async function HomePage() {
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-neutral-500 line-clamp-2 mb-5 leading-relaxed">{job.description}</p>
-                    <div className="flex items-center gap-2 text-xs text-neutral-400">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
-                      <span className="truncate">{job.customer?.name}</span>
-                      {!job.budget && <span className="ml-auto shrink-0">Öppen budget</span>}
+                    <p className="text-sm text-neutral-600 line-clamp-2 mb-5 leading-relaxed">{job.description}</p>
+                    <div className="flex items-center gap-2 text-xs text-neutral-500">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                      <span className="truncate font-medium">{job.customer?.name}</span>
+                      {!job.budget && (
+                        <span className="ml-auto shrink-0 bg-neutral-100 text-neutral-600 font-medium px-2 py-0.5 rounded-md">
+                          Öppen budget
+                        </span>
+                      )}
                     </div>
                   </div>
                 </Link>
@@ -212,21 +217,21 @@ export default async function HomePage() {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {services.map((service: any) => (
                 <Link key={service.id} href={`/services/${service.id}`} className="group block">
-                  <div className="bg-white border border-neutral-200 rounded-2xl p-6 h-full hover:border-neutral-400 hover:shadow-md transition-all duration-200 flex flex-col gap-3">
+                  <div className="bg-white border border-neutral-300 rounded-2xl p-6 h-full hover:border-neutral-500 hover:shadow-md transition-all duration-200 flex flex-col gap-3">
                     <h3 className="font-semibold text-neutral-900 group-hover:text-neutral-600 transition-colors line-clamp-2 leading-snug">
                       {service.title}
                     </h3>
-                    <p className="text-sm text-neutral-500 line-clamp-2 leading-relaxed flex-1">{service.description}</p>
-                    <div className="flex items-center justify-between pt-3 border-t border-neutral-100">
-                      <div className="flex items-center gap-2 text-xs text-neutral-400">
+                    <p className="text-sm text-neutral-600 line-clamp-2 leading-relaxed flex-1">{service.description}</p>
+                    <div className="flex items-center justify-between pt-3 border-t border-neutral-200">
+                      <div className="flex items-center gap-2 text-xs text-neutral-600">
                         <div className="w-6 h-6 rounded-full bg-neutral-900 flex items-center justify-center text-white font-bold text-[10px]">
                           {service.provider?.name?.[0]?.toUpperCase()}
                         </div>
-                        <span className="truncate max-w-[100px]">{service.provider?.name}</span>
+                        <span className="truncate max-w-[100px] font-medium">{service.provider?.name}</span>
                       </div>
                       <div className="text-right">
                         <span className="text-sm font-bold text-neutral-900">{formatCurrency(service.price)}</span>
-                        <p className="text-[11px] text-neutral-400">{service.delivery_time}</p>
+                        <p className="text-[11px] text-neutral-500 font-medium">{service.delivery_time}</p>
                       </div>
                     </div>
                   </div>
