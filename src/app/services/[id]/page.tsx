@@ -2,7 +2,6 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardBody } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
 import { formatCurrency, formatDate } from '@/lib/utils'
 
 export async function generateMetadata({ params }: { params: { id: string } }) {
@@ -44,8 +43,11 @@ export default async function ServicePage({ params }: { params: { id: string } }
                 <p className="text-2xl font-bold text-blue-700">{formatCurrency(service.price)}</p>
                 <p className="text-sm text-blue-600">Leverans: {service.delivery_time}</p>
               </div>
-              <Link href={`/jobs/create`}>
-                <Button>Lägg ut uppdrag</Button>
+              <Link
+                href="/jobs/create"
+                className="inline-flex items-center bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Lägg ut uppdrag
               </Link>
             </CardBody>
           </Card>
@@ -81,10 +83,11 @@ export default async function ServicePage({ params }: { params: { id: string } }
                 </div>
               )}
 
-              <Link href={`/profile/${service.provider.id}`} className="block">
-                <Button variant="secondary" className="w-full" size="sm">
-                  Visa profil
-                </Button>
+              <Link
+                href={`/profile/${service.provider.id}`}
+                className="block w-full text-center bg-gray-100 text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Visa profil
               </Link>
             </CardBody>
           </Card>

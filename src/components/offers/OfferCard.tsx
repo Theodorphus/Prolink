@@ -59,10 +59,11 @@ export default function OfferCard({ offer, isOwner, currentUserId }: OfferCardPr
       {(isOwner || isOwnOffer) && (
         <CardFooter>
           <div className="flex gap-3">
-            <Link href={`/offers/${offer.id}`} className="flex-1">
-              <Button variant="secondary" className="w-full" size="sm">
-                {isOwnOffer ? 'Din offert' : 'Visa detaljer & chatta'}
-              </Button>
+            <Link
+              href={`/offers/${offer.id}`}
+              className="flex-1 text-center bg-gray-100 text-gray-900 text-sm font-medium px-3 py-1.5 rounded-lg hover:bg-gray-200 transition-colors"
+            >
+              {isOwnOffer ? 'Din offert' : 'Visa detaljer & chatta'}
             </Link>
             {isOwner && offer.status === 'pending' && (
               <>

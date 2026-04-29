@@ -1,6 +1,6 @@
 export type UserRole = 'customer' | 'provider'
 export type JobStatus = 'open' | 'closed'
-export type OfferStatus = 'pending' | 'accepted' | 'rejected'
+export type OfferStatus = 'pending' | 'accepted' | 'rejected' | 'delivered' | 'completed'
 export type PriceType = 'fixed' | 'hourly'
 
 export interface User {
@@ -11,6 +11,7 @@ export interface User {
   skills: string[] | null
   hourly_rate: number | null
   avatar_url: string | null
+  linkedin_url: string | null
   created_at: string
 }
 

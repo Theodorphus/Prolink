@@ -3,7 +3,6 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardBody, CardHeader } from '@/components/ui/Card'
 import { StatusBadge } from '@/components/ui/Badge'
-import { Button } from '@/components/ui/Button'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import OfferCard from '@/components/offers/OfferCard'
 import CloseJobButton from '@/components/jobs/CloseJobButton'
@@ -111,15 +110,21 @@ export default async function JobPage({ params }: { params: { id: string } }) {
                 {existingOffer ? (
                   <div className="text-center">
                     <p className="text-sm text-gray-600 mb-3">Du har redan skickat en offert.</p>
-                    <Link href={`/offers/${existingOffer.id}`}>
-                      <Button variant="secondary" className="w-full">Visa din offert</Button>
+                    <Link
+                      href={`/offers/${existingOffer.id}`}
+                      className="block w-full text-center bg-gray-100 text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors"
+                    >
+                      Visa din offert
                     </Link>
                   </div>
                 ) : (
                   <div className="text-center">
                     <p className="text-sm text-gray-600 mb-3">Intresserad av uppdraget?</p>
-                    <Link href={`/jobs/${job.id}/offer`}>
-                      <Button className="w-full">Skicka offert</Button>
+                    <Link
+                      href={`/jobs/${job.id}/offer`}
+                      className="block w-full text-center bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      Skicka offert
                     </Link>
                   </div>
                 )}
@@ -127,8 +132,8 @@ export default async function JobPage({ params }: { params: { id: string } }) {
             </Card>
           )}
 
-          {/* Owner controls */}
-          {isOwner && job.status === 'open' && (
+          {/* Owner controls — hide if an offer is already accepted/in progress */}
+          {isOwner && job.status === 'open' && !job.offers?.some((o: any) => ['accepted', 'delivered'].includes(o.status)) && (
             <CloseJobButton jobId={job.id} />
           )}
         </div>

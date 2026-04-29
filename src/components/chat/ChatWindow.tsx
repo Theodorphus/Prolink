@@ -15,7 +15,8 @@ interface ChatWindowProps {
 export default function ChatWindow({ offerId, currentUserId, initialMessages }: ChatWindowProps) {
   const [messages, setMessages] = useState<MessageWithSender[]>(initialMessages)
   const bottomRef = useRef<HTMLDivElement>(null)
-  const supabase = createClient()
+  const supabaseRef = useRef(createClient())
+  const supabase = supabaseRef.current
 
   // Scroll to bottom on new message
   useEffect(() => {
@@ -49,7 +50,7 @@ export default function ChatWindow({ offerId, currentUserId, initialMessages }: 
       .subscribe()
 
     return () => { supabase.removeChannel(channel) }
-  }, [offerId, supabase])
+  }, [offerId]) // supabase is stable via useRef
 
   const handleSend = useCallback(async (content: string, attachmentUrl?: string) => {
     const res = await fetch(`/api/messages/${offerId}`, {

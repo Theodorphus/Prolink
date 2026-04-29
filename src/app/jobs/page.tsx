@@ -1,20 +1,58 @@
 import Link from 'next/link'
+import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardBody } from '@/components/ui/Card'
 import { StatusBadge } from '@/components/ui/Badge'
-import { Button } from '@/components/ui/Button'
 import { formatCurrency, formatDate } from '@/lib/utils'
+import JobFilters from '@/components/jobs/JobFilters'
 
 export const metadata = { title: 'Uppdrag' }
 
-export default async function JobsPage() {
-  const supabase = await createClient()
+interface Props {
+  searchParams: { q?: string; sort?: string; budget?: string }
+}
 
-  const { data: jobs } = await supabase
+export default async function JobsPage({ searchParams }: Props) {
+  const supabase = await createClient()
+  const { q, sort = 'newest', budget = 'all' } = searchParams
+
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: profile } = user
+    ? await supabase.from('users').select('role').eq('id', user.id).single()
+    : { data: null }
+  const isCustomer = profile?.role === 'customer'
+  const isLoggedIn = !!user
+
+  let query = supabase
     .from('jobs')
     .select('*, customer:users(name), offers(id)')
     .eq('status', 'open')
-    .order('created_at', { ascending: false })
+
+  if (q) {
+    query = query.or(`title.ilike.%${q}%,description.ilike.%${q}%`)
+  }
+
+  if (budget === 'with') {
+    query = query.not('budget', 'is', null)
+  } else if (budget === 'without') {
+    query = query.is('budget', null)
+  }
+
+  switch (sort) {
+    case 'oldest':
+      query = query.order('created_at', { ascending: true })
+      break
+    case 'budget_high':
+      query = query.order('budget', { ascending: false, nullsFirst: false })
+      break
+    case 'budget_low':
+      query = query.order('budget', { ascending: true, nullsFirst: false })
+      break
+    default:
+      query = query.order('created_at', { ascending: false })
+  }
+
+  const { data: jobs } = await query
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-12">
@@ -23,10 +61,27 @@ export default async function JobsPage() {
           <h1 className="text-3xl font-bold text-gray-900">Uppdrag</h1>
           <p className="text-gray-600 mt-1">{jobs?.length ?? 0} öppna uppdrag</p>
         </div>
-        <Link href="/jobs/create">
-          <Button>+ Lägg ut uppdrag</Button>
-        </Link>
+        {isCustomer && (
+          <Link
+            href="/jobs/create"
+            className="inline-flex items-center gap-1.5 bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            + Lägg ut uppdrag
+          </Link>
+        )}
+        {!isLoggedIn && (
+          <Link
+            href="/register"
+            className="inline-flex items-center gap-1.5 bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            + Lägg ut uppdrag
+          </Link>
+        )}
       </div>
+
+      <Suspense>
+        <JobFilters />
+      </Suspense>
 
       <div className="space-y-4">
         {jobs?.map((job: any) => (
@@ -63,10 +118,19 @@ export default async function JobsPage() {
         ))}
         {(!jobs || jobs.length === 0) && (
           <div className="text-center py-16 text-gray-500">
-            <p className="text-lg">Inga öppna uppdrag just nu.</p>
-            <Link href="/jobs/create" className="mt-4 inline-block">
-              <Button>Lägg ut det första uppdraget</Button>
-            </Link>
+            {q ? (
+              <p className="text-lg">Inga uppdrag matchade &ldquo;{q}&rdquo;.</p>
+            ) : (
+              <>
+                <p className="text-lg">Inga öppna uppdrag just nu.</p>
+                <Link
+                  href="/jobs/create"
+                  className="mt-4 inline-flex items-center bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Lägg ut det första uppdraget
+                </Link>
+              </>
+            )}
           </div>
         )}
       </div>

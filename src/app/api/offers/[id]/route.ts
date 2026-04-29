@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { sendOfferAcceptedEmail } from '@/lib/email'
 
+const CUSTOMER_STATUSES = ['accepted', 'rejected', 'completed']
+const PROVIDER_STATUSES = ['delivered']
+
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -9,19 +12,28 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   if (!user) return NextResponse.json({ error: 'Ej inloggad' }, { status: 401 })
 
   const { status } = await request.json()
-  if (!['accepted', 'rejected'].includes(status)) {
+  const allValid = [...CUSTOMER_STATUSES, ...PROVIDER_STATUSES]
+  if (!allValid.includes(status)) {
     return NextResponse.json({ error: 'Ogiltigt status' }, { status: 400 })
   }
 
-  // Hämta offert för att validera att det är kunden som uppdaterar
   const { data: offer } = await supabase
     .from('offers')
-    .select('*, job:jobs(title, customer_id), provider:users(name)')
+    .select('*, job:jobs(id, title, customer_id), provider:users(name)')
     .eq('id', params.id)
     .single()
 
   if (!offer) return NextResponse.json({ error: 'Offert hittades inte' }, { status: 404 })
-  if (offer.job.customer_id !== user.id) return NextResponse.json({ error: 'Ej behörig' }, { status: 403 })
+
+  const isCustomer = offer.job.customer_id === user.id
+  const isProvider = offer.provider_id === user.id
+
+  if (CUSTOMER_STATUSES.includes(status) && !isCustomer) {
+    return NextResponse.json({ error: 'Ej behörig' }, { status: 403 })
+  }
+  if (PROVIDER_STATUSES.includes(status) && !isProvider) {
+    return NextResponse.json({ error: 'Ej behörig' }, { status: 403 })
+  }
 
   const { data, error } = await supabase
     .from('offers')
@@ -32,10 +44,16 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // Stäng uppdraget vid accept, notifiera leverantör
   if (status === 'accepted') {
-    await supabase.from('jobs').update({ status: 'closed' }).eq('id', offer.job_id)
+    // Auto-reject other pending offers for the same job
+    await supabase
+      .from('offers')
+      .update({ status: 'rejected' })
+      .eq('job_id', offer.job.id)
+      .eq('status', 'pending')
+      .neq('id', params.id)
 
+    // Notify provider
     const { data: providerAuth } = await supabase.auth.admin.getUserById(offer.provider_id)
     if (providerAuth?.user?.email) {
       await sendOfferAcceptedEmail({
@@ -44,6 +62,10 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
         offerId: offer.id,
       }).catch(console.error)
     }
+  }
+
+  if (status === 'completed') {
+    await supabase.from('jobs').update({ status: 'closed' }).eq('id', offer.job.id)
   }
 
   return NextResponse.json(data)

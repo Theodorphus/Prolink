@@ -8,6 +8,35 @@
   }
 }
 
+/* Transparent navbar over hero video */
+[data-transparent='true'] .nav-header {
+  background: transparent;
+  border-color: transparent;
+  backdrop-filter: none;
+}
+
+[data-transparent='true'] .nav-header a,
+[data-transparent='true'] .nav-header button,
+[data-transparent='true'] .nav-header span {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+[data-transparent='true'] .nav-header a:hover,
+[data-transparent='true'] .nav-header button:hover {
+  color: #ffffff !important;
+}
+
+/* Primary CTA i navbar behåller sin styling */
+[data-transparent='true'] .nav-header .nav-cta {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: white !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
+
+[data-transparent='true'] .nav-header .nav-cta:hover {
+  background: rgba(255, 255, 255, 0.25) !important;
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

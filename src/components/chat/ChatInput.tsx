@@ -19,10 +19,15 @@ export default function ChatInput({ onSend, offerId }: ChatInputProps) {
   async function uploadFile(file: File): Promise<string> {
     const supabase = createClient()
     const path = `${offerId}/${Date.now()}-${file.name}`
-    const { error } = await supabase.storage.from('attachments').upload(path, file)
-    if (error) throw error
-    const { data } = supabase.storage.from('attachments').getPublicUrl(path)
-    return data.publicUrl
+    const { error: uploadError } = await supabase.storage.from('attachments').upload(path, file)
+    if (uploadError) throw uploadError
+
+    // Attachments bucket is private — use a signed URL (1 year expiry)
+    const { data, error: signError } = await supabase.storage
+      .from('attachments')
+      .createSignedUrl(path, 60 * 60 * 24 * 365)
+    if (signError || !data) throw new Error('Kunde inte generera länk för bilagan')
+    return data.signedUrl
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -43,7 +48,7 @@ export default function ChatInput({ onSend, offerId }: ChatInputProps) {
         if (fileRef.current) fileRef.current.value = ''
       }
 
-      const content = text.trim() || (file ? file.name : '')
+      const content = text.trim()
       await onSend(content, attachmentUrl)
       setText('')
     } catch (err: any) {

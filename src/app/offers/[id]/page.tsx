@@ -3,9 +3,10 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardBody, CardHeader } from '@/components/ui/Card'
 import { StatusBadge } from '@/components/ui/Badge'
-import { Button } from '@/components/ui/Button'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import AcceptRejectButtons from '@/components/offers/AcceptRejectButtons'
+import MarkDeliveredButton from '@/components/offers/MarkDeliveredButton'
+import CompleteJobButton from '@/components/offers/CompleteJobButton'
 
 export async function generateMetadata(_: { params: { id: string } }) {
   return { title: 'Offert' }
@@ -73,12 +74,27 @@ export default async function OfferPage({ params }: { params: { id: string } }) 
             <AcceptRejectButtons offerId={offer.id} />
           )}
 
+          {/* Provider: mark as delivered */}
+          {isProvider && offer.status === 'accepted' && (
+            <MarkDeliveredButton offerId={offer.id} />
+          )}
+
+          {/* Customer: confirm completion */}
+          {isCustomer && offer.status === 'delivered' && (
+            <CompleteJobButton offerId={offer.id} />
+          )}
+
           {/* Chat link */}
-          {(offer.status === 'accepted' || isCustomer || isProvider) && (
-            <Link href={`/messages/${offer.id}`}>
-              <Button className="w-full" variant={offer.status === 'accepted' ? 'primary' : 'secondary'}>
-                {offer.status === 'accepted' ? 'Öppna chatten' : 'Chatta om offerten'}
-              </Button>
+          {(isCustomer || isProvider) && (
+            <Link
+              href={`/messages/${offer.id}`}
+              className={`block w-full text-center text-sm font-medium px-4 py-2.5 rounded-lg transition-colors ${
+                offer.status === 'accepted' || offer.status === 'delivered'
+                  ? 'bg-blue-600 text-white hover:bg-blue-700'
+                  : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+              }`}
+            >
+              {offer.status === 'accepted' || offer.status === 'delivered' ? 'Öppna chatten' : 'Chatta om offerten'}
             </Link>
           )}
         </div>

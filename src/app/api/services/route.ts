@@ -19,6 +19,9 @@ export async function POST(request: NextRequest) {
 
   if (!user) return NextResponse.json({ error: 'Ej inloggad' }, { status: 401 })
 
+  const { data: profile } = await supabase.from('users').select('role').eq('id', user.id).single()
+  if (profile?.role !== 'provider') return NextResponse.json({ error: 'Endast leverantörer kan skapa tjänster' }, { status: 403 })
+
   const body = await request.json()
   const { title, description, price, delivery_time } = body
 

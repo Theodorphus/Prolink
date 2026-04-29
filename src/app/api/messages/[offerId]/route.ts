@@ -27,7 +27,7 @@ export async function POST(request: NextRequest, { params }: { params: { offerId
   const body = await request.json()
   const { content, attachment_url } = body
 
-  if (!content?.trim()) return NextResponse.json({ error: 'Meddelande får inte vara tomt' }, { status: 400 })
+  if (!content?.trim() && !attachment_url) return NextResponse.json({ error: 'Meddelande eller bilaga krävs' }, { status: 400 })
 
   const { data: message, error } = await supabase
     .from('messages')

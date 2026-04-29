@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/Textarea'
 import { Button } from '@/components/ui/Button'
 import { Card, CardBody, CardHeader } from '@/components/ui/Card'
 import { createClient } from '@/lib/supabase/client'
+import AvatarUpload from '@/components/profile/AvatarUpload'
 import type { User } from '@/types/database'
 
 export default function EditProfileForm({ profile }: { profile: User }) {
@@ -37,6 +38,7 @@ export default function EditProfileForm({ profile }: { profile: User }) {
         bio: form.get('bio') as string || null,
         hourly_rate: form.get('hourly_rate') ? Number(form.get('hourly_rate')) : null,
         skills: skills.length > 0 ? skills : null,
+        linkedin_url: form.get('linkedin_url') as string || null,
       })
       .eq('id', profile.id)
 
@@ -58,6 +60,14 @@ export default function EditProfileForm({ profile }: { profile: User }) {
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && <div className="bg-red-50 text-red-700 border border-red-200 rounded-lg px-4 py-3 text-sm">{error}</div>}
           {success && <div className="bg-green-50 text-green-700 border border-green-200 rounded-lg px-4 py-3 text-sm">Profilen uppdaterades!</div>}
+
+          <div className="flex justify-center pb-2">
+            <AvatarUpload
+              userId={profile.id}
+              name={profile.name}
+              currentAvatarUrl={profile.avatar_url ?? null}
+            />
+          </div>
 
           <Input label="Namn" name="name" defaultValue={profile.name} required />
           <Textarea label="Bio" name="bio" defaultValue={profile.bio ?? ''} rows={3} placeholder="Berätta lite om dig själv..." />
@@ -86,6 +96,14 @@ export default function EditProfileForm({ profile }: { profile: User }) {
               </div>
             </>
           )}
+
+            <Input
+            label="LinkedIn-profil (URL)"
+            name="linkedin_url"
+            type="url"
+            defaultValue={profile.linkedin_url ?? ''}
+            placeholder="https://linkedin.com/in/ditt-namn"
+          />
 
           <div className="flex justify-end">
             <Button type="submit" loading={loading}>Spara ändringar</Button>
