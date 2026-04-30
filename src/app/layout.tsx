@@ -4,6 +4,8 @@ import './globals.css'
 import Navbar from '@/components/layout/Navbar'
 import NavbarWrapper from '@/components/layout/NavbarWrapper'
 import Footer from '@/components/layout/Footer'
+import { Analytics } from "@vercel/analytics/react"
+
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -47,6 +49,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </NavbarWrapper>
         <main className="flex-1">{children}</main>
         <Footer />
+        <Analytics />
       </body>
     </html>
   )
