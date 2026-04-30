@@ -11,13 +11,16 @@ export default function AcceptRejectButtons({ offerId }: { offerId: string }) {
 
   async function update(status: 'accepted' | 'rejected') {
     setLoading(status === 'accepted' ? 'accept' : 'reject')
-    const res = await fetch(`/api/offers/${offerId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
-    })
-    if (res.ok) router.refresh()
-    setLoading(null)
+    try {
+      const res = await fetch(`/api/offers/${offerId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      })
+      if (res.ok) router.refresh()
+    } finally {
+      setLoading(null)
+    }
   }
 
   return (

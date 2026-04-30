@@ -13,6 +13,7 @@ export default function SwitchRoleButton({ currentRole, userId }: SwitchRoleButt
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
+  const [error, setError] = useState('')
 
   const newRole = currentRole === 'customer' ? 'provider' : 'customer'
   const newRoleLabel = newRole === 'provider' ? 'Leverantör' : 'Uppdragsgivare'
@@ -29,8 +30,8 @@ export default function SwitchRoleButton({ currentRole, userId }: SwitchRoleButt
       .eq('id', userId)
 
     if (error) {
+      setError('Något gick fel. Försök igen.')
       setLoading(false)
-      setShowConfirm(false)
       return
     }
 
@@ -59,6 +60,7 @@ export default function SwitchRoleButton({ currentRole, userId }: SwitchRoleButt
             <p className="text-xs text-gray-400 mb-6">
               Din befintliga data behålls. Du kan byta tillbaka när som helst.
             </p>
+            {error && <p className="text-xs text-red-600 mb-4">{error}</p>}
             <div className="flex gap-3">
               <button
                 onClick={() => setShowConfirm(false)}

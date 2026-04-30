@@ -25,8 +25,11 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 
   if (!offer) return NextResponse.json({ error: 'Offert hittades inte' }, { status: 404 })
 
+  const job = Array.isArray(offer.job) ? offer.job[0] : offer.job
+  if (!job) return NextResponse.json({ error: 'Uppdraget hittades inte' }, { status: 404 })
+
   // Prevent accepting an offer on a closed job
-  if (status === 'accepted' && offer.job.status !== 'open') {
+  if (status === 'accepted' && job.status !== 'open') {
     return NextResponse.json({ error: 'Uppdraget är inte längre öppet' }, { status: 409 })
   }
 
@@ -35,7 +38,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     return NextResponse.json({ error: 'Offerten är redan avslutad' }, { status: 409 })
   }
 
-  const isCustomer = offer.job.customer_id === user.id
+  const isCustomer = job.customer_id === user.id
   const isProvider = offer.provider_id === user.id
 
   if (CUSTOMER_STATUSES.includes(status) && !isCustomer) {
@@ -55,27 +58,25 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   if (status === 'accepted') {
-    // Auto-reject other pending offers for the same job
     await supabase
       .from('offers')
       .update({ status: 'rejected' })
-      .eq('job_id', offer.job.id)
+      .eq('job_id', job.id)
       .eq('status', 'pending')
       .neq('id', params.id)
 
-    // Notify provider
     const { data: providerAuth } = await supabase.auth.admin.getUserById(offer.provider_id)
     if (providerAuth?.user?.email) {
       await sendOfferAcceptedEmail({
         to: providerAuth.user.email,
-        jobTitle: offer.job.title,
+        jobTitle: job.title,
         offerId: offer.id,
       }).catch(console.error)
     }
   }
 
   if (status === 'completed') {
-    await supabase.from('jobs').update({ status: 'closed' }).eq('id', offer.job.id)
+    await supabase.from('jobs').update({ status: 'closed' }).eq('id', job.id)
   }
 
   return NextResponse.json(data)

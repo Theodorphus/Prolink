@@ -10,8 +10,11 @@ import DeleteJobButton from '@/components/jobs/DeleteJobButton'
 
 export async function generateMetadata({ params }: { params: { id: string } }) {
   const supabase = await createClient()
-  const { data } = await supabase.from('jobs').select('title').eq('id', params.id).single()
-  return { title: data?.title ?? 'Uppdrag' }
+  const { data } = await supabase.from('jobs').select('title, description').eq('id', params.id).single()
+  return {
+    title: data?.title ? `${data.title} | Prolink` : 'Uppdrag | Prolink',
+    description: data?.description?.slice(0, 155) ?? 'Se uppdragsdetaljer och skicka offert på Prolink.',
+  }
 }
 
 export default async function JobPage({ params }: { params: { id: string } }) {
@@ -85,7 +88,7 @@ export default async function JobPage({ params }: { params: { id: string } }) {
                 />
               ))}
               {(!job.offers || job.offers.length === 0) && (
-                <p className="text-gray-500 text-sm py-8 text-center">Inga offerter än — var den första!</p>
+                <p className="text-gray-500 text-sm py-8 text-center">Ingen har skickat offert än. Bli den första!</p>
               )}
             </div>
           </div>

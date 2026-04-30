@@ -29,9 +29,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Alla fält krävs' }, { status: 400 })
   }
 
+  const parsedPrice = Number(price)
+  if (isNaN(parsedPrice) || parsedPrice <= 0) {
+    return NextResponse.json({ error: 'Priset måste vara ett positivt belopp' }, { status: 400 })
+  }
+
   const { data, error } = await supabase
     .from('services')
-    .insert({ provider_id: user.id, title, description, price: Number(price), delivery_time })
+    .insert({ provider_id: user.id, title, description, price: parsedPrice, delivery_time })
     .select()
     .single()
 

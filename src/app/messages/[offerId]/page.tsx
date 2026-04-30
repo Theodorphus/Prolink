@@ -29,6 +29,13 @@ export default async function MessagesPage({ params }: { params: { offerId: stri
 
   if (!isCustomer && !isProvider) redirect('/')
 
+  // Markera som läst för den inloggade parten
+  const readField = isCustomer ? 'customer_read_at' : 'provider_read_at'
+  await supabase
+    .from('offers')
+    .update({ [readField]: new Date().toISOString() })
+    .eq('id', params.offerId)
+
   const { data: messages } = await supabase
     .from('messages')
     .select('*, sender:users(id, name, avatar_url)')

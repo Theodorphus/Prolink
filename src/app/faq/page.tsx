@@ -1,4 +1,7 @@
-export const metadata = { title: 'Vanliga frågor' }
+export const metadata = {
+  title: 'Vanliga frågor | Prolink',
+  description: 'Svar på de vanligaste frågorna om Prolink – hur uppdrag fungerar, hur du skickar offerter och hur betalning hanteras.',
+}
 
 const faqs = [
   {
@@ -65,7 +68,7 @@ const faqs = [
       },
       {
         q: 'Kan jag radera mitt konto?',
-        a: 'Kontakta oss på webbdevstudio@gmail.com så hjälper vi dig att radera ditt konto och all tillhörande data i enlighet med GDPR.',
+        a: 'Kontakta oss på hej@prolink.se så hjälper vi dig att radera ditt konto och all tillhörande data i enlighet med GDPR.',
       },
     ],
   },
@@ -76,7 +79,7 @@ export default function FaqPage() {
     <div className="max-w-3xl mx-auto px-4 py-16">
       <div className="mb-12">
         <h1 className="text-4xl font-bold text-gray-900 tracking-tight mb-3">Vanliga frågor</h1>
-        <p className="text-gray-500 text-lg">Hittar du inte svaret? Maila oss på <a href="mailto:webbdevstudio@gmail.com" className="text-blue-600 hover:underline">webbdevstudio@gmail.com</a></p>
+        <p className="text-gray-500 text-lg">Hittar du inte svaret? Maila oss på <a href="mailto:hej@prolink.se" className="text-blue-600 hover:underline">hej@prolink.se</a></p>
       </div>
 
       <div className="space-y-12">

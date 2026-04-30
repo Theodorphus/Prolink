@@ -2,6 +2,11 @@ import Link from 'next/link'
 import { login } from '@/lib/actions/auth'
 import AuthForm from '@/components/auth/AuthForm'
 
+export const metadata = {
+  title: 'Logga in | Prolink',
+  description: 'Logga in på Prolink och hantera dina uppdrag, offerter och meddelanden.',
+}
+
 export default function LoginPage({
   searchParams,
 }: {

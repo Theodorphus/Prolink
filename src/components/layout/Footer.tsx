@@ -28,7 +28,7 @@ export default function Footer() {
             <Link href="/" className="text-lg font-bold text-gray-900 tracking-tight">
               Prolink
             </Link>
-            <p className="mt-3 text-sm text-gray-500 leading-relaxed max-w-xs">
+            <p className="mt-3 text-sm text-gray-600 leading-relaxed max-w-xs font-medium">
               Sveriges marknadsplats för freelancers och företag. Enkel, snabb, gratis.
             </p>
           </div>
@@ -43,7 +43,7 @@ export default function Footer() {
                   <li key={href}>
                     <Link
                       href={href}
-                      className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
+                      className="text-sm text-gray-600 hover:text-gray-900 transition-colors font-medium"
                     >
                       {label}
                     </Link>
@@ -56,11 +56,11 @@ export default function Footer() {
         </div>
 
         <div className="pt-8 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-gray-600 font-medium">
             © {new Date().getFullYear()} Prolink. Alla rättigheter förbehållna.
           </p>
-          <p className="text-xs text-gray-400">
-            Byggt i Sverige 🇸🇪
+          <p className="text-xs text-gray-600 font-medium">
+            Byggt med ❤️ i Sverige
           </p>
         </div>
       </div>

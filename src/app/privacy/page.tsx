@@ -1,4 +1,7 @@
-export const metadata = { title: 'Integritetspolicy' }
+export const metadata = {
+  title: 'Integritetspolicy | Prolink',
+  description: 'Läs om hur Prolink hanterar och skyddar dina personuppgifter i enlighet med GDPR.',
+}
 
 export default function PrivacyPage() {
   return (
@@ -12,7 +15,7 @@ export default function PrivacyPage() {
 
         <section>
           <h2 className="text-xl font-bold text-gray-900 mb-3">1. Personuppgiftsansvarig</h2>
-          <p>Prolink (&ldquo;vi&rdquo;, &ldquo;oss&rdquo;) är personuppgiftsansvarig för behandlingen av dina personuppgifter. Kontakt: <a href="mailto:webbdevstudio@gmail.com" className="text-blue-600 hover:underline">webbdevstudio@gmail.com</a></p>
+          <p>Prolink (&ldquo;vi&rdquo;, &ldquo;oss&rdquo;) är personuppgiftsansvarig för behandlingen av dina personuppgifter. Kontakt: <a href="mailto:hej@prolink.se" className="text-blue-600 hover:underline">hej@prolink.se</a></p>
         </section>
 
         <section>
@@ -58,7 +61,7 @@ export default function PrivacyPage() {
             <li><strong>Rätt till dataportabilitet</strong> — du kan begära dina uppgifter i ett maskinläsbart format.</li>
             <li><strong>Rätt att invända</strong> — du kan invända mot behandling baserad på berättigat intresse.</li>
           </ul>
-          <p className="text-sm mt-3">Kontakta oss på <a href="mailto:webbdevstudio@gmail.com" className="text-blue-600 hover:underline">webbdevstudio@gmail.com</a> för att utöva dina rättigheter. Du har också rätt att lämna klagomål till <a href="https://www.imy.se" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Integritetsskyddsmyndigheten (IMY)</a>.</p>
+          <p className="text-sm mt-3">Kontakta oss på <a href="mailto:hej@prolink.se" className="text-blue-600 hover:underline">hej@prolink.se</a> för att utöva dina rättigheter. Du har också rätt att lämna klagomål till <a href="https://www.imy.se" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Integritetsskyddsmyndigheten (IMY)</a>.</p>
         </section>
 
         <section>

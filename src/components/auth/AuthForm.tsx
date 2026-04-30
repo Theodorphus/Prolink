@@ -1,11 +1,13 @@
 'use client'
 
+import { useEffect } from 'react'
 import { useFormState, useFormStatus } from 'react-dom'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import GoogleAuthButton from '@/components/auth/GoogleAuthButton'
 
-type ActionState = { error: string } | null
+type ActionState = { error: string } | { success: true; redirectTo: string } | null
 
 interface AuthFormProps {
   action: (state: ActionState, formData: FormData) => Promise<ActionState>
@@ -25,6 +27,14 @@ function SubmitButton({ label }: { label: string }) {
 
 export default function AuthForm({ action, submitLabel, redirect, next }: AuthFormProps) {
   const [state, formAction] = useFormState<ActionState, FormData>(action, null)
+  const router = useRouter()
+
+  useEffect(() => {
+    if (state && 'success' in state) {
+      router.push(state.redirectTo)
+      router.refresh()
+    }
+  }, [state, router])
 
   return (
     <div className="bg-white shadow-sm border border-gray-200 rounded-xl p-8 space-y-5">
@@ -39,7 +49,7 @@ export default function AuthForm({ action, submitLabel, redirect, next }: AuthFo
       <form action={formAction} className="space-y-4">
         {redirect && <input type="hidden" name="redirect" value={redirect} />}
 
-        {state?.error && (
+        {state && 'error' in state && (
           <div className="bg-red-50 text-red-700 border border-red-200 rounded-lg px-4 py-3 text-sm">
             {state.error}
           </div>

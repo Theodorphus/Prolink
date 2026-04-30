@@ -13,7 +13,7 @@ export default async function MessagesOverviewPage() {
   // Offers where user is provider
   const { data: asProvider } = await supabase
     .from('offers')
-    .select('id, status, job:jobs(id, title, customer:users(id, name, avatar_url)), messages(id, content, created_at, sender_id)')
+    .select('id, status, provider_read_at, job:jobs(id, title, customer:users(id, name, avatar_url)), messages(id, content, created_at, sender_id)')
     .eq('provider_id', user.id)
     .in('status', ['accepted', 'delivered', 'completed'])
     .order('created_at', { ascending: false })
@@ -29,11 +29,21 @@ export default async function MessagesOverviewPage() {
   const { data: asCustomer } = jobIds.length > 0
     ? await supabase
         .from('offers')
-        .select('id, status, job:jobs(id, title), provider:users(id, name, avatar_url), messages(id, content, created_at, sender_id)')
+        .select('id, status, customer_read_at, job:jobs(id, title), provider:users(id, name, avatar_url), messages(id, content, created_at, sender_id)')
         .in('job_id', jobIds)
         .in('status', ['accepted', 'delivered', 'completed'])
         .order('created_at', { ascending: false })
     : { data: [] }
+
+  const computeUnread = (o: any, readAtField: string, userId: string) => {
+    const msgs = (o.messages ?? []).filter((m: any) => m.sender_id !== userId)
+    if (msgs.length === 0) return false
+    const lastMsg = msgs.sort((a: any, b: any) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    )[0]
+    if (!o[readAtField]) return true
+    return new Date(lastMsg.created_at) > new Date(o[readAtField])
+  }
 
   // Merge and sort by last message
   const all = [
@@ -41,11 +51,13 @@ export default async function MessagesOverviewPage() {
       ...o,
       otherParty: Array.isArray(o.job?.customer) ? o.job.customer[0] : o.job?.customer,
       jobTitle: Array.isArray(o.job) ? o.job[0]?.title : o.job?.title,
+      isUnread: computeUnread(o, 'provider_read_at', user.id),
     })),
     ...(asCustomer ?? []).map((o: any) => ({
       ...o,
       otherParty: Array.isArray(o.provider) ? o.provider[0] : o.provider,
       jobTitle: Array.isArray(o.job) ? o.job[0]?.title : o.job?.title,
+      isUnread: computeUnread(o, 'customer_read_at', user.id),
     })),
   ].sort((a, b) => {
     const aLast = a.messages?.at(-1)?.created_at ?? a.created_at
@@ -69,7 +81,7 @@ export default async function MessagesOverviewPage() {
         <div className="space-y-2">
           {all.map((conv: any) => {
             const lastMsg = conv.messages?.at(-1)
-            const isUnread = lastMsg && lastMsg.sender_id !== user.id
+            const isUnread = conv.isUnread
             return (
               <Link key={conv.id} href={`/messages/${conv.id}`} className="group block">
                 <div className={`flex items-center gap-4 p-4 rounded-2xl border transition-all duration-150 ${

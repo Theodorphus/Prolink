@@ -3,7 +3,10 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import CreateServiceForm from '@/components/services/CreateServiceForm'
 
-export const metadata = { title: 'Ny tjänst' }
+export const metadata = {
+  title: 'Erbjud en tjänst | Prolink',
+  description: 'Publicera din tjänst på Prolink och nå nya kunder som söker din kompetens.',
+}
 
 export default async function CreateServicePage() {
   const supabase = await createClient()

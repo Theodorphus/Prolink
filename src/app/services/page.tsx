@@ -6,7 +6,10 @@ import { formatCurrency } from '@/lib/utils'
 import Image from 'next/image'
 import ServiceFilters from '@/components/services/ServiceFilters'
 
-export const metadata = { title: 'Tjänster' }
+export const metadata = {
+  title: 'Tjänster – Hitta freelancers | Prolink',
+  description: 'Hitta kvalificerade freelancers och byråer. Jämför priser, leveranstider och kompetenser – boka direkt.',
+}
 
 interface Props {
   searchParams: { q?: string; sort?: string; max_price?: string }

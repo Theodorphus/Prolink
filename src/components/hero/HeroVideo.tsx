@@ -2,7 +2,9 @@
 
 import { useEffect, useRef } from 'react'
 
-const FADE_S = 1.2 // seconds of crossfade overlap
+const FADE_S = 2.0    // crossfade duration in seconds
+const TRIGGER_S = 2.2 // start fade this many seconds before end
+const EASING = 'cubic-bezier(0.4, 0, 0.2, 1)'
 
 export default function HeroVideo({ src }: { src: string }) {
   const v1 = useRef<HTMLVideoElement>(null)
@@ -21,33 +23,36 @@ export default function HeroVideo({ src }: { src: string }) {
       const cur = videos[active.current]
       const nxt = videos[1 - active.current as 0 | 1]
 
-      // Prep next video silently
+      // Reset and pre-buffer next video
       nxt.currentTime = 0
       nxt.style.transition = 'none'
       nxt.style.opacity = '0'
       nxt.play().catch(() => {})
 
-      // Trigger crossfade on next frame so nxt has started
-      requestAnimationFrame(() => {
-        cur.style.transition = `opacity ${FADE_S}s ease-in-out`
-        nxt.style.transition = `opacity ${FADE_S}s ease-in-out`
+      // Give next video 3 frames to decode first frame before fading
+      let frame = 0
+      function waitAndFade() {
+        if (++frame < 3) { requestAnimationFrame(waitAndFade); return }
+        cur.style.transition = `opacity ${FADE_S}s ${EASING}`
+        nxt.style.transition = `opacity ${FADE_S}s ${EASING}`
         cur.style.opacity = '0'
         nxt.style.opacity = '1'
-      })
+      }
+      requestAnimationFrame(waitAndFade)
 
       setTimeout(() => {
         cur.pause()
+        cur.currentTime = 0
         cur.style.transition = 'none'
         active.current = (1 - active.current) as 0 | 1
         fading.current = false
-      }, FADE_S * 1000)
+      }, FADE_S * 1000 + 100)
     }
 
     function onTimeUpdate(this: HTMLVideoElement) {
-      // Only react to the currently active video
       if (this !== videos[active.current]) return
       if (!this.duration) return
-      if (this.duration - this.currentTime <= FADE_S) {
+      if (this.duration - this.currentTime <= TRIGGER_S) {
         crossfade()
       }
     }
@@ -68,8 +73,10 @@ export default function HeroVideo({ src }: { src: string }) {
         autoPlay
         muted
         playsInline
+        preload="auto"
+        disablePictureInPicture
         className="absolute inset-0 w-full h-full object-cover"
-        style={{ opacity: 1 }}
+        style={{ opacity: 1, willChange: 'opacity' }}
       >
         <source src={src} type="video/mp4" />
       </video>
@@ -77,8 +84,10 @@ export default function HeroVideo({ src }: { src: string }) {
         ref={v2}
         muted
         playsInline
+        preload="auto"
+        disablePictureInPicture
         className="absolute inset-0 w-full h-full object-cover"
-        style={{ opacity: 0 }}
+        style={{ opacity: 0, willChange: 'opacity' }}
       >
         <source src={src} type="video/mp4" />
       </video>

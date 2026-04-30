@@ -6,7 +6,10 @@ import { StatusBadge } from '@/components/ui/Badge'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import JobFilters from '@/components/jobs/JobFilters'
 
-export const metadata = { title: 'Uppdrag' }
+export const metadata = {
+  title: 'Uppdrag – Hitta freelanceuppdrag | Prolink',
+  description: 'Bläddra bland lediga uppdrag från svenska företag och privatpersoner. Skicka offert och börja jobba idag.',
+}
 
 interface Props {
   searchParams: { q?: string; sort?: string; budget?: string }

@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 
-type ActionState = { error: string } | null
+type ActionState = { error: string } | { success: true; redirectTo: string } | null
 
 export async function login(_: ActionState, formData: FormData): Promise<ActionState> {
   const supabase = await createClient()
@@ -20,7 +20,7 @@ export async function login(_: ActionState, formData: FormData): Promise<ActionS
   }
 
   revalidatePath('/', 'layout')
-  redirect(redirectTo || '/')
+  return { success: true, redirectTo: redirectTo || '/' }
 }
 
 export async function register(_: ActionState, formData: FormData): Promise<ActionState> {
@@ -44,7 +44,7 @@ export async function register(_: ActionState, formData: FormData): Promise<Acti
   }
 
   revalidatePath('/', 'layout')
-  redirect('/')
+  return { success: true, redirectTo: '/' }
 }
 
 export async function logout() {

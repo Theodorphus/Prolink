@@ -12,13 +12,16 @@ export default function MarkDeliveredButton({ offerId }: { offerId: string }) {
   async function handle() {
     if (!confirm('Markera uppdraget som levererat? Kunden kommer att bekräfta slutförandet.')) return
     setLoading(true)
-    const res = await fetch(`/api/offers/${offerId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: 'delivered' }),
-    })
-    if (res.ok) router.refresh()
-    setLoading(false)
+    try {
+      const res = await fetch(`/api/offers/${offerId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'delivered' }),
+      })
+      if (res.ok) router.refresh()
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (

@@ -12,13 +12,16 @@ export default function CompleteJobButton({ offerId }: { offerId: string }) {
   async function handle() {
     if (!confirm('Bekräfta att uppdraget är slutfört? Jobbet stängs och kan inte återöppnas.')) return
     setLoading(true)
-    const res = await fetch(`/api/offers/${offerId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: 'completed' }),
-    })
-    if (res.ok) router.refresh()
-    setLoading(false)
+    try {
+      const res = await fetch(`/api/offers/${offerId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'completed' }),
+      })
+      if (res.ok) router.refresh()
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (

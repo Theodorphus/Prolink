@@ -4,7 +4,10 @@ import CreateOfferForm from '@/components/offers/CreateOfferForm'
 import { Card, CardBody } from '@/components/ui/Card'
 import { formatCurrency } from '@/lib/utils'
 
-export const metadata = { title: 'Skicka offert' }
+export const metadata = {
+  title: 'Skicka offert | Prolink',
+  description: 'Skicka en offert på ett uppdrag på Prolink.',
+}
 
 export default async function CreateOfferPage({ params }: { params: { id: string } }) {
   const supabase = await createClient()
@@ -32,7 +35,7 @@ export default async function CreateOfferPage({ params }: { params: { id: string
     .eq('provider_id', user.id)
     .single()
 
-  if (existing) redirect(`/offers/${existing.id}`)
+  if (existing) redirect(`/offers/${existing.id}?already=1`)
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-12">

@@ -37,11 +37,19 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     url.searchParams.set('redirect', pathname)
-    return NextResponse.redirect(url)
+    const redirectResponse = NextResponse.redirect(url)
+    supabaseResponse.cookies.getAll().forEach(cookie =>
+      redirectResponse.cookies.set(cookie.name, cookie.value)
+    )
+    return redirectResponse
   }
 
   if (isAuthRoute && user) {
-    return NextResponse.redirect(new URL('/', request.url))
+    const redirectResponse = NextResponse.redirect(new URL('/', request.url))
+    supabaseResponse.cookies.getAll().forEach(cookie =>
+      redirectResponse.cookies.set(cookie.name, cookie.value)
+    )
+    return redirectResponse
   }
 
   return supabaseResponse

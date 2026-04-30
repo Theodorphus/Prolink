@@ -13,6 +13,12 @@ const nextConfig = {
       },
     ],
   },
+  webpack(config) {
+    if (config.cache && typeof config.cache === 'object') {
+      config.cache.compression = 'gzip'
+    }
+    return config
+  },
 }
 
 export default nextConfig

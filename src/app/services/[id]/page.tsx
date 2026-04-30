@@ -6,8 +6,11 @@ import { formatCurrency, formatDate } from '@/lib/utils'
 
 export async function generateMetadata({ params }: { params: { id: string } }) {
   const supabase = await createClient()
-  const { data } = await supabase.from('services').select('title').eq('id', params.id).single()
-  return { title: data?.title ?? 'Tjänst' }
+  const { data } = await supabase.from('services').select('title, description').eq('id', params.id).single()
+  return {
+    title: data?.title ? `${data.title} | Prolink` : 'Tjänst | Prolink',
+    description: data?.description?.slice(0, 155) ?? 'Se tjänstedetaljer och kontakta leverantören på Prolink.',
+  }
 }
 
 export default async function ServicePage({ params }: { params: { id: string } }) {
@@ -44,10 +47,10 @@ export default async function ServicePage({ params }: { params: { id: string } }
                 <p className="text-sm text-blue-600">Leverans: {service.delivery_time}</p>
               </div>
               <Link
-                href="/jobs/create"
+                href={`/profile/${service.provider.id}`}
                 className="inline-flex items-center bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
               >
-                Lägg ut uppdrag
+                Kontakta leverantören
               </Link>
             </CardBody>
           </Card>

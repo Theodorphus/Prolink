@@ -25,35 +25,35 @@ export default async function HomePage() {
 
       {/* ── Hero ─────────────────────────────────────────────── */}
       <section className="relative overflow-hidden min-h-[94vh] flex items-center">
-        <HeroVideo src="/HeroVid.mp4" />
+        <HeroVideo src="/Herovid2_opt.mp4" />
 
-        {/* Flerskiktat overlay för mer djup */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-black/80" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20" />
+        {/* Overlay — mörkare mitt för bättre textläsbarhet */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/55 to-black/85" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-black/10 to-black/30" />
 
         <div className="relative w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-40 text-center">
 
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md text-white/90 text-xs font-medium px-4 py-2 rounded-full mb-10 tracking-widest uppercase border border-white/20 shadow-lg">
+          <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-md text-white text-xs font-semibold px-4 py-2 rounded-full mb-10 tracking-widest uppercase border border-white/30 shadow-lg">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             Gratis att komma igång
           </div>
 
-          <h1 className="text-6xl md:text-8xl font-bold text-white tracking-tight leading-[1.02] mb-6">
+          <h1 className="text-6xl md:text-8xl font-black text-white tracking-tight leading-[1.02] mb-6 drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)]">
             Hitta rätt<br />
-            <span className="text-white/50">kompetens</span>
+            <span className="text-white/70">kompetens</span>
           </h1>
 
-          <p className="text-lg md:text-2xl text-white/65 max-w-xl mx-auto mb-4 leading-relaxed font-light">
+          <p className="text-lg md:text-2xl text-white/90 max-w-xl mx-auto mb-4 leading-relaxed font-medium drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]">
             Sveriges marknadsplats för uppdrag och freelancers.
           </p>
-          <p className="text-sm md:text-base text-white/40 max-w-lg mx-auto mb-12 leading-relaxed">
+          <p className="text-sm md:text-base text-white/70 max-w-lg mx-auto mb-12 leading-relaxed font-medium drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]">
             Lägg ut ett uppdrag på minuter — kvalificerade leverantörer skickar offerter direkt till dig.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href="/jobs/create"
-              className="inline-flex items-center justify-center gap-2.5 bg-white text-neutral-900 text-sm font-bold px-8 py-4 rounded-2xl hover:bg-neutral-100 active:scale-[0.98] transition-all duration-150 w-full sm:w-auto shadow-xl shadow-black/20"
+              className="inline-flex items-center justify-center gap-2.5 bg-white text-neutral-900 text-sm font-bold px-8 py-4 rounded-2xl hover:bg-neutral-100 active:scale-[0.98] transition-all duration-150 w-full sm:w-auto shadow-xl shadow-black/30"
             >
               Lägg ut uppdrag
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -62,13 +62,13 @@ export default async function HomePage() {
             </Link>
             <Link
               href="/services"
-              className="inline-flex items-center justify-center gap-2 text-white/80 text-sm font-semibold px-8 py-4 rounded-2xl border border-white/25 hover:bg-white/10 hover:border-white/40 active:scale-[0.98] transition-all duration-150 w-full sm:w-auto backdrop-blur-sm"
+              className="inline-flex items-center justify-center gap-2 text-white text-sm font-semibold px-8 py-4 rounded-2xl border border-white/40 hover:bg-white/15 hover:border-white/60 active:scale-[0.98] transition-all duration-150 w-full sm:w-auto backdrop-blur-sm"
             >
               Bläddra tjänster
             </Link>
           </div>
 
-          <p className="mt-10 text-xs text-white/30 tracking-wide">
+          <p className="mt-10 text-xs text-white/60 tracking-wide font-medium">
             Ingen bindningstid &nbsp;·&nbsp; Inga avgifter &nbsp;·&nbsp; Leverantören fakturerar direkt
           </p>
         </div>
@@ -82,17 +82,14 @@ export default async function HomePage() {
       </section>
 
       {/* ── Hur det fungerar ─────────────────────────────────── */}
-      <section className="relative py-28 px-4 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-neutral-950 via-neutral-900 to-white" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_40%_at_50%_0%,rgba(255,255,255,0.04),transparent)]" />
-
-        <div className="relative max-w-5xl mx-auto">
+      <section className="py-28 px-4 bg-gray-50 border-y border-gray-100">
+        <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
-            <p className="text-[11px] font-bold text-neutral-500 uppercase tracking-[0.2em] mb-4">Hur det fungerar</p>
-            <h2 className="text-3xl md:text-5xl font-bold text-white tracking-tight">
+            <p className="text-[11px] font-bold text-blue-500 uppercase tracking-[0.2em] mb-4">Hur det fungerar</p>
+            <h2 className="text-3xl md:text-5xl font-bold text-gray-900 tracking-tight">
               Tre steg till leverans
             </h2>
-            <p className="mt-4 text-neutral-400 max-w-md mx-auto">Enkelt, snabbt och utan krångel.</p>
+            <p className="mt-4 text-gray-600 font-medium max-w-md mx-auto">Enkelt, snabbt och utan krångel.</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-5">
@@ -143,7 +140,7 @@ export default async function HomePage() {
                   </span>
                 </div>
                 <h3 className="text-base font-bold text-neutral-900 mb-2 tracking-tight">{title}</h3>
-                <p className="text-sm text-neutral-500 leading-relaxed">{desc}</p>
+                <p className="text-sm text-gray-600 leading-relaxed font-medium">{desc}</p>
               </div>
             ))}
           </div>
@@ -156,10 +153,10 @@ export default async function HomePage() {
           <div className="max-w-7xl mx-auto">
             <div className="flex items-end justify-between mb-10">
               <div>
-                <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-[0.2em] mb-2">Uppdrag</p>
+                <p className="text-[11px] font-bold text-gray-600 uppercase tracking-[0.2em] mb-2">Uppdrag</p>
                 <h2 className="text-2xl md:text-3xl font-bold text-neutral-900 tracking-tight">Senaste uppdragen</h2>
               </div>
-              <Link href="/jobs" className="text-sm font-semibold text-neutral-500 hover:text-neutral-900 transition-colors inline-flex items-center gap-1.5 group">
+              <Link href="/jobs" className="text-sm font-semibold text-gray-700 hover:text-blue-600 transition-colors inline-flex items-center gap-1.5 group">
                 Se alla
                 <svg className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -180,8 +177,8 @@ export default async function HomePage() {
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-neutral-600 line-clamp-2 mb-5 leading-relaxed">{job.description}</p>
-                    <div className="flex items-center gap-2 text-xs text-neutral-500">
+                    <p className="text-sm text-gray-700 line-clamp-2 mb-5 leading-relaxed font-medium">{job.description}</p>
+                    <div className="flex items-center gap-2 text-xs text-gray-600">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
                       <span className="truncate font-medium">{job.customer?.name}</span>
                       {!job.budget && (
@@ -204,10 +201,10 @@ export default async function HomePage() {
           <div className="max-w-7xl mx-auto">
             <div className="flex items-end justify-between mb-10">
               <div>
-                <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-[0.2em] mb-2">Tjänster</p>
+                <p className="text-[11px] font-bold text-gray-600 uppercase tracking-[0.2em] mb-2">Tjänster</p>
                 <h2 className="text-2xl md:text-3xl font-bold text-neutral-900 tracking-tight">Populära tjänster</h2>
               </div>
-              <Link href="/services" className="text-sm font-semibold text-neutral-500 hover:text-neutral-900 transition-colors inline-flex items-center gap-1.5 group">
+              <Link href="/services" className="text-sm font-semibold text-gray-700 hover:text-blue-600 transition-colors inline-flex items-center gap-1.5 group">
                 Se alla
                 <svg className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -221,17 +218,17 @@ export default async function HomePage() {
                     <h3 className="font-semibold text-neutral-900 group-hover:text-neutral-600 transition-colors line-clamp-2 leading-snug">
                       {service.title}
                     </h3>
-                    <p className="text-sm text-neutral-600 line-clamp-2 leading-relaxed flex-1">{service.description}</p>
+                    <p className="text-sm text-gray-700 line-clamp-2 leading-relaxed flex-1 font-medium">{service.description}</p>
                     <div className="flex items-center justify-between pt-3 border-t border-neutral-200">
-                      <div className="flex items-center gap-2 text-xs text-neutral-600">
+                      <div className="flex items-center gap-2 text-xs text-gray-700 font-medium">
                         <div className="w-6 h-6 rounded-full bg-neutral-900 flex items-center justify-center text-white font-bold text-[10px]">
                           {service.provider?.name?.[0]?.toUpperCase()}
                         </div>
-                        <span className="truncate max-w-[100px] font-medium">{service.provider?.name}</span>
+                        <span className="truncate max-w-[100px]">{service.provider?.name}</span>
                       </div>
                       <div className="text-right">
                         <span className="text-sm font-bold text-neutral-900">{formatCurrency(service.price)}</span>
-                        <p className="text-[11px] text-neutral-500 font-medium">{service.delivery_time}</p>
+                        <p className="text-[11px] text-gray-600 font-medium">{service.delivery_time}</p>
                       </div>
                     </div>
                   </div>
@@ -243,39 +240,42 @@ export default async function HomePage() {
       )}
 
       {/* ── CTA ──────────────────────────────────────────────── */}
-      <section className="relative min-h-[60vh] flex items-center justify-center overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: "url('/cta-bg.png')" }}
-        />
-        <div className="absolute inset-0 bg-neutral-950/65" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+      <section className="py-24 px-4 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <div
+            className="relative overflow-hidden rounded-3xl bg-cover bg-center"
+            style={{ backgroundImage: "url('/cta-bg.png')" }}
+          >
+            <div className="absolute inset-0 bg-neutral-950/65" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
 
-        <div className="relative w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-28 text-center">
-          <p className="text-[11px] font-bold text-white/40 uppercase tracking-[0.2em] mb-5">Kom igång idag</p>
-          <h2 className="text-5xl md:text-7xl font-bold text-white tracking-tight leading-[1.02] mb-6">
-            Redo att hitta din<br />
-            <span className="text-white/55">nästa kund?</span>
-          </h2>
-          <p className="text-white/60 mb-12 max-w-md mx-auto leading-relaxed text-lg">
-            Registrera dig gratis och publicera dina tjänster eller ditt första uppdrag på under en minut.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              href="/register"
-              className="inline-flex items-center justify-center gap-2.5 bg-white text-neutral-900 text-sm font-bold px-8 py-4 rounded-2xl hover:bg-neutral-100 active:scale-[0.98] transition-all duration-150 w-full sm:w-auto shadow-xl shadow-black/30"
-            >
-              Skapa konto gratis
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </Link>
-            <Link
-              href="/jobs"
-              className="inline-flex items-center justify-center text-sm font-medium text-white/50 hover:text-white transition-colors px-8 py-4 w-full sm:w-auto"
-            >
-              Bläddra uppdrag
-            </Link>
+            <div className="relative px-8 py-20 sm:px-16 sm:py-24 text-center">
+              <p className="text-[11px] font-bold text-white/40 uppercase tracking-[0.2em] mb-5">Kom igång idag</p>
+              <h2 className="text-4xl md:text-6xl font-bold text-white tracking-tight leading-[1.02] mb-6">
+                Redo att hitta din<br />
+                <span className="text-white/55">nästa kund?</span>
+              </h2>
+              <p className="text-white/60 mb-10 max-w-md mx-auto leading-relaxed text-base">
+                Registrera dig gratis och publicera dina tjänster eller ditt första uppdrag på under en minut.
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <Link
+                  href="/register"
+                  className="inline-flex items-center justify-center gap-2.5 bg-white text-neutral-900 text-sm font-bold px-8 py-4 rounded-2xl hover:bg-neutral-100 active:scale-[0.98] transition-all duration-150 w-full sm:w-auto shadow-xl shadow-black/30"
+                >
+                  Skapa konto gratis
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </Link>
+                <Link
+                  href="/jobs"
+                  className="inline-flex items-center justify-center text-sm font-medium text-white/70 hover:text-white transition-colors px-8 py-4 w-full sm:w-auto"
+                >
+                  Bläddra uppdrag
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </section>

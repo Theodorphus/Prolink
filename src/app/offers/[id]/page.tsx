@@ -8,11 +8,21 @@ import AcceptRejectButtons from '@/components/offers/AcceptRejectButtons'
 import MarkDeliveredButton from '@/components/offers/MarkDeliveredButton'
 import CompleteJobButton from '@/components/offers/CompleteJobButton'
 
-export async function generateMetadata(_: { params: { id: string } }) {
-  return { title: 'Offert' }
+export async function generateMetadata({ params }: { params: { id: string } }) {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('offers')
+    .select('job:jobs(title)')
+    .eq('id', params.id)
+    .single()
+  const jobTitle = (data?.job as any)?.title
+  return {
+    title: jobTitle ? `Offert – ${jobTitle} | Prolink` : 'Offert | Prolink',
+    description: 'Se offertdetaljer, acceptera eller avslå offerter och kommunicera med leverantören.',
+  }
 }
 
-export default async function OfferPage({ params }: { params: { id: string } }) {
+export default async function OfferPage({ params, searchParams }: { params: { id: string }; searchParams: { already?: string } }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -26,20 +36,32 @@ export default async function OfferPage({ params }: { params: { id: string } }) 
 
   if (!offer) notFound()
 
-  const isCustomer = user.id === offer.job.customer_id
+  const job = Array.isArray(offer.job) ? offer.job[0] : offer.job
+  const provider = Array.isArray(offer.provider) ? offer.provider[0] : offer.provider
+  if (!job) notFound()
+
+  const isCustomer = user.id === job.customer_id
   const isProvider = user.id === offer.provider_id
 
   if (!isCustomer && !isProvider) redirect('/')
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-12">
+      {searchParams.already === '1' && (
+        <div className="mb-6 flex items-start gap-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl px-4 py-3 text-sm">
+          <svg className="w-4 h-4 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>Du har redan skickat en offert på det här uppdraget. Här är din befintliga offert.</span>
+        </div>
+      )}
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Left: Offer details */}
         <div className="lg:col-span-2 space-y-6">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <Link href={`/jobs/${offer.job.id}`} className="text-sm text-blue-600 hover:underline">
-                ← {offer.job.title}
+              <Link href={`/jobs/${job.id}`} className="text-sm text-blue-600 hover:underline">
+                ← {job.title}
               </Link>
               <h1 className="text-2xl font-bold text-gray-900 mt-2">Offert</h1>
             </div>
@@ -106,23 +128,23 @@ export default async function OfferPage({ params }: { params: { id: string } }) 
               <h3 className="font-semibold text-gray-900">Leverantör</h3>
             </CardHeader>
             <CardBody className="space-y-3">
-              <Link href={`/profile/${offer.provider.id}`} className="flex items-center gap-3 hover:opacity-80">
+              <Link href={`/profile/${provider.id}`} className="flex items-center gap-3 hover:opacity-80">
                 <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center font-bold text-blue-700">
-                  {offer.provider.name?.[0]?.toUpperCase()}
+                  {provider.name?.[0]?.toUpperCase()}
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">{offer.provider.name}</p>
-                  {offer.provider.hourly_rate && (
-                    <p className="text-xs text-gray-400">{formatCurrency(offer.provider.hourly_rate)}/h</p>
+                  <p className="font-medium text-gray-900">{provider.name}</p>
+                  {provider.hourly_rate && (
+                    <p className="text-xs text-gray-400">{formatCurrency(provider.hourly_rate)}/h</p>
                   )}
                 </div>
               </Link>
-              {offer.provider.bio && (
-                <p className="text-sm text-gray-600">{offer.provider.bio}</p>
+              {provider.bio && (
+                <p className="text-sm text-gray-600">{provider.bio}</p>
               )}
-              {offer.provider.skills && offer.provider.skills.length > 0 && (
+              {provider.skills && provider.skills.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
-                  {offer.provider.skills.map((skill: string) => (
+                  {provider.skills.map((skill: string) => (
                     <span key={skill} className="text-xs bg-gray-100 text-gray-600 rounded-full px-2.5 py-1">
                       {skill}
                     </span>
@@ -137,13 +159,15 @@ export default async function OfferPage({ params }: { params: { id: string } }) 
               <h3 className="font-semibold text-gray-900">Uppdrag</h3>
             </CardHeader>
             <CardBody>
-              <Link href={`/jobs/${offer.job.id}`} className="hover:text-blue-600">
-                <p className="font-medium text-gray-900">{offer.job.title}</p>
+              <Link href={`/jobs/${job.id}`} className="hover:text-blue-600">
+                <p className="font-medium text-gray-900">{job.title}</p>
               </Link>
-              {offer.job.budget && (
-                <p className="text-sm text-blue-600 mt-1">Budget: {formatCurrency(offer.job.budget)}</p>
+              {job.budget && (
+                <p className="text-sm text-blue-600 mt-1">Budget: {formatCurrency(job.budget)}</p>
               )}
-              <p className="text-xs text-gray-400 mt-2">Kund: {offer.job.customer?.name}</p>
+              {job.customer?.name && (
+                <p className="text-xs text-gray-400 mt-2">Kund: {Array.isArray(job.customer) ? job.customer[0]?.name : job.customer.name}</p>
+              )}
             </CardBody>
           </Card>
         </div>

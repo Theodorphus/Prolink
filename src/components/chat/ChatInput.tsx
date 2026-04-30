@@ -99,7 +99,7 @@ export default function ChatInput({ onSend, offerId }: ChatInputProps) {
           </Button>
         </div>
       </div>
-      <input ref={fileRef} type="file" className="hidden" accept="image/*,.pdf,.doc,.docx" />
+      <input ref={fileRef} type="file" className="hidden" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
       {uploading && <p className="text-xs text-blue-500">Laddar upp fil...</p>}
     </form>
   )

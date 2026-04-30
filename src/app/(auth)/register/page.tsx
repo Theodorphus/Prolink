@@ -2,6 +2,11 @@ import Link from 'next/link'
 import { register } from '@/lib/actions/auth'
 import RegisterForm from '@/components/auth/RegisterForm'
 
+export const metadata = {
+  title: 'Skapa konto | Prolink',
+  description: 'Skapa ett gratis konto på Prolink och börja lägga ut uppdrag eller erbjud dina tjänster idag.',
+}
+
 export default function RegisterPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
