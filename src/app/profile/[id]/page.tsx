@@ -7,6 +7,7 @@ import { formatCurrency, formatDate } from '@/lib/utils'
 import Image from 'next/image'
 import EditProfileForm from '@/components/profile/EditProfileForm'
 import SwitchRoleButton from '@/components/profile/SwitchRoleButton'
+import DeleteJobButton from '@/components/jobs/DeleteJobButton'
 
 export async function generateMetadata({ params }: { params: { id: string } }) {
   const supabase = await createClient()
@@ -245,19 +246,22 @@ export default async function ProfilePage({ params }: { params: { id: string } }
               </div>
               <div className="space-y-3">
                 {jobs?.map((job: any) => (
-                  <Link key={job.id} href={`/jobs/${job.id}`} className="block group">
-                    <Card className="group-hover:shadow-md transition-shadow">
-                      <CardBody className="flex items-center justify-between gap-4">
-                        <div>
-                          <h3 className="font-medium text-gray-900 group-hover:text-blue-600">{job.title}</h3>
-                          <p className="text-xs text-gray-400">{formatDate(job.created_at)}</p>
-                        </div>
+                  <Card key={job.id} className="hover:shadow-md transition-shadow">
+                    <CardBody className="flex items-center justify-between gap-4">
+                      <Link href={`/jobs/${job.id}`} className="flex-1 min-w-0 group">
+                        <h3 className="font-medium text-gray-900 group-hover:text-blue-600 truncate">{job.title}</h3>
+                        <p className="text-xs text-gray-400">{formatDate(job.created_at)}</p>
+                      </Link>
+                      <div className="flex items-center gap-3 shrink-0">
                         <Badge variant={job.status === 'open' ? 'success' : 'default'}>
                           {job.status === 'open' ? 'Öppet' : 'Stängt'}
                         </Badge>
-                      </CardBody>
-                    </Card>
-                  </Link>
+                        {isOwn && (
+                          <DeleteJobButton jobId={job.id} compact />
+                        )}
+                      </div>
+                    </CardBody>
+                  </Card>
                 ))}
                 {(!jobs || jobs.length === 0) && (
                   <p className="text-sm text-gray-500 py-4">Inga uppdrag ännu.</p>

@@ -3,17 +3,19 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-export default function DeleteJobButton({ jobId }: { jobId: string }) {
+export default function DeleteJobButton({ jobId, compact = false }: { jobId: string; compact?: boolean }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
 
   async function handleDelete() {
     setLoading(true)
-    const res = await fetch(`/api/jobs/${jobId}`, { method: 'DELETE' })
-    if (res.ok) {
-      router.push('/jobs')
-    } else {
+    try {
+      const res = await fetch(`/api/jobs/${jobId}`, { method: 'DELETE' })
+      if (res.ok) {
+        router.refresh()
+      }
+    } finally {
       setLoading(false)
       setShowConfirm(false)
     }
@@ -23,9 +25,17 @@ export default function DeleteJobButton({ jobId }: { jobId: string }) {
     <>
       <button
         onClick={() => setShowConfirm(true)}
-        className="w-full text-sm text-red-500 hover:text-red-700 transition-colors py-2 border border-red-200 rounded-lg hover:border-red-300 hover:bg-red-50"
+        className={compact
+          ? "p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+          : "w-full text-sm text-red-500 hover:text-red-700 transition-colors py-2 border border-red-200 rounded-lg hover:border-red-300 hover:bg-red-50"
+        }
+        title="Ta bort uppdrag"
       >
-        Ta bort uppdrag
+        {compact ? (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+        ) : 'Ta bort uppdrag'}
       </button>
 
       {showConfirm && (
