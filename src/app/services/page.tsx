@@ -5,6 +5,7 @@ import { Card, CardBody } from '@/components/ui/Card'
 import { formatCurrency } from '@/lib/utils'
 import Image from 'next/image'
 import ServiceFilters from '@/components/services/ServiceFilters'
+import { getCategoryLabel } from '@/lib/categories'
 
 export const metadata = {
   title: 'Tjänster – Hitta freelancers | Prolink',
@@ -12,12 +13,12 @@ export const metadata = {
 }
 
 interface Props {
-  searchParams: { q?: string; sort?: string; max_price?: string }
+  searchParams: { q?: string; sort?: string; max_price?: string; category?: string }
 }
 
 export default async function ServicesPage({ searchParams }: Props) {
   const supabase = await createClient()
-  const { q, sort = 'newest', max_price } = searchParams
+  const { q, sort = 'newest', max_price, category } = searchParams
 
   const { data: { user } } = await supabase.auth.getUser()
   const { data: profile } = user
@@ -35,6 +36,10 @@ export default async function ServicesPage({ searchParams }: Props) {
 
   if (max_price) {
     query = query.lte('price', Number(max_price))
+  }
+
+  if (category) {
+    query = query.eq('category', category)
   }
 
   switch (sort) {
@@ -101,6 +106,11 @@ export default async function ServicesPage({ searchParams }: Props) {
                     {service.delivery_time}
                   </span>
                 </div>
+                {service.category && (
+                  <span className="self-start text-xs bg-blue-50 text-blue-600 font-medium px-2 py-0.5 rounded-full">
+                    {getCategoryLabel(service.category)}
+                  </span>
+                )}
               </CardBody>
             </Card>
           </Link>

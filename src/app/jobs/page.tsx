@@ -5,6 +5,7 @@ import { Card, CardBody } from '@/components/ui/Card'
 import { StatusBadge } from '@/components/ui/Badge'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import JobFilters from '@/components/jobs/JobFilters'
+import { getCategoryLabel } from '@/lib/categories'
 
 export const metadata = {
   title: 'Uppdrag – Hitta freelanceuppdrag | Prolink',
@@ -12,12 +13,12 @@ export const metadata = {
 }
 
 interface Props {
-  searchParams: { q?: string; sort?: string; budget?: string }
+  searchParams: { q?: string; sort?: string; budget?: string; category?: string }
 }
 
 export default async function JobsPage({ searchParams }: Props) {
   const supabase = await createClient()
-  const { q, sort = 'newest', budget = 'all' } = searchParams
+  const { q, sort = 'newest', budget = 'all', category } = searchParams
 
   const { data: { user } } = await supabase.auth.getUser()
   const { data: profile } = user
@@ -39,6 +40,10 @@ export default async function JobsPage({ searchParams }: Props) {
     query = query.not('budget', 'is', null)
   } else if (budget === 'without') {
     query = query.is('budget', null)
+  }
+
+  if (category) {
+    query = query.eq('category', category)
   }
 
   switch (sort) {
@@ -103,12 +108,17 @@ export default async function JobsPage({ searchParams }: Props) {
                       <StatusBadge status={job.status} />
                     </div>
                     <p className="text-sm text-gray-600 line-clamp-2 mb-3">{job.description}</p>
-                    <div className="flex items-center gap-4 text-xs text-gray-400">
+                    <div className="flex items-center gap-3 flex-wrap text-xs text-gray-400">
                       <span>{job.customer?.name}</span>
                       <span>•</span>
                       <span>{formatDate(job.created_at)}</span>
                       <span>•</span>
                       <span>{job.offers?.length ?? 0} offert{(job.offers?.length ?? 0) !== 1 ? 'er' : ''}</span>
+                      {job.category && (
+                        <span className="bg-blue-50 text-blue-600 font-medium px-2 py-0.5 rounded-full">
+                          {getCategoryLabel(job.category)}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="text-right shrink-0">

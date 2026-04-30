@@ -26,10 +26,14 @@ export async function POST(request: NextRequest) {
   if (profile?.role !== 'customer') return NextResponse.json({ error: 'Endast kunder kan skapa uppdrag' }, { status: 403 })
 
   const body = await request.json()
-  const { title, description, budget } = body
+  const { title, description, budget, category } = body
 
   if (!title?.trim() || !description?.trim()) {
     return NextResponse.json({ error: 'Titel och beskrivning krävs' }, { status: 400 })
+  }
+
+  if (!category) {
+    return NextResponse.json({ error: 'Kategori krävs' }, { status: 400 })
   }
 
   const parsedBudget = budget ? Number(budget) : null
@@ -39,7 +43,7 @@ export async function POST(request: NextRequest) {
 
   const { data, error } = await supabase
     .from('jobs')
-    .insert({ customer_id: user.id, title: title.trim(), description: description.trim(), budget: parsedBudget })
+    .insert({ customer_id: user.id, title: title.trim(), description: description.trim(), budget: parsedBudget, category })
     .select()
     .single()
 

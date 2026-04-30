@@ -23,10 +23,14 @@ export async function POST(request: NextRequest) {
   if (profile?.role !== 'provider') return NextResponse.json({ error: 'Endast leverantörer kan skapa tjänster' }, { status: 403 })
 
   const body = await request.json()
-  const { title, description, price, delivery_time } = body
+  const { title, description, price, delivery_time, category } = body
 
   if (!title || !description || !price || !delivery_time) {
     return NextResponse.json({ error: 'Alla fält krävs' }, { status: 400 })
+  }
+
+  if (!category) {
+    return NextResponse.json({ error: 'Kategori krävs' }, { status: 400 })
   }
 
   const parsedPrice = Number(price)
@@ -36,7 +40,7 @@ export async function POST(request: NextRequest) {
 
   const { data, error } = await supabase
     .from('services')
-    .insert({ provider_id: user.id, title, description, price: parsedPrice, delivery_time })
+    .insert({ provider_id: user.id, title, description, price: parsedPrice, delivery_time, category })
     .select()
     .single()
 

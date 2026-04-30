@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
 import { Button } from '@/components/ui/Button'
 import { Card, CardBody } from '@/components/ui/Card'
+import { CATEGORIES } from '@/lib/categories'
 
 export default function CreateServiceForm() {
   const router = useRouter()
@@ -27,6 +28,7 @@ export default function CreateServiceForm() {
         description: form.get('description'),
         price: Number(form.get('price')),
         delivery_time: form.get('delivery_time'),
+        category: form.get('category') || null,
       }),
     })
 
@@ -53,6 +55,22 @@ export default function CreateServiceForm() {
             rows={5}
             placeholder="Beskriv tjänsten i detalj — vad levererar du, hur går processen till, vad behöver kunden förbereda?"
           />
+
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium text-gray-700">
+              Kategori <span className="text-red-500">*</span>
+            </label>
+            <select
+              name="category"
+              required
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            >
+              <option value="">Välj kategori...</option>
+              {CATEGORIES.map(c => (
+                <option key={c.value} value={c.value}>{c.label}</option>
+              ))}
+            </select>
+          </div>
 
           <div className="grid grid-cols-2 gap-4">
             <Input label="Pris (SEK)" name="price" type="number" min="1" required placeholder="T.ex. 4500" />
