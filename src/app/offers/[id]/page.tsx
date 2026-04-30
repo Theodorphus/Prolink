@@ -7,6 +7,7 @@ import { formatCurrency, formatDate } from '@/lib/utils'
 import AcceptRejectButtons from '@/components/offers/AcceptRejectButtons'
 import MarkDeliveredButton from '@/components/offers/MarkDeliveredButton'
 import CompleteJobButton from '@/components/offers/CompleteJobButton'
+import WriteReviewForm from '@/components/reviews/WriteReviewForm'
 
 export async function generateMetadata({ params }: { params: { id: string } }) {
   const supabase = await createClient()
@@ -42,6 +43,13 @@ export default async function OfferPage({ params, searchParams }: { params: { id
 
   const isCustomer = user.id === job.customer_id
   const isProvider = user.id === offer.provider_id
+
+  // Load existing reviews for this offer
+  const { data: reviews } = offer.status === 'completed'
+    ? await supabase.from('reviews').select('reviewer_id').eq('offer_id', params.id)
+    : { data: [] }
+
+  const hasReviewed = reviews?.some(r => r.reviewer_id === user.id) ?? false
 
   if (!isCustomer && !isProvider) redirect('/')
 
@@ -104,6 +112,23 @@ export default async function OfferPage({ params, searchParams }: { params: { id
           {/* Customer: confirm completion */}
           {isCustomer && offer.status === 'delivered' && (
             <CompleteJobButton offerId={offer.id} />
+          )}
+
+          {/* Review form — visas för båda parter efter completed */}
+          {offer.status === 'completed' && !hasReviewed && (
+            <WriteReviewForm
+              offerId={offer.id}
+              revieweeId={isCustomer ? provider.id : job.customer_id}
+              revieweeName={isCustomer ? provider.name : job.customer?.name ?? 'kunden'}
+            />
+          )}
+          {offer.status === 'completed' && hasReviewed && (
+            <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
+              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              Du har lämnat ett omdöme för det här uppdraget.
+            </div>
           )}
 
           {/* Chat link */}

@@ -71,6 +71,20 @@ export interface MessageWithSender extends Message {
   sender: User
 }
 
+export interface Review {
+  id: string
+  offer_id: string
+  reviewer_id: string
+  reviewee_id: string
+  rating: number
+  comment: string | null
+  created_at: string
+}
+
+export interface ReviewWithReviewer extends Review {
+  reviewer: Pick<User, 'id' | 'name' | 'avatar_url'>
+}
+
 // Supabase Database type
 export type Database = {
   public: {

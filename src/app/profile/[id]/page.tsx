@@ -8,6 +8,8 @@ import Image from 'next/image'
 import EditProfileForm from '@/components/profile/EditProfileForm'
 import SwitchRoleButton from '@/components/profile/SwitchRoleButton'
 import DeleteJobButton from '@/components/jobs/DeleteJobButton'
+import ReviewCard from '@/components/reviews/ReviewCard'
+import StarRating from '@/components/reviews/StarRating'
 
 export async function generateMetadata({ params }: { params: { id: string } }) {
   const supabase = await createClient()
@@ -38,6 +40,17 @@ export default async function ProfilePage({ params }: { params: { id: string } }
   const { data: jobs } = profile.role === 'customer'
     ? await supabase.from('jobs').select('*').eq('customer_id', params.id).order('created_at', { ascending: false }).limit(5)
     : { data: null }
+
+  // Load reviews for this profile
+  const { data: reviews } = await supabase
+    .from('reviews')
+    .select('*, reviewer:users(id, name, avatar_url)')
+    .eq('reviewee_id', params.id)
+    .order('created_at', { ascending: false })
+
+  const avgRating = reviews && reviews.length > 0
+    ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+    : null
 
   // Find existing shared conversation (offer between viewer and profile owner)
   let sharedOffer: { id: string } | null = null
@@ -132,6 +145,12 @@ export default async function ProfilePage({ params }: { params: { id: string } }
                   </svg>
                   LinkedIn-profil
                 </a>
+              )}
+              {avgRating !== null && (
+                <div className="flex flex-col items-center gap-1">
+                  <StarRating value={Math.round(avgRating)} readonly size="sm" />
+                  <p className="text-xs text-gray-500">{avgRating.toFixed(1)} / 5 ({reviews!.length} omdömen)</p>
+                </div>
               )}
               <p className="text-xs text-gray-400">Medlem sedan {formatDate(profile.created_at)}</p>
               {isOwn && (
@@ -266,6 +285,19 @@ export default async function ProfilePage({ params }: { params: { id: string } }
                 {(!jobs || jobs.length === 0) && (
                   <p className="text-sm text-gray-500 py-4">Inga uppdrag ännu.</p>
                 )}
+              </div>
+            </div>
+          )}
+          {/* Reviews */}
+          {reviews && reviews.length > 0 && (
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                Omdömen ({reviews.length})
+              </h2>
+              <div className="bg-white border border-gray-100 rounded-2xl px-6 divide-y divide-gray-100">
+                {reviews.map((review: any) => (
+                  <ReviewCard key={review.id} review={review} />
+                ))}
               </div>
             </div>
           )}
