@@ -2,11 +2,9 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardBody } from '@/components/ui/Card'
-import { Badge } from '@/components/ui/Badge'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { formatDate } from '@/lib/utils'
 import Image from 'next/image'
 import EditProfileForm from '@/components/profile/EditProfileForm'
-import SwitchRoleButton from '@/components/profile/SwitchRoleButton'
 import DeleteJobButton from '@/components/jobs/DeleteJobButton'
 import ReviewCard from '@/components/reviews/ReviewCard'
 import StarRating from '@/components/reviews/StarRating'
@@ -14,7 +12,7 @@ import StarRating from '@/components/reviews/StarRating'
 export async function generateMetadata({ params }: { params: { id: string } }) {
   const supabase = await createClient()
   const { data } = await supabase.from('users').select('name').eq('id', params.id).single()
-  return { title: data?.name ?? 'Profil' }
+  return { title: data?.name ? `${data.name} | Prolink` : 'Profil | Prolink' }
 }
 
 export default async function ProfilePage({ params }: { params: { id: string } }) {
@@ -31,17 +29,13 @@ export default async function ProfilePage({ params }: { params: { id: string } }
 
   const isOwn = user?.id === params.id
 
-  // Load provider's services if provider
-  const { data: services } = profile.role === 'provider'
-    ? await supabase.from('services').select('*').eq('provider_id', params.id).order('created_at', { ascending: false })
-    : { data: null }
+  const { data: jobs } = await supabase
+    .from('jobs')
+    .select('*')
+    .eq('customer_id', params.id)
+    .order('created_at', { ascending: false })
+    .limit(5)
 
-  // Load customer's recent jobs if customer
-  const { data: jobs } = profile.role === 'customer'
-    ? await supabase.from('jobs').select('*').eq('customer_id', params.id).order('created_at', { ascending: false }).limit(5)
-    : { data: null }
-
-  // Load reviews for this profile
   const { data: reviews } = await supabase
     .from('reviews')
     .select('*, reviewer:users(id, name, avatar_url)')
@@ -52,55 +46,10 @@ export default async function ProfilePage({ params }: { params: { id: string } }
     ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
     : null
 
-  // Find existing shared conversation (offer between viewer and profile owner)
-  let sharedOffer: { id: string } | null = null
-  if (user && !isOwn) {
-    // Viewer is customer, profile is provider: look for offer where viewer's job was offered by profile owner
-    if (profile.role === 'provider') {
-      const { data } = await supabase
-        .from('offers')
-        .select('id')
-        .eq('provider_id', params.id)
-        .in('status', ['accepted', 'delivered', 'completed'])
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
-      // Verify viewer is the customer of that job
-      if (data) {
-        const { data: offer } = await supabase
-          .from('offers')
-          .select('id, job:jobs(customer_id)')
-          .eq('id', data.id)
-          .single()
-        const jobCustomer = Array.isArray((offer as any)?.job) ? (offer as any).job[0]?.customer_id : (offer as any)?.job?.customer_id
-        if (jobCustomer === user.id) sharedOffer = data
-      }
-    }
-    // Viewer is provider, profile is customer: look for offer by viewer on profile's jobs
-    if (profile.role === 'customer') {
-      const { data: myJobs } = await supabase
-        .from('jobs')
-        .select('id')
-        .eq('customer_id', params.id)
-      const jobIds = myJobs?.map((j: any) => j.id) ?? []
-      if (jobIds.length > 0) {
-        const { data } = await supabase
-          .from('offers')
-          .select('id')
-          .eq('provider_id', user.id)
-          .in('job_id', jobIds)
-          .in('status', ['accepted', 'delivered', 'completed'])
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle()
-        sharedOffer = data
-      }
-    }
-  }
-
   return (
     <div className="max-w-5xl mx-auto px-4 py-12">
       <div className="grid lg:grid-cols-3 gap-8">
+
         {/* Sidebar: Profile card */}
         <div className="space-y-4">
           <Card>
@@ -114,24 +63,9 @@ export default async function ProfilePage({ params }: { params: { id: string } }
               </div>
               <div>
                 <h1 className="text-xl font-bold text-gray-900">{profile.name}</h1>
-                <Badge variant={profile.role === 'provider' ? 'info' : 'default'} className="mt-1">
-                  {profile.role === 'provider' ? 'Leverantör' : 'Kund'}
-                </Badge>
               </div>
-              {profile.hourly_rate && (
-                <p className="text-blue-600 font-semibold">{formatCurrency(profile.hourly_rate)}/h</p>
-              )}
               {profile.bio && (
                 <p className="text-sm text-gray-600 leading-relaxed">{profile.bio}</p>
-              )}
-              {profile.skills && profile.skills.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 justify-center">
-                  {profile.skills.map((skill: string) => (
-                    <span key={skill} className="text-xs bg-gray-100 text-gray-600 rounded-full px-2.5 py-1">
-                      {skill}
-                    </span>
-                  ))}
-                </div>
               )}
               {profile.linkedin_url && (
                 <a
@@ -153,142 +87,53 @@ export default async function ProfilePage({ params }: { params: { id: string } }
                 </div>
               )}
               <p className="text-xs text-gray-400">Medlem sedan {formatDate(profile.created_at)}</p>
-              {isOwn && (
-                <SwitchRoleButton currentRole={profile.role} userId={profile.id} />
-              )}
             </CardBody>
           </Card>
-
-          {/* Kontaktkort — visas bara för inloggade som tittar på annans profil */}
-          {user && !isOwn && (
-            <Card>
-              <CardBody className="space-y-3">
-                <h3 className="font-semibold text-gray-900 text-sm">Kontakta {profile.name.split(' ')[0]}</h3>
-
-                {sharedOffer ? (
-                  <Link
-                    href={`/messages/${sharedOffer.id}`}
-                    className="flex items-center gap-2 w-full bg-blue-600 text-white text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-blue-700 transition-colors justify-center"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                    </svg>
-                    Öppna konversation
-                  </Link>
-                ) : profile.role === 'provider' ? (
-                  <>
-                    <p className="text-xs text-gray-500">Lägg ut ett uppdrag för att ta emot offerter från {profile.name.split(' ')[0]}.</p>
-                    <Link
-                      href="/jobs/create"
-                      className="flex items-center justify-center gap-2 w-full bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors"
-                    >
-                      Lägg ut uppdrag
-                    </Link>
-                    {services && services.length > 0 && (
-                      <Link
-                        href={`/services/${services[0].id}`}
-                        className="flex items-center justify-center w-full bg-gray-100 text-gray-800 text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-gray-200 transition-colors"
-                      >
-                        Se tjänster
-                      </Link>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <p className="text-xs text-gray-500">Bläddra bland {profile.name.split(' ')[0]}s aktiva uppdrag och skicka en offert.</p>
-                    <Link
-                      href="/jobs"
-                      className="flex items-center justify-center gap-2 w-full bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-gray-700 transition-colors"
-                    >
-                      Hitta uppdrag
-                    </Link>
-                  </>
-                )}
-              </CardBody>
-            </Card>
-          )}
         </div>
 
         {/* Main content */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Edit form (own profile) */}
+
           {isOwn && <EditProfileForm profile={profile} />}
 
-          {/* Provider: Services */}
-          {profile.role === 'provider' && (
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-gray-900">Tjänster</h2>
-                {isOwn && (
-                  <Link
-                    href="/services/create"
-                    className="inline-flex items-center bg-blue-600 text-white text-xs font-medium px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    + Ny tjänst
-                  </Link>
-                )}
-              </div>
-              <div className="space-y-3">
-                {services?.map((service: any) => (
-                  <Link key={service.id} href={`/services/${service.id}`} className="block group">
-                    <Card className="group-hover:shadow-md transition-shadow">
-                      <CardBody className="flex items-center justify-between gap-4">
-                        <div>
-                          <h3 className="font-medium text-gray-900 group-hover:text-blue-600">{service.title}</h3>
-                          <p className="text-xs text-gray-400">{service.delivery_time}</p>
-                        </div>
-                        <span className="font-semibold text-blue-600">{formatCurrency(service.price)}</span>
-                      </CardBody>
-                    </Card>
-                  </Link>
-                ))}
-                {(!services || services.length === 0) && (
-                  <p className="text-sm text-gray-500 py-4">Inga tjänster publicerade ännu.</p>
-                )}
-              </div>
+          {/* Posted jobs */}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-900">
+                {isOwn ? 'Dina jobbannonser' : 'Jobbannonser'}
+              </h2>
+              {isOwn && (
+                <Link
+                  href="/jobs/create"
+                  className="inline-flex items-center bg-blue-600 text-white text-xs font-medium px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  + Nytt jobb
+                </Link>
+              )}
             </div>
-          )}
+            <div className="space-y-3">
+              {jobs?.map((job: any) => (
+                <Card key={job.id} className="hover:shadow-md transition-shadow">
+                  <CardBody className="flex items-center justify-between gap-4">
+                    <Link href={`/jobs/${job.id}`} className="flex-1 min-w-0 group">
+                      <h3 className="font-medium text-gray-900 group-hover:text-blue-600 truncate">{job.title}</h3>
+                      <p className="text-xs text-gray-400">{formatDate(job.created_at)}</p>
+                    </Link>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${job.status === 'open' ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                        {job.status === 'open' ? 'Öppet' : 'Stängt'}
+                      </span>
+                      {isOwn && <DeleteJobButton jobId={job.id} compact />}
+                    </div>
+                  </CardBody>
+                </Card>
+              ))}
+              {(!jobs || jobs.length === 0) && (
+                <p className="text-sm text-gray-500 py-4">Inga jobbannonser ännu.</p>
+              )}
+            </div>
+          </div>
 
-          {/* Customer: Jobs */}
-          {profile.role === 'customer' && (
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-gray-900">Senaste uppdrag</h2>
-                {isOwn && (
-                  <Link
-                    href="/jobs/create"
-                    className="inline-flex items-center bg-blue-600 text-white text-xs font-medium px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    + Nytt uppdrag
-                  </Link>
-                )}
-              </div>
-              <div className="space-y-3">
-                {jobs?.map((job: any) => (
-                  <Card key={job.id} className="hover:shadow-md transition-shadow">
-                    <CardBody className="flex items-center justify-between gap-4">
-                      <Link href={`/jobs/${job.id}`} className="flex-1 min-w-0 group">
-                        <h3 className="font-medium text-gray-900 group-hover:text-blue-600 truncate">{job.title}</h3>
-                        <p className="text-xs text-gray-400">{formatDate(job.created_at)}</p>
-                      </Link>
-                      <div className="flex items-center gap-3 shrink-0">
-                        <Badge variant={job.status === 'open' ? 'success' : 'default'}>
-                          {job.status === 'open' ? 'Öppet' : 'Stängt'}
-                        </Badge>
-                        {isOwn && (
-                          <DeleteJobButton jobId={job.id} compact />
-                        )}
-                      </div>
-                    </CardBody>
-                  </Card>
-                ))}
-                {(!jobs || jobs.length === 0) && (
-                  <p className="text-sm text-gray-500 py-4">Inga uppdrag ännu.</p>
-                )}
-              </div>
-            </div>
-          )}
-          {/* Reviews */}
           {reviews && reviews.length > 0 && (
             <div>
               <h2 className="text-xl font-semibold text-gray-900 mb-4">
@@ -302,6 +147,7 @@ export default async function ProfilePage({ params }: { params: { id: string } }
             </div>
           )}
         </div>
+
       </div>
     </div>
   )

@@ -2,10 +2,8 @@ import Link from 'next/link'
 
 const links = {
   Plattform: [
-    { href: '/jobs', label: 'Hitta uppdrag' },
-    { href: '/services', label: 'Bläddra tjänster' },
-    { href: '/jobs/create', label: 'Lägg ut uppdrag' },
-    { href: '/services/create', label: 'Erbjud tjänster' },
+    { href: '/jobs', label: 'Hitta jobb' },
+    { href: '/jobs/create', label: 'Lägg upp jobb' },
   ],
   Konto: [
     { href: '/login', label: 'Logga in' },
@@ -29,7 +27,7 @@ export default function Footer() {
               Prolink
             </Link>
             <p className="mt-3 text-sm text-gray-600 leading-relaxed max-w-xs font-medium">
-              Sveriges marknadsplats för freelancers och företag. Enkel, snabb, gratis.
+              Göteborgs enklaste jobbsajt. Gratis för alla.
             </p>
           </div>
 
@@ -41,10 +39,7 @@ export default function Footer() {
               <ul className="space-y-3">
                 {items.map(({ href, label }) => (
                   <li key={href}>
-                    <Link
-                      href={href}
-                      className="text-sm text-gray-600 hover:text-gray-900 transition-colors font-medium"
-                    >
+                    <Link href={href} className="text-sm text-gray-600 hover:text-gray-900 transition-colors font-medium">
                       {label}
                     </Link>
                   </li>

@@ -22,11 +22,8 @@ export async function POST(request: NextRequest) {
 
   if (!user) return NextResponse.json({ error: 'Ej inloggad' }, { status: 401 })
 
-  const { data: profile } = await supabase.from('users').select('role').eq('id', user.id).single()
-  if (profile?.role !== 'customer') return NextResponse.json({ error: 'Endast kunder kan skapa uppdrag' }, { status: 403 })
-
   const body = await request.json()
-  const { title, description, budget, category } = body
+  const { title, description, category, salary, location, work_type, employer_name, employer_email, contact_info } = body
 
   if (!title?.trim() || !description?.trim()) {
     return NextResponse.json({ error: 'Titel och beskrivning krävs' }, { status: 400 })
@@ -36,14 +33,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Kategori krävs' }, { status: 400 })
   }
 
-  const parsedBudget = budget ? Number(budget) : null
-  if (parsedBudget !== null && (isNaN(parsedBudget) || parsedBudget <= 0)) {
-    return NextResponse.json({ error: 'Budget måste vara ett positivt belopp' }, { status: 400 })
-  }
-
   const { data, error } = await supabase
     .from('jobs')
-    .insert({ customer_id: user.id, title: title.trim(), description: description.trim(), budget: parsedBudget, category })
+    .insert({
+      customer_id: user.id,
+      title: title.trim(),
+      description: description.trim(),
+      category,
+      salary: salary?.trim() || null,
+      location: location?.trim() || null,
+      work_type: work_type || null,
+      employer_name: employer_name?.trim() || null,
+      employer_email: employer_email?.trim() || null,
+      contact_info: contact_info?.trim() || null,
+    })
     .select()
     .single()
 

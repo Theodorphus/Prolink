@@ -11,19 +11,16 @@ export default function JobFilters() {
 
   const update = useCallback((key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString())
-    if (value) {
-      params.set(key, value)
-    } else {
-      params.delete(key)
-    }
+    if (value) params.set(key, value)
+    else params.delete(key)
     params.delete('page')
     router.push(`${pathname}?${params.toString()}`)
   }, [router, pathname, searchParams])
 
   const q = searchParams.get('q') ?? ''
   const sort = searchParams.get('sort') ?? 'newest'
-  const budget = searchParams.get('budget') ?? 'all'
   const category = searchParams.get('category') ?? ''
+  const worktype = searchParams.get('worktype') ?? ''
 
   return (
     <div className="flex flex-col sm:flex-row gap-3 mb-6 flex-wrap">
@@ -34,32 +31,11 @@ export default function JobFilters() {
         <input
           type="search"
           defaultValue={q}
-          placeholder="Sök uppdrag..."
+          placeholder="Sök jobb..."
           onChange={e => update('q', e.target.value)}
           className="w-full pl-9 pr-4 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
-
-      <select
-        value={sort}
-        onChange={e => update('sort', e.target.value)}
-        className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-      >
-        <option value="newest">Nyast först</option>
-        <option value="oldest">Äldst först</option>
-        <option value="budget_high">Budget: hög→låg</option>
-        <option value="budget_low">Budget: låg→hög</option>
-      </select>
-
-      <select
-        value={budget}
-        onChange={e => update('budget', e.target.value)}
-        className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-      >
-        <option value="all">Alla budgetar</option>
-        <option value="with">Med budget</option>
-        <option value="without">Utan budget</option>
-      </select>
 
       <select
         value={category}
@@ -68,8 +44,30 @@ export default function JobFilters() {
       >
         <option value="">Alla kategorier</option>
         {CATEGORIES.map(c => (
-          <option key={c.value} value={c.value}>{c.label}</option>
+          <option key={c.value} value={c.value}>{c.emoji} {c.label}</option>
         ))}
+      </select>
+
+      <select
+        value={worktype}
+        onChange={e => update('worktype', e.target.value)}
+        className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+      >
+        <option value="">Alla arbetstider</option>
+        <option value="heltid">Heltid</option>
+        <option value="deltid">Deltid</option>
+        <option value="kväll">Kväll & helg</option>
+        <option value="extrajobb">Extrajobb</option>
+        <option value="sommarjobb">Sommarjobb</option>
+      </select>
+
+      <select
+        value={sort}
+        onChange={e => update('sort', e.target.value)}
+        className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+      >
+        <option value="newest">Nyast först</option>
+        <option value="oldest">Äldst först</option>
       </select>
     </div>
   )
