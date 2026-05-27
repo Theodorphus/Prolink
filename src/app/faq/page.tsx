@@ -1,5 +1,5 @@
 export const metadata = {
-  title: 'Vanliga frågor | Prolink',
+  title: 'Vanliga frågor',
   description: 'Svar på de vanligaste frågorna om Prolink – hur uppdrag fungerar, hur du skickar offerter och hur betalning hanteras.',
 }
 

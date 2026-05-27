@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import CreateJobForm from '@/components/jobs/CreateJobForm'
 
 export const metadata = {
-  title: 'Lägg upp jobb gratis | Prolink',
+  title: 'Lägg upp jobb gratis',
   description: 'Lägg upp ett jobb i Göteborg gratis och få ansökningar direkt. Inga avgifter.',
 }
 

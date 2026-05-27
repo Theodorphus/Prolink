@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
   const supabase = await createClient()
   const { data } = await supabase.from('jobs').select('title, description').eq('id', params.id).single()
   return {
-    title: data?.title ? `${data.title} – Jobb i Göteborg | Prolink` : 'Jobb | Prolink',
+    title: data?.title ? `${data.title} – Jobb i Göteborg` : 'Jobb',
     description: data?.description?.slice(0, 155) ?? 'Sök jobb i Göteborg på Prolink.',
   }
 }

@@ -1,5 +1,5 @@
 export const metadata = {
-  title: 'Användarvillkor | Prolink',
+  title: 'Användarvillkor',
   description: 'Läs Prolinks användarvillkor och förstå dina rättigheter och skyldigheter som användare av plattformen.',
 }
 

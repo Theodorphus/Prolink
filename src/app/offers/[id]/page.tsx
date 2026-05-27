@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
     .single()
   const jobTitle = (data?.job as any)?.title
   return {
-    title: jobTitle ? `Offert – ${jobTitle} | Prolink` : 'Offert | Prolink',
+    title: jobTitle ? `Offert – ${jobTitle}` : 'Offert',
     description: 'Se offertdetaljer, acceptera eller avslå offerter och kommunicera med leverantören.',
   }
 }

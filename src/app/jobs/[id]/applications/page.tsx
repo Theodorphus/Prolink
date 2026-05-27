@@ -7,7 +7,7 @@ import { Card, CardBody } from '@/components/ui/Card'
 export async function generateMetadata({ params }: { params: { id: string } }) {
   const supabase = await createClient()
   const { data } = await supabase.from('jobs').select('title').eq('id', params.id).single()
-  return { title: data?.title ? `Ansökningar – ${data.title} | Prolink` : 'Ansökningar | Prolink' }
+  return { title: data?.title ? `Ansökningar – ${data.title}` : 'Ansökningar' }
 }
 
 export default async function ApplicationsPage({ params }: { params: { id: string } }) {

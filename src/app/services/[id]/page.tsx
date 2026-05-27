@@ -8,7 +8,7 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
   const supabase = await createClient()
   const { data } = await supabase.from('services').select('title, description').eq('id', params.id).single()
   return {
-    title: data?.title ? `${data.title} | Prolink` : 'Tjänst | Prolink',
+    title: data?.title ? data.title : 'Tjänst',
     description: data?.description?.slice(0, 155) ?? 'Se tjänstedetaljer och kontakta leverantören på Prolink.',
   }
 }

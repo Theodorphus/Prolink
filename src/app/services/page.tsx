@@ -8,7 +8,7 @@ import ServiceFilters from '@/components/services/ServiceFilters'
 import { getCategoryLabel } from '@/lib/categories'
 
 export const metadata = {
-  title: 'Tjänster – Hitta freelancers | Prolink',
+  title: 'Tjänster – Hitta freelancers',
   description: 'Hitta kvalificerade freelancers och byråer. Jämför priser, leveranstider och kompetenser – boka direkt.',
 }
 

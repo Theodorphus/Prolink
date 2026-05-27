@@ -6,7 +6,7 @@ import JobFilters from '@/components/jobs/JobFilters'
 import { getCategoryLabel, getCategoryEmoji } from '@/lib/categories'
 
 export const metadata = {
-  title: 'Jobb i Göteborg – Städ, café, restaurang, lager & mer | Prolink',
+  title: 'Jobb i Göteborg – Städ, café, restaurang, lager & mer',
   description: 'Bläddra bland lediga jobb i Göteborg. Ansök direkt med din profil.',
 }
 

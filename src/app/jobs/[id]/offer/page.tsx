@@ -5,7 +5,7 @@ import { Card, CardBody } from '@/components/ui/Card'
 import { formatCurrency } from '@/lib/utils'
 
 export const metadata = {
-  title: 'Skicka offert | Prolink',
+  title: 'Skicka offert',
   description: 'Skicka en offert på ett uppdrag på Prolink.',
 }
 

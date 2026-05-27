@@ -3,7 +3,7 @@ import { register } from '@/lib/actions/auth'
 import RegisterForm from '@/components/auth/RegisterForm'
 
 export const metadata = {
-  title: 'Skapa konto | Prolink',
+  title: 'Skapa konto',
   description: 'Skapa ett gratis konto på Prolink och börja lägga ut uppdrag eller erbjud dina tjänster idag.',
 }
 

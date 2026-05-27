@@ -1,5 +1,5 @@
 export const metadata = {
-  title: 'Integritetspolicy | Prolink',
+  title: 'Integritetspolicy',
   description: 'Läs om hur Prolink hanterar och skyddar dina personuppgifter i enlighet med GDPR.',
 }
 

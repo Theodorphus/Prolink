@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import CreateServiceForm from '@/components/services/CreateServiceForm'
 
 export const metadata = {
-  title: 'Erbjud en tjänst | Prolink',
+  title: 'Erbjud en tjänst',
   description: 'Publicera din tjänst på Prolink och nå nya kunder som söker din kompetens.',
 }
 

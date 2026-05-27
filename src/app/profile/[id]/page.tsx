@@ -12,7 +12,7 @@ import StarRating from '@/components/reviews/StarRating'
 export async function generateMetadata({ params }: { params: { id: string } }) {
   const supabase = await createClient()
   const { data } = await supabase.from('users').select('name').eq('id', params.id).single()
-  return { title: data?.name ? `${data.name} | Prolink` : 'Profil | Prolink' }
+  return { title: data?.name ? data.name : 'Profil' }
 }
 
 export default async function ProfilePage({ params }: { params: { id: string } }) {
