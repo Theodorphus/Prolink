@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
       if (error.code === '23505') {
         return NextResponse.json({ error: 'Du har redan ansökt till det här jobbet.' }, { status: 409 })
       }
-      throw error
+      return NextResponse.json({ error: `DB-fel: ${error.message} (kod: ${error.code})` }, { status: 500 })
     }
 
     return NextResponse.json({ ok: true })
