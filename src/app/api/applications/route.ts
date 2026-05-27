@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
         .from('users')
         .select('name, phone, cv_url')
         .eq('id', user.id)
-        .single()
+        .maybeSingle()
 
       resolvedName = profile?.name ?? user.email ?? 'Okänd'
       resolvedEmail = user.email ?? ''
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
       if (error.code === '23505') {
         return NextResponse.json({ error: 'Du har redan ansökt till det här jobbet.' }, { status: 409 })
       }
-      return NextResponse.json({ error: `DB-fel: ${error.message} (kod: ${error.code})` }, { status: 500 })
+      return NextResponse.json({ error: 'Internt serverfel.' }, { status: 500 })
     }
 
     return NextResponse.json({ ok: true })

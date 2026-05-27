@@ -8,17 +8,24 @@ import { Card, CardBody } from '@/components/ui/Card'
 export default function MarkDeliveredButton({ offerId }: { offerId: string }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   async function handle() {
     if (!confirm('Markera uppdraget som levererat? Kunden kommer att bekräfta slutförandet.')) return
     setLoading(true)
+    setError('')
     try {
       const res = await fetch(`/api/offers/${offerId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'delivered' }),
       })
-      if (res.ok) router.refresh()
+      if (res.ok) {
+        router.refresh()
+      } else {
+        const data = await res.json()
+        setError(data.error ?? 'Något gick fel.')
+      }
     } finally {
       setLoading(false)
     }
@@ -31,6 +38,7 @@ export default function MarkDeliveredButton({ offerId }: { offerId: string }) {
         <p className="text-xs text-gray-500 mb-4">
           Markera som levererat när du är klar. Kunden bekräftar sedan att uppdraget är slutfört.
         </p>
+        {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
         <Button className="w-full" onClick={handle} loading={loading}>
           ✓ Markera som levererat
         </Button>
