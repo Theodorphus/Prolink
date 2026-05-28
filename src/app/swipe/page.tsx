@@ -23,10 +23,10 @@ export default async function SwipePage() {
   const jobs = (data ?? []) as SwipeJob[]
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] flex-col items-center bg-neutral-50 px-4 py-10">
-      <div className="mb-8 text-center">
+    <div className="flex min-h-[calc(100vh-4rem)] flex-col items-center bg-neutral-50 px-4 py-6 sm:py-10">
+      <div className="mb-5 text-center sm:mb-8">
         <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-blue-500">Swipa</p>
-        <h1 className="text-3xl font-bold tracking-tight text-neutral-900">Hitta jobb genom att swipa</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-neutral-900 sm:text-3xl">Hitta jobb genom att swipa</h1>
         <p className="mt-2 text-sm font-medium text-neutral-500">
           Höger för intresserad, vänster för att hoppa över.
         </p>

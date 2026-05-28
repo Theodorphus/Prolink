@@ -50,9 +50,16 @@ export default function JobSwipeCard({ job }: { job: SwipeJob }) {
           )}
         </div>
 
-        <p className="mt-4 flex-1 overflow-hidden text-sm leading-relaxed text-neutral-600 line-clamp-[8]">
+        <p className="mt-4 flex-1 overflow-hidden text-sm leading-relaxed text-neutral-600 line-clamp-[7]">
           {job.description}
         </p>
+
+        <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-blue-600">
+          Tryck för detaljer
+          <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </span>
       </div>
     </div>
   )

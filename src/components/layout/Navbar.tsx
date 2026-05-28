@@ -45,42 +45,49 @@ export default async function Navbar() {
           </div>
 
           <div className="flex items-center gap-1">
-            <MobileMenu links={NAV_LINKS} isAuthed={!!user} />
-            {user && profile ? (
-              <>
-                <Link
-                  href="/jobs/create"
-                  className="hidden sm:inline-flex items-center gap-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors px-3 py-1.5"
-                >
-                  + Lägg upp jobb
-                </Link>
+            {/* Desktop auth controls */}
+            <div className="hidden md:flex items-center gap-1">
+              {user && profile ? (
+                <>
+                  <Link
+                    href="/jobs/create"
+                    className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors px-3 py-1.5"
+                  >
+                    + Lägg upp jobb
+                  </Link>
 
-                <Link
-                  href={`/profile/${user.id}`}
-                  className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors pl-2 pr-3 py-1.5 rounded-lg hover:bg-gray-100"
-                >
-                  <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600">
-                    {profile.name?.[0]?.toUpperCase()}
-                  </div>
-                  <span className="hidden sm:inline">{profile.name?.split(' ')[0] || 'Profil'}</span>
-                </Link>
+                  <Link
+                    href={`/profile/${user.id}`}
+                    className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors pl-2 pr-3 py-1.5 rounded-lg hover:bg-gray-100"
+                  >
+                    <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600">
+                      {profile.name?.[0]?.toUpperCase()}
+                    </div>
+                    <span>{profile.name?.split(' ')[0] || 'Profil'}</span>
+                  </Link>
 
-                <form action={logout}>
-                  <button type="submit" className="text-sm font-medium text-gray-400 hover:text-gray-900 transition-colors px-2 py-1.5">
-                    Logga ut
-                  </button>
-                </form>
-              </>
-            ) : (
-              <>
-                <Link href="/login" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors px-3 py-1.5">
-                  Logga in
-                </Link>
-                <Link href="/register" className="nav-cta inline-flex items-center text-sm font-medium bg-gray-900 text-white hover:bg-gray-700 transition-colors px-4 py-2 rounded-lg">
-                  Kom igång
-                </Link>
-              </>
-            )}
+                  <form action={logout}>
+                    <button type="submit" className="text-sm font-medium text-gray-400 hover:text-gray-900 transition-colors px-2 py-1.5">
+                      Logga ut
+                    </button>
+                  </form>
+                </>
+              ) : (
+                <>
+                  <Link href="/login" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors px-3 py-1.5">
+                    Logga in
+                  </Link>
+                  <Link href="/register" className="nav-cta inline-flex items-center text-sm font-medium bg-gray-900 text-white hover:bg-gray-700 transition-colors px-4 py-2 rounded-lg">
+                    Kom igång
+                  </Link>
+                </>
+              )}
+            </div>
+
+            <MobileMenu
+              links={NAV_LINKS}
+              user={user && profile ? { id: user.id, name: profile.name ?? '' } : null}
+            />
           </div>
         </div>
       </div>
