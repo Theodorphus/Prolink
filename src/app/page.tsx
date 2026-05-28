@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { getCategoryEmoji, getCategoryLabel } from '@/lib/categories'
+import { CATEGORIES, getCategoryEmoji, getCategoryLabel } from '@/lib/categories'
 import HeroVideo from '@/components/hero/HeroVideo'
 
 export default async function HomePage() {
@@ -10,6 +10,7 @@ export default async function HomePage() {
     .from('jobs')
     .select('*, customer:users(name)')
     .eq('status', 'open')
+    .order('is_demo', { ascending: true })
     .order('created_at', { ascending: false })
     .limit(6)
 
@@ -70,6 +71,60 @@ export default async function HomePage() {
           <svg className="w-4 h-4 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
           </svg>
+        </div>
+      </section>
+
+      {/* ── Kategorier ───────────────────────────────────────── */}
+      <section className="py-24 px-4 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <p className="text-[11px] font-bold text-blue-500 uppercase tracking-[0.2em] mb-4">Kategorier</p>
+            <h2 className="text-3xl md:text-5xl font-bold text-gray-900 tracking-tight">
+              Vad letar du efter?
+            </h2>
+            <p className="mt-4 text-gray-600 font-medium max-w-md mx-auto">Hitta jobb inom det du är bra på.</p>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {CATEGORIES.filter((c) => c.value !== 'annat').map((c) => (
+              <Link
+                key={c.value}
+                href={`/jobs?category=${c.value}`}
+                className="group flex items-center gap-4 bg-white rounded-2xl p-5 border border-neutral-200 shadow-sm hover:shadow-lg hover:scale-[1.03] transition-all duration-200"
+              >
+                <span className="text-3xl shrink-0">{c.emoji}</span>
+                <span className="text-base font-semibold text-neutral-800 group-hover:text-blue-600 transition-colors">
+                  {c.label}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Swipe-banner ─────────────────────────────────────── */}
+      <section className="px-4 pb-8">
+        <div className="max-w-6xl mx-auto">
+          <Link
+            href="/swipe"
+            className="group relative flex flex-col sm:flex-row items-center justify-between gap-6 overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-700 px-8 py-10 sm:px-12 shadow-xl"
+          >
+            <div className="relative text-center sm:text-left">
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/60 mb-2">Nyhet</p>
+              <h2 className="text-2xl md:text-4xl font-bold text-white tracking-tight">
+                Testa jobbswipe
+              </h2>
+              <p className="mt-2 text-white/80 font-medium max-w-md">
+                Swipa dig igenom jobb i Göteborg. Höger för intresserad, vänster för att hoppa över.
+              </p>
+            </div>
+            <span className="relative inline-flex items-center gap-2 rounded-2xl bg-white px-7 py-4 text-sm font-bold text-blue-700 shadow-lg transition-transform group-hover:scale-105 shrink-0">
+              Testa jobbswipe
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </span>
+          </Link>
         </div>
       </section>
 

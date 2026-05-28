@@ -1,6 +1,14 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { logout } from '@/lib/actions/auth'
+import MobileMenu from './MobileMenu'
+
+const NAV_LINKS = [
+  { href: '/jobs', label: 'Hitta jobb' },
+  { href: '/swipe', label: 'Swipa' },
+  { href: '/saved', label: 'Sparade' },
+  { href: '/jobs/create', label: 'Lägg upp jobb' },
+]
 
 export default async function Navbar() {
   const supabase = await createClient()
@@ -23,10 +31,7 @@ export default async function Navbar() {
               Prolink
             </Link>
             <nav className="hidden md:flex items-center gap-8">
-              {[
-                { href: '/jobs', label: 'Hitta jobb' },
-                { href: '/jobs/create', label: 'Lägg upp jobb' },
-              ].map(({ href, label }) => (
+              {NAV_LINKS.map(({ href, label }) => (
                 <Link
                   key={href}
                   href={href}
@@ -40,6 +45,7 @@ export default async function Navbar() {
           </div>
 
           <div className="flex items-center gap-1">
+            <MobileMenu links={NAV_LINKS} isAuthed={!!user} />
             {user && profile ? (
               <>
                 <Link

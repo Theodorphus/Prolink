@@ -27,6 +27,7 @@ export default async function JobsPage({ searchParams }: Props) {
   if (category) query = query.eq('category', category)
   if (worktype) query = query.eq('work_type', worktype)
 
+  query = query.order('is_demo', { ascending: true })
   query = sort === 'oldest'
     ? query.order('created_at', { ascending: true })
     : query.order('created_at', { ascending: false })
