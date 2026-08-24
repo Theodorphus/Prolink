@@ -1,62 +1,72 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import {
+  emailValue,
+  InputValidationError,
+  optionalText,
+  requiredText,
+  uuidValue,
+} from '@/lib/validation'
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { job_id, applicant_name, applicant_email, applicant_phone, message, use_profile } = body
-
-    if (!job_id) {
-      return NextResponse.json({ error: 'job_id krävs.' }, { status: 400 })
-    }
+    const jobId = uuidValue(body.job_id, 'Jobb')
+    const useProfile = body.use_profile === true
+    const message = optionalText(body.message, 'Meddelande', 2000)
 
     const supabase = await createClient()
 
     const { data: job } = await supabase
       .from('jobs')
       .select('id, status')
-      .eq('id', job_id)
+      .eq('id', jobId)
       .single()
 
     if (!job || job.status !== 'open') {
       return NextResponse.json({ error: 'Jobbet är inte längre aktivt.' }, { status: 400 })
     }
 
-    let resolvedName = applicant_name
-    let resolvedEmail = applicant_email
-    let resolvedPhone = applicant_phone
+    let resolvedName: string | null = null
+    let resolvedEmail: string | null = null
+    let resolvedPhone = optionalText(body.applicant_phone, 'Telefon', 50)
     let profileUserId: string | null = null
-    let cvUrl: string | null = null
 
-    if (use_profile) {
+    if (useProfile) {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return NextResponse.json({ error: 'Du måste vara inloggad.' }, { status: 401 })
 
-      const { data: profile } = await supabase
+      const [{ data: profile }, { data: privateProfile }] = await Promise.all([
+        supabase
         .from('users')
-        .select('name, phone, cv_url')
+        .select('name')
         .eq('id', user.id)
-        .maybeSingle()
+        .maybeSingle(),
+        supabase
+          .from('user_private_profiles')
+          .select('phone')
+          .eq('user_id', user.id)
+          .maybeSingle(),
+      ])
 
       resolvedName = profile?.name ?? user.email ?? 'Okänd'
       resolvedEmail = user.email ?? ''
-      resolvedPhone = applicant_phone || profile?.phone || null
+      resolvedPhone = resolvedPhone || privateProfile?.phone || null
       profileUserId = user.id
-      cvUrl = profile?.cv_url ?? null
-    }
-
-    if (!resolvedName?.trim() || !resolvedEmail?.trim()) {
-      return NextResponse.json({ error: 'Namn och e-post krävs.' }, { status: 400 })
+    } else {
+      resolvedName = requiredText(body.applicant_name, 'Namn', 2, 100)
+      resolvedEmail = emailValue(body.applicant_email)
     }
 
     const { error } = await supabase.from('applications').insert({
-      job_id,
+      job_id: jobId,
       applicant_name: resolvedName,
       applicant_email: resolvedEmail,
       applicant_phone: resolvedPhone || null,
       message: message || null,
       user_id: profileUserId,
-      cv_url: cvUrl,
+      // CV storage is private and is no longer shared through a permanent URL.
+      cv_url: null,
     })
 
     if (error) {
@@ -67,8 +77,11 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ ok: true })
-  } catch (err: any) {
-    console.error('applications POST error:', err)
+  } catch (error) {
+    if (error instanceof InputValidationError) {
+      return NextResponse.json({ error: error.message }, { status: 400 })
+    }
+    console.error('applications POST error:', error)
     return NextResponse.json({ error: 'Internt serverfel.' }, { status: 500 })
   }
 }

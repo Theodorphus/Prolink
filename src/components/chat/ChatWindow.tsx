@@ -52,11 +52,11 @@ export default function ChatWindow({ offerId, currentUserId, initialMessages }: 
     return () => { supabase.removeChannel(channel) }
   }, [offerId]) // supabase is stable via useRef
 
-  const handleSend = useCallback(async (content: string, attachmentUrl?: string) => {
+  const handleSend = useCallback(async (content: string, attachmentPath?: string) => {
     const res = await fetch(`/api/messages/${offerId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content, attachment_url: attachmentUrl }),
+      body: JSON.stringify({ content, attachment_path: attachmentPath }),
     })
     // Realtime will pick up the new message — no need to manually add
     if (!res.ok) {

@@ -11,7 +11,7 @@ interface Profile {
   phone: string | null
   bio: string | null
   cv_text: string | null
-  cv_url?: string | null
+  cv_path?: string | null
 }
 
 interface Props {
@@ -117,16 +117,15 @@ export default function ApplyForm({ jobId, profile }: Props) {
                 <p className="font-semibold text-gray-900 text-sm">{profile.name}</p>
                 {profile.bio && <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{profile.bio}</p>}
                 {profile.cv_text && <p className="text-xs text-gray-500 mt-1 line-clamp-2 leading-relaxed">{profile.cv_text}</p>}
-                {profile.cv_url && (
-                  <a href={profile.cv_url} target="_blank" rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-[11px] text-gray-400 hover:text-blue-600 transition-colors mt-1">
+                {profile.cv_path && (
+                  <span className="inline-flex items-center gap-1 text-[11px] text-gray-400 mt-1">
                     <svg className="w-3 h-3 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                     </svg>
-                    CV bifogas
-                  </a>
+                    CV sparat privat
+                  </span>
                 )}
-                {!profile.cv_text && !profile.cv_url && (
+                {!profile.cv_text && !profile.cv_path && (
                   <Link href={`/profile/${profile.id}`}
                     className="inline-flex items-center gap-1 text-[11px] text-blue-500 font-medium mt-1 hover:underline">
                     + Lägg till erfarenhet →

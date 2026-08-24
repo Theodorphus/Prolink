@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/Button'
 
 interface ChatInputProps {
-  onSend: (content: string, attachmentUrl?: string) => Promise<void>
+  onSend: (content: string, attachmentPath?: string) => Promise<void>
   offerId: string
 }
 
@@ -17,17 +17,24 @@ export default function ChatInput({ onSend, offerId }: ChatInputProps) {
   const fileRef = useRef<HTMLInputElement>(null)
 
   async function uploadFile(file: File): Promise<string> {
+    const allowedTypes = [
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+      'image/gif',
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ]
+    if (!allowedTypes.includes(file.type)) throw new Error('Filtypen är inte tillåten')
+    if (file.size > 10 * 1024 * 1024) throw new Error('Bilagan får max vara 10 MB')
+
     const supabase = createClient()
-    const path = `${offerId}/${Date.now()}-${file.name}`
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(-120)
+    const path = `${offerId}/${Date.now()}-${crypto.randomUUID()}-${safeName}`
     const { error: uploadError } = await supabase.storage.from('attachments').upload(path, file)
     if (uploadError) throw uploadError
-
-    // Attachments bucket is private — use a signed URL (1 year expiry)
-    const { data, error: signError } = await supabase.storage
-      .from('attachments')
-      .createSignedUrl(path, 60 * 60 * 24 * 365)
-    if (signError || !data) throw new Error('Kunde inte generera länk för bilagan')
-    return data.signedUrl
+    return path
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -36,23 +43,27 @@ export default function ChatInput({ onSend, offerId }: ChatInputProps) {
 
     setSending(true)
     setError('')
+    let uploadedPath: string | undefined
 
     try {
-      let attachmentUrl: string | undefined
       const file = fileRef.current?.files?.[0]
 
       if (file) {
         setUploading(true)
-        attachmentUrl = await uploadFile(file)
+        uploadedPath = await uploadFile(file)
         setUploading(false)
         if (fileRef.current) fileRef.current.value = ''
       }
 
       const content = text.trim()
-      await onSend(content, attachmentUrl)
+      await onSend(content, uploadedPath)
       setText('')
-    } catch (err: any) {
-      setError(err.message ?? 'Kunde inte skicka meddelandet')
+    } catch (submitError) {
+      if (uploadedPath) {
+        const supabase = createClient()
+        await supabase.storage.from('attachments').remove([uploadedPath])
+      }
+      setError(submitError instanceof Error ? submitError.message : 'Kunde inte skicka meddelandet')
     } finally {
       setSending(false)
       setUploading(false)
@@ -62,7 +73,7 @@ export default function ChatInput({ onSend, offerId }: ChatInputProps) {
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
-      handleSubmit(e as any)
+      e.currentTarget.form?.requestSubmit()
     }
   }
 

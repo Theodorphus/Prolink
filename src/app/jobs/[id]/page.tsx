@@ -31,14 +31,30 @@ export default async function JobPage({ params }: { params: { id: string } }) {
 
   const isOwner = user?.id === job.customer_id
 
-  const applicantProfile = user && !isOwner
-    ? await supabase
+  let applicantProfile = null
+  if (user && !isOwner) {
+    const [{ data: publicProfile }, { data: privateProfile }] = await Promise.all([
+      supabase
         .from('users')
-        .select('id, name, avatar_url, phone, bio, cv_text, cv_url')
+        .select('id, name, avatar_url, bio')
         .eq('id', user.id)
-        .single()
-        .then(r => r.data)
-    : null
+        .single(),
+      supabase
+        .from('user_private_profiles')
+        .select('phone, cv_text, cv_path')
+        .eq('user_id', user.id)
+        .maybeSingle(),
+    ])
+
+    if (publicProfile) {
+      applicantProfile = {
+        ...publicProfile,
+        phone: privateProfile?.phone ?? null,
+        cv_text: privateProfile?.cv_text ?? null,
+        cv_path: privateProfile?.cv_path ?? null,
+      }
+    }
+  }
 
   const userHasApplied = user && !isOwner
     ? !!(await supabase

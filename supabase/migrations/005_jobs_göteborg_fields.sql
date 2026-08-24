@@ -7,7 +7,10 @@ ALTER TABLE jobs
   ADD COLUMN IF NOT EXISTS work_type      text,
   ADD COLUMN IF NOT EXISTS employer_name  text,
   ADD COLUMN IF NOT EXISTS employer_email text,
-  ADD COLUMN IF NOT EXISTS contact_info   text;
+  ADD COLUMN IF NOT EXISTS contact_info   text,
+  -- 007 also adds this column. Keeping the prerequisite here makes a clean
+  -- replay safe before the category index below is created.
+  ADD COLUMN IF NOT EXISTS category       text;
 
 -- Tabell för ansökningar
 CREATE TABLE IF NOT EXISTS applications (

@@ -6,15 +6,15 @@ import { createClient } from '@/lib/supabase/client'
 
 interface Props {
   userId: string
-  currentCvUrl: string | null
+  currentCvPath: string | null
 }
 
-export default function CvUpload({ userId, currentCvUrl }: Props) {
+export default function CvUpload({ userId, currentCvPath }: Props) {
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [cvUrl, setCvUrl] = useState<string | null>(currentCvUrl)
+  const [cvPath, setCvPath] = useState<string | null>(currentCvPath)
 
   async function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -53,17 +53,18 @@ export default function CvUpload({ userId, currentCvUrl }: Props) {
       return
     }
 
-    const { data: { publicUrl } } = supabase.storage.from('cvs').getPublicUrl(path)
-
     const { error: updateError } = await supabase
-      .from('users')
-      .update({ cv_url: publicUrl })
-      .eq('id', userId)
+      .from('user_private_profiles')
+      .upsert({ user_id: userId, cv_path: path, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
 
     if (updateError) {
+      if (path !== cvPath) await supabase.storage.from('cvs').remove([path])
       setError('Kunde inte spara CV:t. Försök igen.')
     } else {
-      setCvUrl(publicUrl)
+      if (cvPath && cvPath !== path) {
+        await supabase.storage.from('cvs').remove([cvPath])
+      }
+      setCvPath(path)
       router.refresh()
     }
 
@@ -72,29 +73,50 @@ export default function CvUpload({ userId, currentCvUrl }: Props) {
 
   async function handleRemove() {
     setLoading(true)
+    setError('')
     const supabase = createClient()
 
+    if (cvPath) {
+      const { error: storageError } = await supabase.storage.from('cvs').remove([cvPath])
+      if (storageError) {
+        setError('Kunde inte ta bort CV-filen.')
+        setLoading(false)
+        return
+      }
+    }
+
     const { error: updateError } = await supabase
-      .from('users')
-      .update({ cv_url: null })
-      .eq('id', userId)
+      .from('user_private_profiles')
+      .upsert({ user_id: userId, cv_path: null, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
 
     if (updateError) {
-      setError('Kunde inte ta bort CV:t.')
+      setError('Filen togs bort men profilreferensen kunde inte uppdateras.')
     } else {
-      setCvUrl(null)
+      setCvPath(null)
       router.refresh()
     }
     setLoading(false)
   }
 
-  const fileName = cvUrl
-    ? decodeURIComponent(cvUrl.split('/').pop() ?? 'cv')
+  async function handleView() {
+    if (!cvPath) return
+    setError('')
+    const supabase = createClient()
+    const { data, error: signError } = await supabase.storage.from('cvs').createSignedUrl(cvPath, 60)
+    if (signError || !data) {
+      setError('Kunde inte öppna CV:t.')
+      return
+    }
+    window.open(data.signedUrl, '_blank', 'noopener,noreferrer')
+  }
+
+  const fileName = cvPath
+    ? decodeURIComponent(cvPath.split('/').pop() ?? 'cv')
     : null
 
   return (
     <div className="space-y-2">
-      {cvUrl ? (
+      {cvPath ? (
         <div className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
           <div className="w-9 h-9 rounded-lg bg-red-50 flex items-center justify-center shrink-0">
             <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -106,14 +128,13 @@ export default function CvUpload({ userId, currentCvUrl }: Props) {
             <p className="text-xs text-gray-400">CV uppladdat</p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <a
-              href={cvUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
+              onClick={handleView}
               className="text-xs text-blue-600 font-semibold hover:underline"
             >
               Visa
-            </a>
+            </button>
             <button
               type="button"
               onClick={() => inputRef.current?.click()}

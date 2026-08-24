@@ -21,13 +21,21 @@ export default async function ProfilePage({ params }: { params: { id: string } }
 
   const { data: profile } = await supabase
     .from('users')
-    .select('*')
+    .select('id, role, name, bio, skills, hourly_rate, avatar_url, linkedin_url, created_at')
     .eq('id', params.id)
     .single()
 
   if (!profile) notFound()
 
   const isOwn = user?.id === params.id
+
+  const { data: privateProfile } = isOwn
+    ? await supabase
+        .from('user_private_profiles')
+        .select('phone, cv_text, cv_path')
+        .eq('user_id', params.id)
+        .maybeSingle()
+    : { data: null }
 
   const { data: jobs } = await supabase
     .from('jobs')
@@ -94,7 +102,16 @@ export default async function ProfilePage({ params }: { params: { id: string } }
         {/* Main content */}
         <div className="lg:col-span-2 space-y-6">
 
-          {isOwn && <EditProfileForm profile={profile} />}
+          {isOwn && (
+            <EditProfileForm
+              profile={{
+                ...profile,
+                phone: privateProfile?.phone ?? null,
+                cv_text: privateProfile?.cv_text ?? null,
+                cv_path: privateProfile?.cv_path ?? null,
+              }}
+            />
+          )}
 
           {/* Posted jobs */}
           <div>

@@ -98,7 +98,6 @@ function CategoryIcon({ category }: { category?: string | null }) {
 
 export interface TaskCardJob extends Job {
   customer: Pick<User, 'name' | 'avatar_url'>
-  category?: string | null
   offer_count?: number
 }
 

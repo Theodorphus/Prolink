@@ -15,6 +15,15 @@ export interface User {
   created_at: string
 }
 
+export interface UserPrivateProfile {
+  user_id: string
+  phone: string | null
+  cv_text: string | null
+  cv_path: string | null
+  created_at: string
+  updated_at: string
+}
+
 export interface Job {
   id: string
   customer_id: string
@@ -22,6 +31,26 @@ export interface Job {
   description: string
   budget: number | null
   status: JobStatus
+  category: string | null
+  salary: string | null
+  location: string | null
+  work_type: string | null
+  employer_name: string | null
+  employer_email: string | null
+  contact_info: string | null
+  is_demo: boolean
+  created_at: string
+}
+
+export interface Application {
+  id: string
+  job_id: string
+  user_id: string | null
+  applicant_name: string
+  applicant_email: string
+  applicant_phone: string | null
+  message: string | null
+  cv_url: string | null
   created_at: string
 }
 
@@ -32,6 +61,7 @@ export interface Service {
   description: string
   price: number
   delivery_time: string
+  category: string | null
   created_at: string
 }
 
@@ -44,6 +74,8 @@ export interface Offer {
   timeline: string
   description: string
   status: OfferStatus
+  provider_read_at: string | null
+  customer_read_at: string | null
   created_at: string
 }
 
@@ -52,7 +84,15 @@ export interface Message {
   offer_id: string
   sender_id: string
   content: string
+  attachment_path: string | null
   attachment_url: string | null
+  created_at: string
+}
+
+export interface SavedJob {
+  id: string
+  user_id: string
+  job_id: string
   created_at: string
 }
 
@@ -95,10 +135,25 @@ export type Database = {
         Update: Partial<Omit<User, 'id' | 'created_at'>>
         Relationships: []
       }
+      user_private_profiles: {
+        Row: UserPrivateProfile
+        Insert: Omit<UserPrivateProfile, 'created_at' | 'updated_at'> & {
+          created_at?: string
+          updated_at?: string
+        }
+        Update: Partial<Omit<UserPrivateProfile, 'user_id' | 'created_at'>>
+        Relationships: []
+      }
       jobs: {
         Row: Job
-        Insert: Omit<Job, 'id' | 'created_at'>
+        Insert: Omit<Job, 'id' | 'created_at' | 'is_demo'> & { id?: string; is_demo?: boolean }
         Update: Partial<Omit<Job, 'id' | 'created_at'>>
+        Relationships: []
+      }
+      applications: {
+        Row: Application
+        Insert: Omit<Application, 'id' | 'created_at'> & { id?: string; created_at?: string }
+        Update: Partial<Omit<Application, 'id' | 'created_at'>>
         Relationships: []
       }
       services: {
@@ -119,9 +174,30 @@ export type Database = {
         Update: Partial<Omit<Message, 'id' | 'created_at'>>
         Relationships: []
       }
+      reviews: {
+        Row: Review
+        Insert: Omit<Review, 'id' | 'created_at'> & { id?: string; created_at?: string }
+        Update: Partial<Omit<Review, 'id' | 'created_at'>>
+        Relationships: []
+      }
+      saved_jobs: {
+        Row: SavedJob
+        Insert: Omit<SavedJob, 'id' | 'created_at'> & { id?: string; created_at?: string }
+        Update: Partial<Omit<SavedJob, 'id' | 'created_at'>>
+        Relationships: []
+      }
     }
     Views: Record<string, never>
-    Functions: Record<string, never>
+    Functions: {
+      transition_offer: {
+        Args: { p_offer_id: string; p_new_status: OfferStatus }
+        Returns: Offer
+      }
+      mark_offer_read: {
+        Args: { p_offer_id: string }
+        Returns: undefined
+      }
+    }
     Enums: {
       user_role: UserRole
       job_status: JobStatus

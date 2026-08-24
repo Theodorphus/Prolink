@@ -7,9 +7,17 @@ import { Card, CardBody, CardHeader } from '@/components/ui/Card'
 import { createClient } from '@/lib/supabase/client'
 import AvatarUpload from '@/components/profile/AvatarUpload'
 import CvUpload from '@/components/profile/CvUpload'
-import type { User } from '@/types/database'
+import type { User, UserPrivateProfile } from '@/types/database'
+import {
+  InputValidationError,
+  optionalHttpUrl,
+  optionalText,
+  requiredText,
+} from '@/lib/validation'
 
-export default function EditProfileForm({ profile }: { profile: User & { phone?: string | null; cv_text?: string | null; cv_url?: string | null } }) {
+type EditableProfile = User & Pick<UserPrivateProfile, 'phone' | 'cv_text' | 'cv_path'>
+
+export default function EditProfileForm({ profile }: { profile: EditableProfile }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -25,29 +33,50 @@ export default function EditProfileForm({ profile }: { profile: User & { phone?:
     const form = new FormData(e.currentTarget)
     const supabase = createClient()
 
-    const skills = skillsInput
-      .split(',')
-      .map(s => s.trim())
-      .filter(Boolean)
+    try {
+      const skills = skillsInput
+        .split(',')
+        .map(skill => skill.trim())
+        .filter(Boolean)
 
-    const { error } = await supabase
-      .from('users')
-      .update({
-        name: form.get('name') as string,
-        bio: (form.get('bio') as string) || null,
-        phone: (form.get('phone') as string) || null,
-        cv_text: (form.get('cv_text') as string) || null,
-        hourly_rate: form.get('hourly_rate') ? Number(form.get('hourly_rate')) : null,
-        skills: skills.length > 0 ? skills : null,
-        linkedin_url: (form.get('linkedin_url') as string) || null,
-      })
-      .eq('id', profile.id)
+      if (skills.length > 25 || skills.some(skill => skill.length > 60)) {
+        throw new InputValidationError('Ange max 25 kompetenser med max 60 tecken per kompetens.')
+      }
 
-    if (error) {
-      setError(error.message)
-    } else {
+      const hourlyRateValue = form.get('hourly_rate')
+      const hourlyRate = hourlyRateValue ? Number(hourlyRateValue) : null
+      if (hourlyRate !== null && (!Number.isFinite(hourlyRate) || hourlyRate < 0 || hourlyRate > 100_000)) {
+        throw new InputValidationError('Timpriset är ogiltigt.')
+      }
+
+      const { error: publicError } = await supabase
+        .from('users')
+        .update({
+          name: requiredText(form.get('name'), 'Namn', 1, 100),
+          bio: optionalText(form.get('bio'), 'Om mig', 3000),
+          hourly_rate: hourlyRate,
+          skills: skills.length > 0 ? skills : null,
+          linkedin_url: optionalHttpUrl(form.get('linkedin_url'), 'LinkedIn'),
+        })
+        .eq('id', profile.id)
+
+      if (publicError) throw publicError
+
+      const { error: privateError } = await supabase
+        .from('user_private_profiles')
+        .upsert({
+          user_id: profile.id,
+          phone: optionalText(form.get('phone'), 'Telefon', 50),
+          cv_text: optionalText(form.get('cv_text'), 'Erfarenhet och bakgrund', 10000),
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_id' })
+
+      if (privateError) throw privateError
+
       setSuccess(true)
       router.refresh()
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : 'Profilen kunde inte sparas.')
     }
     setLoading(false)
   }
@@ -81,7 +110,7 @@ export default function EditProfileForm({ profile }: { profile: User & { phone?:
             <input
               name="phone"
               type="tel"
-              defaultValue={(profile as any).phone ?? ''}
+              defaultValue={profile.phone ?? ''}
               placeholder="07X XXX XX XX"
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
@@ -106,7 +135,7 @@ export default function EditProfileForm({ profile }: { profile: User & { phone?:
             </label>
             <textarea
               name="cv_text"
-              defaultValue={(profile as any).cv_text ?? ''}
+              defaultValue={profile.cv_text ?? ''}
               rows={5}
               placeholder={`Beskriv din erfarenhet, tidigare jobb och vad du är bra på.\n\nT.ex.:\n– 2 år som städare på Städproffs AB\n– Jobbat i kök på Restaurang Grön\n– Pålitlig, punktlig, trivs med fysiskt arbete`}
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
@@ -117,9 +146,9 @@ export default function EditProfileForm({ profile }: { profile: User & { phone?:
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-gray-700">
               CV-dokument
-              <span className="ml-2 text-xs text-gray-400 font-normal">Bifogas vid ansökan</span>
+              <span className="ml-2 text-xs text-gray-400 font-normal">Privat – endast synligt för dig</span>
             </label>
-            <CvUpload userId={profile.id} currentCvUrl={(profile as any).cv_url ?? null} />
+            <CvUpload userId={profile.id} currentCvPath={profile.cv_path} />
           </div>
 
           {profile.role === 'provider' && (

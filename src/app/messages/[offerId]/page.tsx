@@ -29,12 +29,8 @@ export default async function MessagesPage({ params }: { params: { offerId: stri
 
   if (!isCustomer && !isProvider) redirect('/')
 
-  // Markera som läst för den inloggade parten
-  const readField = isCustomer ? 'customer_read_at' : 'provider_read_at'
-  await supabase
-    .from('offers')
-    .update({ [readField]: new Date().toISOString() })
-    .eq('id', params.offerId)
+  // The database function updates only the current participant's read marker.
+  await supabase.rpc('mark_offer_read', { p_offer_id: params.offerId })
 
   const { data: messages } = await supabase
     .from('messages')
