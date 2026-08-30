@@ -4,12 +4,13 @@ import './globals.css'
 import Navbar from '@/components/layout/Navbar'
 import NavbarWrapper from '@/components/layout/NavbarWrapper'
 import Footer from '@/components/layout/Footer'
-import { Analytics } from "@vercel/analytics/react"
+import { Analytics } from '@vercel/analytics/next'
 
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://prolink.se'),
   title: { default: 'Prolink', template: '%s | Prolink' },
   description: 'Hitta enkla jobb i Göteborg – snabbt och gratis.',
   icons: {

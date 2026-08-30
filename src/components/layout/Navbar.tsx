@@ -5,8 +5,6 @@ import MobileMenu from './MobileMenu'
 
 const NAV_LINKS = [
   { href: '/jobs', label: 'Hitta jobb' },
-  { href: '/swipe', label: 'Swipa' },
-  { href: '/saved', label: 'Sparade' },
   { href: '/jobs/create', label: 'Lägg upp jobb' },
 ]
 

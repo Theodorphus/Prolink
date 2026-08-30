@@ -3,7 +3,6 @@ import Link from 'next/link'
 const links = {
   Plattform: [
     { href: '/jobs', label: 'Hitta jobb' },
-    { href: '/swipe', label: 'Swipa jobb' },
     { href: '/jobs/create', label: 'Lägg upp jobb' },
   ],
   Konto: [

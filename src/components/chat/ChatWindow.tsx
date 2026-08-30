@@ -50,7 +50,10 @@ export default function ChatWindow({ offerId, currentUserId, initialMessages }: 
       .subscribe()
 
     return () => { supabase.removeChannel(channel) }
-  }, [offerId]) // supabase is stable via useRef
+    // supabase comes from a useRef and never changes identity, so re-subscribing
+    // on offerId alone is correct. Adding it would not change behaviour.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [offerId])
 
   const handleSend = useCallback(async (content: string, attachmentPath?: string) => {
     const res = await fetch(`/api/messages/${offerId}`, {

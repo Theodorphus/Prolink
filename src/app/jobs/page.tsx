@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { formatDate } from '@/lib/utils'
 import JobFilters from '@/components/jobs/JobFilters'
 import { getCategoryLabel, getCategoryEmoji } from '@/lib/categories'
+import { PUBLIC_JOB_FIELDS } from '@/lib/jobs'
 
 export const metadata = {
   title: 'Jobb i Göteborg – Städ, café, restaurang, lager & mer',
@@ -20,19 +21,22 @@ export default async function JobsPage({ searchParams }: Props) {
 
   let query = supabase
     .from('jobs')
-    .select('*, customer:users(name)')
+    .select(PUBLIC_JOB_FIELDS)
     .eq('status', 'open')
 
   if (q) query = query.or(`title.ilike.%${q}%,description.ilike.%${q}%`)
   if (category) query = query.eq('category', category)
   if (worktype) query = query.eq('work_type', worktype)
 
-  query = query.order('is_demo', { ascending: true })
   query = sort === 'oldest'
     ? query.order('created_at', { ascending: true })
     : query.order('created_at', { ascending: false })
 
-  const { data: jobs } = await query
+  const { data: jobs, error } = await query
+
+  if (error) {
+    console.error('Kunde inte hämta uppdrag:', error.message)
+  }
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-12">

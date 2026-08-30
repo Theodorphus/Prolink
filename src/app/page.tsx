@@ -1,18 +1,22 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { CATEGORIES, getCategoryEmoji, getCategoryLabel } from '@/lib/categories'
+import { PUBLIC_JOB_FIELDS } from '@/lib/jobs'
 import HeroVideo from '@/components/hero/HeroVideo'
 
 export default async function HomePage() {
   const supabase = await createClient()
 
-  const { data: jobs } = await supabase
+  const { data: jobs, error } = await supabase
     .from('jobs')
-    .select('*, customer:users(name)')
+    .select(PUBLIC_JOB_FIELDS)
     .eq('status', 'open')
-    .order('is_demo', { ascending: true })
     .order('created_at', { ascending: false })
     .limit(6)
+
+  if (error) {
+    console.error('Kunde inte hämta uppdrag till startsidan:', error.message)
+  }
 
   return (
     <div className="bg-neutral-50">
@@ -99,32 +103,6 @@ export default async function HomePage() {
               </Link>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* ── Swipe-banner ─────────────────────────────────────── */}
-      <section className="px-4 pb-8">
-        <div className="max-w-6xl mx-auto">
-          <Link
-            href="/swipe"
-            className="group relative flex flex-col sm:flex-row items-center justify-between gap-6 overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-700 px-8 py-10 sm:px-12 shadow-xl"
-          >
-            <div className="relative text-center sm:text-left">
-              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/60 mb-2">Nyhet</p>
-              <h2 className="text-2xl md:text-4xl font-bold text-white tracking-tight">
-                Testa jobbswipe
-              </h2>
-              <p className="mt-2 text-white/80 font-medium max-w-md">
-                Swipa dig igenom jobb i Göteborg. Höger för intresserad, vänster för att hoppa över.
-              </p>
-            </div>
-            <span className="relative inline-flex items-center gap-2 rounded-2xl bg-white px-7 py-4 text-sm font-bold text-blue-700 shadow-lg transition-transform group-hover:scale-105 shrink-0">
-              Testa jobbswipe
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </span>
-          </Link>
         </div>
       </section>
 
