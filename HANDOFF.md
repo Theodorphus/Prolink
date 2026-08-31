@@ -61,15 +61,16 @@ explicit decision.
 
 ## Still required before deployment
 
-1. Obtain the Development environment variables from the Vercel project
-   `ths-projects-9e3c8e82/prolink`. The local Vercel CLI was authenticated as
-   `webbdevstudio-7033`, which does not have access to that project, so the pull
-   could not be completed. Note that the Supabase project is owned by
-   `webbdevstudio@gmail.com`, so the account ownership across Vercel and
-   Supabase should be reconciled before deploying. `.env.local` remains ignored
-   and must never be committed. Re-authenticate with an account that can access
-   the project, link it, and run
-   `vercel env pull .env.local --environment=development`.
+1. Link the local workspace to the Vercel project and pull the development
+   environment variables. There is no `.vercel/` directory in the workspace, so
+   the project is not linked locally:
+
+   ```bash
+   vercel link --scope webbdev --project prolink
+   vercel env pull .env.local --environment=development
+   ```
+
+   `.env.local` exists locally, remains gitignored, and must never be committed.
 2. Confirm `SUPABASE_SERVICE_ROLE_KEY` and `RESEND_API_KEY` are server-only and
    configure the verified `RESEND_FROM_EMAIL` sender.
 3. Enable Leaked Password Protection in Supabase Auth. It is currently disabled
@@ -79,7 +80,28 @@ explicit decision.
    completion with separate customer and provider accounts. No offers exist in
    the database yet (0 rows), so the offer lifecycle has never been exercised
    against real data.
-5. No Vercel deployment has been performed from this workspace.
+5. Verify that the production deployment picked up the current `master`. See
+   the deployment section below.
+
+### Vercel
+
+Verified 2026-08-31. The project is `prolink` (`prj_CnAC151RpS9mKBPNilQYFOAQ8bcv`)
+on team `webbdev` (`team_TXS7AWULHA2AsKOTTzvgy0mW`), owned by the same
+`webbdevstudio` account as the Supabase project. Earlier revisions of this file
+named `ths-projects-9e3c8e82/prolink` and stated that no deployment had been
+performed; both were wrong. There is no account ownership mismatch.
+
+- Framework preset: Next.js. Node version: 24.x, which satisfies the
+  `>=20.9 <25` range in `package.json`.
+- Pushes to `master` deploy automatically. The commits from 2026-08-31,
+  including the `employer_email` / `contact_info` fix, deployed to production
+  and reported `READY`.
+- Domains: `prolink-one.vercel.app`, `prolink-webbdev.vercel.app`,
+  `prolink-git-master-webbdev.vercel.app`.
+- The project reports `live: false`, so confirm in the dashboard whether the
+  production alias is intentionally not serving yet.
+- Listing deployments over the API returned 403 with the current credentials, so
+  deployment history must be checked in the dashboard.
 
 ### Supabase advisor findings that are not defects
 
@@ -120,11 +142,13 @@ with the Gothenburg demo seed. This narrows the product to
 The Phase 1 database baseline is live and verified, so the remaining blockers
 are environment configuration rather than schema work:
 
-1. Resolve the Vercel/Supabase account ownership mismatch and pull the
-   development environment variables.
-2. Enable Leaked Password Protection in Supabase Auth.
-3. Smoke-test the full offer lifecycle with separate customer and provider
-   accounts, since no offers exist yet.
+1. Enable Leaked Password Protection in Supabase Auth.
+2. Smoke-test the full offer lifecycle with separate customer and provider
+   accounts, since no offers exist yet. This is the highest-value remaining
+   check: the transactional offer logic is the core of the product and has so
+   far only been exercised by unit tests.
+3. Link the workspace to Vercel and pull the development environment variables.
+4. Confirm whether the production alias should be serving, given `live: false`.
 
 After that, define Phase 2 scope before changing product UI or introducing the
 future business-account architecture. Decide explicitly whether to drop the now
