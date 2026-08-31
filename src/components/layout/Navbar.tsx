@@ -4,10 +4,9 @@ import { logout } from '@/lib/actions/auth'
 import MobileMenu from './MobileMenu'
 
 const NAV_LINKS = [
-  { href: '/jobs', label: 'Hitta jobb' },
-  { href: '/swipe', label: 'Swipa' },
-  { href: '/saved', label: 'Sparade' },
-  { href: '/jobs/create', label: 'Lägg upp jobb' },
+  { href: '/jobs', label: 'Hitta uppdrag' },
+  { href: '/services', label: 'Hitta tjänster' },
+  { href: '/jobs/create', label: 'Publicera uppdrag' },
 ]
 
 export default async function Navbar() {
@@ -53,7 +52,7 @@ export default async function Navbar() {
                     href="/jobs/create"
                     className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors px-3 py-1.5"
                   >
-                    + Lägg upp jobb
+                    + Publicera uppdrag
                   </Link>
 
                   <Link

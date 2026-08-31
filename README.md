@@ -1,15 +1,20 @@
 # Prolink
 
-Prolink is a Next.js 14 application backed by Supabase. The current repository
-contains both the original Swedish service-marketplace flow and a later
-employment-board flow. Phase 1 stabilizes the existing marketplace core without
-redesigning the product or destructively removing legacy data.
+Prolink is a Swedish marketplace for freelance services, built with Next.js,
+Supabase, and Resend. Small businesses and other buyers can publish assignments,
+compare offers, chat with specialists, approve delivery, and leave reviews.
+Freelancers can both respond to assignments and publish packaged services.
+
+The product focuses on digital and professional services such as web
+development, design, marketing, accounting, content, photo/video, IT support,
+and business administration. Legacy employment-board fields remain in the
+schema temporarily but are not the product direction.
 
 ## Local development
 
 Requirements:
 
-- Node.js 20 or newer
+- Node.js 20.9–24 (Node 20 LTS recommended)
 - A Supabase project
 - A Resend account for transactional email
 
@@ -66,7 +71,7 @@ the new `user_private_profiles` table, `messages.attachment_path`, and the
 After migration:
 
 1. Confirm the `cvs` and `attachments` buckets are private.
-2. Confirm anon cannot select `phone`, `cv_text`, or `cv_url` from `users`.
+2. Confirm anon cannot select private profile or archived CV data.
 3. Test offer acceptance, delivery, completion, CV access, and attachments with
    separate customer/provider accounts.
 4. Keep `SUPABASE_SERVICE_ROLE_KEY` only in server-side deployment secrets.

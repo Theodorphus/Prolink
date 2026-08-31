@@ -10,15 +10,16 @@ import { Analytics } from "@vercel/analytics/react"
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://prolink.se'),
   title: { default: 'Prolink', template: '%s | Prolink' },
-  description: 'Hitta enkla jobb i Göteborg – snabbt och gratis.',
+  description: 'Hitta frilansare, tjänster och uppdrag inom webb, design, marknadsföring, redovisning och IT.',
   icons: {
     icon: '/Favicon.png',
     apple: '/Favicon.png',
   },
   openGraph: {
-    title: 'Prolink – Jobb i Göteborg',
-    description: 'Hitta enkla jobb i Göteborg – snabbt och gratis.',
+    title: 'Prolink – där företag och frilansare möts',
+    description: 'Hitta rätt specialist för nästa uppdrag eller låt nästa kund hitta dig.',
     url: 'https://prolink.se',
     siteName: 'Prolink',
     images: [
@@ -26,7 +27,7 @@ export const metadata: Metadata = {
         url: '/Copilot_20260430_140059.png',
         width: 1200,
         height: 630,
-        alt: 'Prolink – Jobb i Göteborg',
+        alt: 'Prolink – där företag och frilansare möts',
       },
     ],
     locale: 'sv_SE',
@@ -34,8 +35,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Prolink – Jobb i Göteborg',
-    description: 'Hitta enkla jobb i Göteborg – snabbt och gratis.',
+    title: 'Prolink – där företag och frilansare möts',
+    description: 'Hitta rätt specialist för nästa uppdrag eller låt nästa kund hitta dig.',
     images: ['/Copilot_20260430_140059.png'],
   },
 }

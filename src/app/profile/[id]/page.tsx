@@ -9,13 +9,15 @@ import DeleteJobButton from '@/components/jobs/DeleteJobButton'
 import ReviewCard from '@/components/reviews/ReviewCard'
 import StarRating from '@/components/reviews/StarRating'
 
-export async function generateMetadata({ params }: { params: { id: string } }) {
+export async function generateMetadata(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const supabase = await createClient()
   const { data } = await supabase.from('users').select('name').eq('id', params.id).single()
   return { title: data?.name ? data.name : 'Profil' }
 }
 
-export default async function ProfilePage({ params }: { params: { id: string } }) {
+export default async function ProfilePage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -32,7 +34,7 @@ export default async function ProfilePage({ params }: { params: { id: string } }
   const { data: privateProfile } = isOwn
     ? await supabase
         .from('user_private_profiles')
-        .select('phone, cv_text, cv_path')
+        .select('phone')
         .eq('user_id', params.id)
         .maybeSingle()
     : { data: null }
@@ -107,8 +109,6 @@ export default async function ProfilePage({ params }: { params: { id: string } }
               profile={{
                 ...profile,
                 phone: privateProfile?.phone ?? null,
-                cv_text: privateProfile?.cv_text ?? null,
-                cv_path: privateProfile?.cv_path ?? null,
               }}
             />
           )}
@@ -117,14 +117,14 @@ export default async function ProfilePage({ params }: { params: { id: string } }
           <div>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold text-gray-900">
-                {isOwn ? 'Dina jobbannonser' : 'Jobbannonser'}
+                {isOwn ? 'Dina uppdrag' : 'Publicerade uppdrag'}
               </h2>
               {isOwn && (
                 <Link
                   href="/jobs/create"
                   className="inline-flex items-center bg-blue-600 text-white text-xs font-medium px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors"
                 >
-                  + Nytt jobb
+                  + Nytt uppdrag
                 </Link>
               )}
             </div>
@@ -146,7 +146,7 @@ export default async function ProfilePage({ params }: { params: { id: string } }
                 </Card>
               ))}
               {(!jobs || jobs.length === 0) && (
-                <p className="text-sm text-gray-500 py-4">Inga jobbannonser ännu.</p>
+                <p className="text-sm text-gray-500 py-4">Inga publicerade uppdrag ännu.</p>
               )}
             </div>
           </div>

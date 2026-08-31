@@ -13,10 +13,11 @@ export const metadata = {
 }
 
 interface Props {
-  searchParams: { q?: string; sort?: string; max_price?: string; category?: string }
+  searchParams: Promise<{ q?: string; sort?: string; max_price?: string; category?: string }>
 }
 
-export default async function ServicesPage({ searchParams }: Props) {
+export default async function ServicesPage(props: Props) {
+  const searchParams = await props.searchParams;
   const supabase = await createClient()
   const { q, sort = 'newest', max_price, category } = searchParams
 

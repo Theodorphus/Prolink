@@ -23,7 +23,8 @@ async function getOfferContext(supabase: Awaited<ReturnType<typeof createClient>
   return { offer: data, job }
 }
 
-export async function GET(_: NextRequest, { params }: { params: { offerId: string } }) {
+export async function GET(_: NextRequest, props: { params: Promise<{ offerId: string }> }) {
+  const params = await props.params;
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -54,7 +55,8 @@ export async function GET(_: NextRequest, { params }: { params: { offerId: strin
   return NextResponse.json(data)
 }
 
-export async function POST(request: NextRequest, { params }: { params: { offerId: string } }) {
+export async function POST(request: NextRequest, props: { params: Promise<{ offerId: string }> }) {
+  const params = await props.params;
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 

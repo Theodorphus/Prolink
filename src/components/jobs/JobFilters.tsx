@@ -31,7 +31,7 @@ export default function JobFilters() {
         <input
           type="search"
           defaultValue={q}
-          placeholder="Sök jobb..."
+          placeholder="Sök uppdrag..."
           onChange={e => update('q', e.target.value)}
           className="w-full pl-9 pr-4 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
@@ -53,12 +53,10 @@ export default function JobFilters() {
         onChange={e => update('worktype', e.target.value)}
         className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
       >
-        <option value="">Alla arbetstider</option>
-        <option value="heltid">Heltid</option>
-        <option value="deltid">Deltid</option>
-        <option value="kväll">Kväll & helg</option>
-        <option value="extrajobb">Extrajobb</option>
-        <option value="sommarjobb">Sommarjobb</option>
+        <option value="">Alla arbetsformer</option>
+        <option value="remote">På distans</option>
+        <option value="onsite">På plats</option>
+        <option value="hybrid">Hybrid</option>
       </select>
 
       <select

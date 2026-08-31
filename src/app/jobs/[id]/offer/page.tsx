@@ -9,7 +9,8 @@ export const metadata = {
   description: 'Skicka en offert på ett uppdrag på Prolink.',
 }
 
-export default async function CreateOfferPage({ params }: { params: { id: string } }) {
+export default async function CreateOfferPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 

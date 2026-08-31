@@ -2,15 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import {
   categoryValue,
-  emailValue,
   InputValidationError,
   oneOf,
   optionalText,
+  positivePrice,
   requiredText,
 } from '@/lib/validation'
 
 const JOB_STATUSES = ['open', 'closed'] as const
-const WORK_TYPES = ['heltid', 'deltid', 'kväll', 'extrajobb', 'sommarjobb'] as const
+const WORK_TYPES = ['remote', 'onsite', 'hybrid'] as const
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient()
@@ -45,28 +45,21 @@ export async function POST(request: NextRequest) {
     title: string
     description: string
     category: string
-    salary: string | null
+    budget: number | null
     location: string | null
     workType: string | null
-    employerName: string | null
-    employerEmail: string | null
-    contactInfo: string | null
   }
 
   try {
     const body = await request.json()
-    const rawEmployerEmail = optionalText(body.employer_email, 'E-post', 254)
-    const rawWorkType = optionalText(body.work_type, 'Arbetstid', 30)
+    const rawWorkType = optionalText(body.work_type, 'Arbetsform', 30)
     input = {
       title: requiredText(body.title, 'Titel', 3, 120),
       description: requiredText(body.description, 'Beskrivning', 10, 5000),
       category: categoryValue(body.category),
-      salary: optionalText(body.salary, 'Lön', 100),
+      budget: body.budget === undefined || body.budget === null || body.budget === '' ? null : positivePrice(body.budget, 'Budget'),
       location: optionalText(body.location, 'Plats', 120),
-      workType: rawWorkType ? oneOf(rawWorkType, WORK_TYPES, 'Arbetstid') : null,
-      employerName: optionalText(body.employer_name, 'Företagsnamn', 120),
-      employerEmail: rawEmployerEmail ? emailValue(rawEmployerEmail) : null,
-      contactInfo: optionalText(body.contact_info, 'Kontaktinformation', 500),
+      workType: rawWorkType ? oneOf(rawWorkType, WORK_TYPES, 'Arbetsform') : null,
     }
   } catch (error) {
     return NextResponse.json(
@@ -82,12 +75,9 @@ export async function POST(request: NextRequest) {
       title: input.title,
       description: input.description,
       category: input.category,
-      salary: input.salary,
+      budget: input.budget,
       location: input.location,
       work_type: input.workType,
-      employer_name: input.employerName,
-      employer_email: input.employerEmail,
-      contact_info: input.contactInfo,
     })
     .select()
     .single()

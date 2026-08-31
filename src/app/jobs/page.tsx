@@ -6,15 +6,16 @@ import JobFilters from '@/components/jobs/JobFilters'
 import { getCategoryLabel, getCategoryEmoji } from '@/lib/categories'
 
 export const metadata = {
-  title: 'Jobb i Göteborg – Städ, café, restaurang, lager & mer',
-  description: 'Bläddra bland lediga jobb i Göteborg. Ansök direkt med din profil.',
+  title: 'Hitta frilansuppdrag',
+  description: 'Bläddra bland öppna uppdrag inom webb, design, marknadsföring, redovisning och IT.',
 }
 
 interface Props {
-  searchParams: { q?: string; sort?: string; category?: string; worktype?: string }
+  searchParams: Promise<{ q?: string; sort?: string; category?: string; worktype?: string }>
 }
 
-export default async function JobsPage({ searchParams }: Props) {
+export default async function JobsPage(props: Props) {
+  const searchParams = await props.searchParams;
   const supabase = await createClient()
   const { q, sort = 'newest', category, worktype } = searchParams
 
@@ -27,7 +28,6 @@ export default async function JobsPage({ searchParams }: Props) {
   if (category) query = query.eq('category', category)
   if (worktype) query = query.eq('work_type', worktype)
 
-  query = query.order('is_demo', { ascending: true })
   query = sort === 'oldest'
     ? query.order('created_at', { ascending: true })
     : query.order('created_at', { ascending: false })
@@ -38,14 +38,14 @@ export default async function JobsPage({ searchParams }: Props) {
     <div className="max-w-5xl mx-auto px-4 py-12">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Jobb i Göteborg</h1>
-          <p className="text-gray-600 mt-1">{jobs?.length ?? 0} lediga jobb</p>
+          <h1 className="text-3xl font-bold text-gray-900">Hitta uppdrag</h1>
+          <p className="text-gray-600 mt-1">{jobs?.length ?? 0} öppna uppdrag</p>
         </div>
         <Link
           href="/jobs/create"
           className="inline-flex items-center gap-1.5 bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
         >
-          + Lägg upp jobb
+          + Publicera uppdrag
         </Link>
       </div>
 
@@ -67,7 +67,7 @@ export default async function JobsPage({ searchParams }: Props) {
                   </div>
                   <p className="text-sm text-gray-600 line-clamp-2 mb-3">{job.description}</p>
                   <div className="flex items-center gap-3 flex-wrap text-xs text-gray-500">
-                    <span className="font-medium">{job.employer_name || job.customer?.name}</span>
+                    <span className="font-medium">{job.customer?.name}</span>
                     {job.location && <><span>·</span><span>📍 {job.location}</span></>}
                     <span>·</span>
                     <span>{formatDate(job.created_at)}</span>
@@ -84,14 +84,14 @@ export default async function JobsPage({ searchParams }: Props) {
                   </div>
                 </div>
                 <div className="text-right shrink-0">
-                  {job.salary ? (
+                  {job.budget ? (
                     <>
-                      <p className="font-semibold text-blue-600 text-lg">{job.salary}</p>
-                      <p className="text-xs text-gray-400">lön</p>
+                      <p className="font-semibold text-blue-600 text-lg">{new Intl.NumberFormat('sv-SE', { style: 'currency', currency: 'SEK', maximumFractionDigits: 0 }).format(job.budget)}</p>
+                      <p className="text-xs text-gray-400">budget</p>
                     </>
                   ) : (
                     <span className="text-sm bg-neutral-100 text-neutral-600 font-medium px-2.5 py-1 rounded-lg">
-                      Enl. ök.
+                      Öppen budget
                     </span>
                   )}
                 </div>
@@ -103,10 +103,10 @@ export default async function JobsPage({ searchParams }: Props) {
         {(!jobs || jobs.length === 0) && (
           <div className="text-center py-16 text-gray-500">
             {q ? (
-              <p className="text-lg">Inga jobb matchade &ldquo;{q}&rdquo;.</p>
+              <p className="text-lg">Inga uppdrag matchade &ldquo;{q}&rdquo;.</p>
             ) : (
               <>
-                <p className="text-lg">Inga öppna jobb just nu.</p>
+                <p className="text-lg">Inga öppna uppdrag just nu.</p>
                 <Link href="/jobs" className="mt-4 inline-flex text-sm text-blue-600 font-medium hover:underline">
                   ← Rensa filter
                 </Link>

@@ -5,7 +5,8 @@ import { sendOfferAcceptedEmail } from '@/lib/email'
 import { canTransitionOffer, OFFER_STATUSES } from '@/lib/marketplace-rules.mjs'
 import { InputValidationError, oneOf, uuidValue } from '@/lib/validation'
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 

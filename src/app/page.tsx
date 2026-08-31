@@ -1,294 +1,54 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { CATEGORIES, getCategoryEmoji, getCategoryLabel } from '@/lib/categories'
-import HeroVideo from '@/components/hero/HeroVideo'
+import { formatCurrency } from '@/lib/utils'
+import type { Job, User } from '@/types/database'
+
+type FeaturedJob = Job & { customer: Pick<User, 'name'> | null }
 
 export default async function HomePage() {
   const supabase = await createClient()
-
-  const { data: jobs } = await supabase
-    .from('jobs')
-    .select('*, customer:users(name)')
-    .eq('status', 'open')
-    .order('is_demo', { ascending: true })
-    .order('created_at', { ascending: false })
-    .limit(6)
+  const { data } = await supabase.from('jobs').select('*, customer:users(name)').eq('status', 'open').order('created_at', { ascending: false }).limit(6)
+  const jobs = (data ?? []) as FeaturedJob[]
 
   return (
-    <div className="bg-neutral-50">
-
-      {/* ── Hero ─────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden min-h-[94vh] flex items-center">
-        <HeroVideo src="/Herovid2_opt.mp4" />
-
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/55 to-black/85" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-black/10 to-black/30" />
-
-        <div className="relative w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-40 text-center">
-
-          <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-md text-white text-xs font-semibold px-4 py-2 rounded-full mb-10 tracking-widest uppercase border border-white/30 shadow-lg">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            Gratis att komma igång
-          </div>
-
-          <h1 className="text-6xl md:text-8xl font-black text-white tracking-tight leading-[1.02] mb-6 drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)]">
-            Hitta jobb<br />
-            <span className="text-white/70">i Göteborg</span>
-          </h1>
-
-          <p className="text-lg md:text-2xl text-white/90 max-w-xl mx-auto mb-4 leading-relaxed font-medium drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]">
-            Göteborgs enklaste jobbsajt.
-          </p>
-          <p className="text-sm md:text-base text-white/70 max-w-lg mx-auto mb-12 leading-relaxed font-medium drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]">
-            Skapa en profil en gång och ansök på sekunder. Städ, café, restaurang, lager och mer.
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              href="/jobs"
-              className="inline-flex items-center justify-center gap-2.5 bg-white text-neutral-900 text-sm font-bold px-8 py-4 rounded-2xl hover:bg-neutral-100 active:scale-[0.98] transition-all duration-150 w-full sm:w-auto shadow-xl shadow-black/30"
-            >
-              Hitta jobb nu
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </Link>
-            <Link
-              href="/jobs/create"
-              className="inline-flex items-center justify-center gap-2 text-white text-sm font-semibold px-8 py-4 rounded-2xl border border-white/40 hover:bg-white/15 hover:border-white/60 active:scale-[0.98] transition-all duration-150 w-full sm:w-auto backdrop-blur-sm"
-            >
-              Lägg upp jobb gratis
-            </Link>
-          </div>
-
-          <p className="mt-10 text-xs text-white/60 tracking-wide font-medium">
-            Ingen bindningstid &nbsp;·&nbsp; Inga avgifter &nbsp;·&nbsp; Publiceras direkt
-          </p>
-        </div>
-
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 text-white/30">
-          <span className="text-[10px] tracking-[0.2em] uppercase">Scrolla</span>
-          <svg className="w-4 h-4 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
-          </svg>
-        </div>
-      </section>
-
-      {/* ── Kategorier ───────────────────────────────────────── */}
-      <section className="py-24 px-4 bg-white">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <p className="text-[11px] font-bold text-blue-500 uppercase tracking-[0.2em] mb-4">Kategorier</p>
-            <h2 className="text-3xl md:text-5xl font-bold text-gray-900 tracking-tight">
-              Vad letar du efter?
-            </h2>
-            <p className="mt-4 text-gray-600 font-medium max-w-md mx-auto">Hitta jobb inom det du är bra på.</p>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {CATEGORIES.filter((c) => c.value !== 'annat').map((c) => (
-              <Link
-                key={c.value}
-                href={`/jobs?category=${c.value}`}
-                className="group flex items-center gap-4 bg-white rounded-2xl p-5 border border-neutral-200 shadow-sm hover:shadow-lg hover:scale-[1.03] transition-all duration-200"
-              >
-                <span className="text-3xl shrink-0">{c.emoji}</span>
-                <span className="text-base font-semibold text-neutral-800 group-hover:text-blue-600 transition-colors">
-                  {c.label}
-                </span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Swipe-banner ─────────────────────────────────────── */}
-      <section className="px-4 pb-8">
-        <div className="max-w-6xl mx-auto">
-          <Link
-            href="/swipe"
-            className="group relative flex flex-col sm:flex-row items-center justify-between gap-6 overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-700 px-8 py-10 sm:px-12 shadow-xl"
-          >
-            <div className="relative text-center sm:text-left">
-              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/60 mb-2">Nyhet</p>
-              <h2 className="text-2xl md:text-4xl font-bold text-white tracking-tight">
-                Testa jobbswipe
-              </h2>
-              <p className="mt-2 text-white/80 font-medium max-w-md">
-                Swipa dig igenom jobb i Göteborg. Höger för intresserad, vänster för att hoppa över.
-              </p>
+    <div className="bg-[#f5f7fb] text-slate-950">
+      <section className="premium-hero relative overflow-hidden border-b border-white/10 text-white">
+        <div className="hero-grid absolute inset-0 opacity-30" />
+        <div className="mesh-orb mesh-orb-one" />
+        <div className="mesh-orb mesh-orb-two" />
+        <div className="relative mx-auto grid min-h-[780px] max-w-7xl items-center gap-16 px-4 pb-24 pt-36 sm:px-6 lg:grid-cols-[1.08fr_.92fr] lg:px-8 lg:pb-28 lg:pt-36">
+          <div className="reveal-up">
+            <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.07] px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-white/80 shadow-xl backdrop-blur-xl">
+              <span className="h-2 w-2 rounded-full bg-emerald-500" /> Svenska uppdrag. Rätt kompetens.
             </div>
-            <span className="relative inline-flex items-center gap-2 rounded-2xl bg-white px-7 py-4 text-sm font-bold text-blue-700 shadow-lg transition-transform group-hover:scale-105 shrink-0">
-              Testa jobbswipe
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </span>
-          </Link>
-        </div>
-      </section>
-
-      {/* ── Hur det fungerar ─────────────────────────────────── */}
-      <section className="py-28 px-4 bg-gray-50 border-y border-gray-100">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-16">
-            <p className="text-[11px] font-bold text-blue-500 uppercase tracking-[0.2em] mb-4">Hur det fungerar</p>
-            <h2 className="text-3xl md:text-5xl font-bold text-gray-900 tracking-tight">
-              Tre steg till jobb
-            </h2>
-            <p className="mt-4 text-gray-600 font-medium max-w-md mx-auto">Enkelt, snabbt och utan krångel.</p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-5">
-            {[
-              {
-                n: '01',
-                title: 'Hitta ett jobb',
-                desc: 'Bläddra bland jobb i Göteborg. Filtrera på kategori, arbetstid och område.',
-                icon: (
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-4.35-4.35M17 11A6 6 0 105 11a6 6 0 0012 0z" />
-                  </svg>
-                ),
-              },
-              {
-                n: '02',
-                title: 'Skapa din profil',
-                desc: 'Lägg till bild och erfarenhet en gång. Din profil återanvänds automatiskt vid ansökan.',
-                icon: (
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                ),
-              },
-              {
-                n: '03',
-                title: 'Ansök och börja jobba',
-                desc: 'Skicka ansökan på sekunder. Arbetsgivaren kontaktar dig direkt.',
-                icon: (
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-                  </svg>
-                ),
-              },
-            ].map(({ n, title, desc, icon }) => (
-              <div
-                key={n}
-                className="group bg-white/95 rounded-3xl p-8 border border-neutral-200 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
-              >
-                <div className="flex items-start justify-between mb-7">
-                  <div className="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-md group-hover:bg-blue-500 transition-colors">
-                    {icon}
-                  </div>
-                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 text-blue-400 text-xs font-bold tracking-wide">
-                    {n}
-                  </span>
-                </div>
-                <h3 className="text-base font-bold text-neutral-900 mb-2 tracking-tight">{title}</h3>
-                <p className="text-sm text-gray-600 leading-relaxed font-medium">{desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Senaste jobb ─────────────────────────────────────── */}
-      {jobs && jobs.length > 0 && (
-        <section className="py-24 px-4 bg-white border-t border-neutral-100">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex items-end justify-between mb-10">
-              <div>
-                <p className="text-[11px] font-bold text-gray-600 uppercase tracking-[0.2em] mb-2">Jobb</p>
-                <h2 className="text-2xl md:text-3xl font-bold text-neutral-900 tracking-tight">Senaste jobben</h2>
-              </div>
-              <Link href="/jobs" className="text-sm font-semibold text-gray-700 hover:text-blue-600 transition-colors inline-flex items-center gap-1.5 group">
-                Se alla
-                <svg className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
+            <h1 className="max-w-3xl text-5xl font-black leading-[0.96] tracking-[-0.06em] sm:text-6xl lg:text-[5.25rem]">Få jobbet gjort.<span className="gradient-text mt-2 block">Hitta nästa kund.</span></h1>
+            <p className="mt-8 max-w-2xl text-lg font-medium leading-8 text-slate-300 sm:text-xl">Prolink samlar företag som behöver hjälp och frilansare som kan leverera—från webb och design till redovisning, marknadsföring och IT.</p>
+            <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+              <Link href="/jobs/create" className="glow-button inline-flex items-center justify-center rounded-xl bg-blue-500 px-7 py-4 text-sm font-bold text-white shadow-2xl shadow-blue-500/25 transition hover:-translate-y-0.5 hover:bg-blue-400">Publicera ett uppdrag <span aria-hidden className="ml-2">→</span></Link>
+              <Link href="/jobs" className="inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/[0.07] px-7 py-4 text-sm font-bold text-white backdrop-blur-xl transition hover:-translate-y-0.5 hover:border-white/30 hover:bg-white/10">Hitta uppdrag</Link>
             </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {jobs.map((job: any) => (
-                <Link key={job.id} href={`/jobs/${job.id}`} className="group block">
-                  <div className="bg-white border border-neutral-300 rounded-2xl p-6 h-full hover:border-neutral-500 hover:shadow-md transition-all duration-200">
-                    <div className="flex items-start justify-between gap-3 mb-3">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <span className="text-xl shrink-0">{getCategoryEmoji(job.category)}</span>
-                        <h3 className="font-semibold text-neutral-900 group-hover:text-neutral-600 transition-colors line-clamp-2 leading-snug">
-                          {job.title}
-                        </h3>
-                      </div>
-                      {job.salary && (
-                        <span className="text-sm font-bold text-neutral-900 shrink-0 bg-neutral-100 px-2.5 py-1 rounded-lg">
-                          {job.salary}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm text-gray-700 line-clamp-2 mb-5 leading-relaxed font-medium">{job.description}</p>
-                    <div className="flex items-center gap-2 text-xs text-gray-600 flex-wrap">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                      <span className="truncate font-medium">{job.employer_name || job.customer?.name}</span>
-                      {job.location && (
-                        <span className="ml-auto shrink-0 bg-neutral-100 text-neutral-600 font-medium px-2 py-0.5 rounded-md">
-                          📍 {job.location}
-                        </span>
-                      )}
-                      {job.category && !job.location && (
-                        <span className="ml-auto shrink-0 bg-blue-50 text-blue-600 font-medium px-2 py-0.5 rounded-md">
-                          {getCategoryLabel(job.category)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
+            <div className="mt-9 flex flex-wrap gap-x-6 gap-y-2 text-sm font-semibold text-slate-400"><span>✓ Gratis att komma igång</span><span>✓ Direktkontakt</span><span>✓ Offerter på ett ställe</span></div>
           </div>
-        </section>
-      )}
-
-      {/* ── CTA ──────────────────────────────────────────────── */}
-      <section className="py-24 px-4 bg-white">
-        <div className="max-w-6xl mx-auto">
-          <div
-            className="relative overflow-hidden rounded-3xl bg-cover bg-center"
-            style={{ backgroundImage: "url('/cta-bg.png')" }}
-          >
-            <div className="absolute inset-0 bg-neutral-950/65" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-
-            <div className="relative px-8 py-20 sm:px-16 sm:py-24 text-center">
-              <p className="text-[11px] font-bold text-white/40 uppercase tracking-[0.2em] mb-5">Kom igång idag</p>
-              <h2 className="text-4xl md:text-6xl font-bold text-white tracking-tight leading-[1.02] mb-6">
-                Behöver du personal<br />
-                <span className="text-white/55">snabbt?</span>
-              </h2>
-              <p className="text-white/60 mb-10 max-w-md mx-auto leading-relaxed text-base">
-                Lägg upp ett jobb gratis och nå tusentals jobbsökare i Göteborg. Publiceras direkt.
-              </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Link
-                  href="/jobs/create"
-                  className="inline-flex items-center justify-center gap-2.5 bg-white text-neutral-900 text-sm font-bold px-8 py-4 rounded-2xl hover:bg-neutral-100 active:scale-[0.98] transition-all duration-150 w-full sm:w-auto shadow-xl shadow-black/30"
-                >
-                  Lägg upp jobb gratis
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                  </svg>
-                </Link>
-                <Link
-                  href="/jobs"
-                  className="inline-flex items-center justify-center text-sm font-medium text-white/70 hover:text-white transition-colors px-8 py-4 w-full sm:w-auto"
-                >
-                  Hitta jobb
-                </Link>
-              </div>
+          <div className="float-card relative mx-auto w-full max-w-xl lg:mx-0">
+            <div className="absolute -inset-7 rotate-2 rounded-[2.75rem] bg-gradient-to-br from-blue-500/20 to-violet-500/10 blur-sm" />
+            <div className="relative rounded-[2rem] border border-white/15 bg-white/[0.09] p-5 shadow-2xl shadow-black/30 backdrop-blur-2xl sm:p-7">
+              <div className="mb-6 flex items-center justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-300">Exempel på uppdrag</p><p className="mt-1 text-sm text-slate-400">Publicera på några minuter</p></div><div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/10 text-xl text-blue-200">✦</div></div>
+              <div className="rounded-2xl border border-white/10 bg-slate-950/45 p-5 shadow-inner"><p className="text-xs font-semibold text-blue-300">WEBBUTVECKLING</p><h2 className="mt-2 text-xl font-bold tracking-tight text-white">Ny webbplats för växande redovisningsbyrå</h2><p className="mt-3 text-sm leading-6 text-slate-300">Vi söker hjälp med design och utveckling av en modern webbplats i Next.js.</p><div className="mt-5 flex items-center justify-between border-t border-white/10 pt-4"><span className="rounded-full bg-emerald-400/15 px-3 py-1.5 text-xs font-bold text-emerald-300">Öppen för offerter</span><span className="text-sm font-black text-white">25 000 kr</span></div></div>
+              <div className="mt-4 grid grid-cols-2 gap-3"><div className="rounded-2xl bg-slate-950 p-4 text-white"><p className="text-2xl font-black">1</p><p className="mt-1 text-xs font-medium text-white/60">brief till alla</p></div><div className="rounded-2xl bg-blue-600 p-4 text-white"><p className="text-2xl font-black">3</p><p className="mt-1 text-xs font-medium text-white/70">enkla steg</p></div></div>
             </div>
           </div>
         </div>
+        <div className="relative border-t border-white/10 bg-white/[0.035] py-4 backdrop-blur"><div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-10 gap-y-2 px-4 text-[11px] font-bold uppercase tracking-[0.18em] text-white/45"><span>Webbutveckling</span><span>Design</span><span>Marknadsföring</span><span>Redovisning</span><span>IT & support</span></div></div>
       </section>
 
+      <section className="border-b border-slate-200/80 bg-white px-4 py-24 sm:px-6 lg:px-8"><div className="mx-auto max-w-7xl"><div className="flex flex-col justify-between gap-4 md:flex-row md:items-end"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-600">Kompetens för småföretag</p><h2 className="mt-3 text-3xl font-black tracking-[-0.04em] sm:text-5xl">Vad behöver du hjälp med?</h2></div><Link href="/services" className="text-sm font-bold text-slate-600 transition hover:text-blue-600">Se alla tjänster →</Link></div><div className="mt-12 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">{CATEGORIES.filter(category => category.value !== 'annat').map(category => <Link key={category.value} href={`/jobs?category=${category.value}`} className="premium-card group rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-1.5 hover:border-blue-200 hover:shadow-2xl hover:shadow-blue-900/10"><span className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-2xl text-blue-700" aria-hidden>{category.emoji}</span><p className="mt-5 font-bold tracking-tight group-hover:text-blue-600">{category.label}</p><p className="mt-1 text-xs font-medium text-slate-500">Hitta specialist →</p></Link>)}</div></div></section>
+
+      <section className="px-4 py-28 sm:px-6 lg:px-8"><div className="mx-auto max-w-7xl"><div className="text-center"><p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-600">Så fungerar Prolink</p><h2 className="mt-3 text-3xl font-black tracking-[-0.04em] sm:text-5xl">Från behov till leverans</h2><p className="mx-auto mt-5 max-w-xl text-lg leading-8 text-slate-600">Slipp leta i flöden och kommentarsfält. Samla uppdrag, offerter och dialog på samma plats.</p></div><div className="mt-14 grid gap-4 md:grid-cols-3">{[['01','Beskriv uppdraget','Berätta vad du behöver, önskad budget och när det ska vara klart.'],['02','Jämför offerter','Ta emot förslag från relevanta frilansare och prata direkt i Prolink.'],['03','Välj och samarbeta','Välj rätt leverantör, följ leveransen och lämna ett omdöme.']].map(([number,title,copy]) => <article key={number} className="premium-card rounded-3xl border border-slate-200/80 bg-white p-8 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"><span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-950 text-xs font-black text-white">{number}</span><h3 className="mt-9 text-xl font-black tracking-tight">{title}</h3><p className="mt-3 text-sm font-medium leading-7 text-slate-600">{copy}</p></article>)}</div></div></section>
+
+      {jobs.length > 0 && <section className="border-y border-slate-200 bg-white px-4 py-24 sm:px-6 lg:px-8"><div className="mx-auto max-w-7xl"><div className="flex items-end justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-600">Aktuellt just nu</p><h2 className="mt-3 text-3xl font-black tracking-[-0.035em] sm:text-4xl">Senaste uppdragen</h2></div><Link href="/jobs" className="hidden text-sm font-bold text-slate-600 hover:text-blue-600 sm:block">Alla uppdrag →</Link></div><div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">{jobs.map(job => <Link key={job.id} href={`/jobs/${job.id}`} className="group rounded-2xl border border-slate-200 p-6 transition hover:-translate-y-1 hover:border-blue-300 hover:shadow-lg"><div className="flex items-start justify-between gap-4"><span className="rounded-xl bg-blue-50 p-2.5 text-xl" aria-hidden>{getCategoryEmoji(job.category)}</span><span className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700">{job.budget ? formatCurrency(job.budget) : 'Öppen budget'}</span></div><p className="mt-5 text-xs font-bold uppercase tracking-wider text-blue-600">{getCategoryLabel(job.category)}</p><h3 className="mt-2 line-clamp-2 text-lg font-black tracking-tight group-hover:text-blue-600">{job.title}</h3><p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-600">{job.description}</p><div className="mt-6 border-t border-slate-100 pt-4 text-xs font-semibold text-slate-500">{job.customer?.name ?? 'Prolink-kund'} <span className="float-right text-blue-600">Visa uppdrag →</span></div></Link>)}</div></div></section>}
+
+      <section className="px-4 py-24 sm:px-6 lg:px-8"><div className="mx-auto grid max-w-7xl gap-5 lg:grid-cols-2"><div className="rounded-[2rem] bg-slate-950 p-8 text-white sm:p-12"><p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-400">För dig som köper tjänster</p><h2 className="mt-5 text-3xl font-black tracking-tight">Rätt hjälp utan ett stort nätverk.</h2><p className="mt-4 max-w-lg leading-7 text-slate-300">Publicera ditt behov en gång, jämför konkreta offerter och välj den kompetens som passar företaget.</p><Link href="/jobs/create" className="mt-8 inline-flex rounded-xl bg-white px-6 py-3.5 text-sm font-bold text-slate-950 hover:bg-slate-100">Skapa ett uppdrag</Link></div><div className="rounded-[2rem] bg-blue-600 p-8 text-white sm:p-12"><p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-100">För dig som säljer tjänster</p><h2 className="mt-5 text-3xl font-black tracking-tight">Låt nästa kund hitta dig.</h2><p className="mt-4 max-w-lg leading-7 text-blue-100">Visa vad du erbjuder, hitta relevanta uppdrag och bygg förtroende genom lyckade leveranser.</p><div className="mt-8 flex flex-wrap gap-3"><Link href="/services/create" className="inline-flex rounded-xl bg-white px-6 py-3.5 text-sm font-bold text-blue-700 hover:bg-blue-50">Publicera en tjänst</Link><Link href="/jobs" className="inline-flex rounded-xl border border-white/40 px-6 py-3.5 text-sm font-bold text-white hover:bg-white/10">Se uppdrag</Link></div></div></div></section>
     </div>
   )
 }

@@ -9,7 +9,8 @@ import MarkDeliveredButton from '@/components/offers/MarkDeliveredButton'
 import CompleteJobButton from '@/components/offers/CompleteJobButton'
 import WriteReviewForm from '@/components/reviews/WriteReviewForm'
 
-export async function generateMetadata({ params }: { params: { id: string } }) {
+export async function generateMetadata(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const supabase = await createClient()
   const { data } = await supabase
     .from('offers')
@@ -23,7 +24,11 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
   }
 }
 
-export default async function OfferPage({ params, searchParams }: { params: { id: string }; searchParams: { already?: string } }) {
+export default async function OfferPage(
+  props: { params: Promise<{ id: string }>; searchParams: Promise<{ already?: string }> }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 

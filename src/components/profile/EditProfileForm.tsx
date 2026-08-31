@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/Button'
 import { Card, CardBody, CardHeader } from '@/components/ui/Card'
 import { createClient } from '@/lib/supabase/client'
 import AvatarUpload from '@/components/profile/AvatarUpload'
-import CvUpload from '@/components/profile/CvUpload'
 import type { User, UserPrivateProfile } from '@/types/database'
 import {
   InputValidationError,
@@ -15,7 +14,7 @@ import {
   requiredText,
 } from '@/lib/validation'
 
-type EditableProfile = User & Pick<UserPrivateProfile, 'phone' | 'cv_text' | 'cv_path'>
+type EditableProfile = User & Pick<UserPrivateProfile, 'phone'>
 
 export default function EditProfileForm({ profile }: { profile: EditableProfile }) {
   const router = useRouter()
@@ -67,7 +66,6 @@ export default function EditProfileForm({ profile }: { profile: EditableProfile 
         .upsert({
           user_id: profile.id,
           phone: optionalText(form.get('phone'), 'Telefon', 50),
-          cv_text: optionalText(form.get('cv_text'), 'Erfarenhet och bakgrund', 10000),
           updated_at: new Date().toISOString(),
         }, { onConflict: 'user_id' })
 
@@ -127,30 +125,6 @@ export default function EditProfileForm({ profile }: { profile: EditableProfile 
             />
           </div>
 
-          {/* CV-sektion – fritext-CV som återanvänds vid ansökningar */}
-          <div className="space-y-1.5 border-t border-gray-100 pt-4">
-            <label className="block text-sm font-medium text-gray-700">
-              Erfarenhet & bakgrund
-              <span className="ml-2 text-xs text-gray-400 font-normal">Används automatiskt i ansökningar</span>
-            </label>
-            <textarea
-              name="cv_text"
-              defaultValue={profile.cv_text ?? ''}
-              rows={5}
-              placeholder={`Beskriv din erfarenhet, tidigare jobb och vad du är bra på.\n\nT.ex.:\n– 2 år som städare på Städproffs AB\n– Jobbat i kök på Restaurang Grön\n– Pålitlig, punktlig, trivs med fysiskt arbete`}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-            />
-            <p className="text-xs text-gray-400">Inget formellt CV krävs – skriv fritt om din bakgrund.</p>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-gray-700">
-              CV-dokument
-              <span className="ml-2 text-xs text-gray-400 font-normal">Privat – endast synligt för dig</span>
-            </label>
-            <CvUpload userId={profile.id} currentCvPath={profile.cv_path} />
-          </div>
-
           {profile.role === 'provider' && (
             <>
               <div className="space-y-1.5">
@@ -170,7 +144,7 @@ export default function EditProfileForm({ profile }: { profile: EditableProfile 
                   type="text"
                   value={skillsInput}
                   onChange={e => setSkillsInput(e.target.value)}
-                  placeholder="T.ex. Städning, Kassa, Truckkörkort"
+                  placeholder="T.ex. Next.js, SEO, Redovisning, Figma"
                   className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>

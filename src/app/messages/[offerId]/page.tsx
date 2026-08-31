@@ -5,7 +5,8 @@ import type { MessageWithSender } from '@/types/database'
 
 export const metadata = { title: 'Chatt' }
 
-export default async function MessagesPage({ params }: { params: { offerId: string } }) {
+export default async function MessagesPage(props: { params: Promise<{ offerId: string }> }) {
+  const params = await props.params;
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 

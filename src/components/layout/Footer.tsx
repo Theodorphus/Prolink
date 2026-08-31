@@ -2,9 +2,9 @@ import Link from 'next/link'
 
 const links = {
   Plattform: [
-    { href: '/jobs', label: 'Hitta jobb' },
-    { href: '/swipe', label: 'Swipa jobb' },
-    { href: '/jobs/create', label: 'Lägg upp jobb' },
+    { href: '/jobs', label: 'Hitta uppdrag' },
+    { href: '/services', label: 'Hitta tjänster' },
+    { href: '/jobs/create', label: 'Publicera uppdrag' },
   ],
   Konto: [
     { href: '/login', label: 'Logga in' },
@@ -28,7 +28,7 @@ export default function Footer() {
               Prolink
             </Link>
             <p className="mt-3 text-sm text-gray-600 leading-relaxed max-w-xs font-medium">
-              Göteborgs enklaste jobbsajt. Gratis för alla.
+              Marknadsplatsen där småföretag och frilansare hittar varandra.
             </p>
             <div className="mt-5 flex items-center gap-3">
               {[

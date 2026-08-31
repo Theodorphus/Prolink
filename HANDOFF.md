@@ -6,9 +6,10 @@ Last updated: 2026-08-24
 
 Phase 1 (security, schema safety, and technical baseline) is implemented in the
 repository. Phase 2 has not started, and the homepage has not been redesigned.
-The product direction remains a Swedish service marketplace built around:
+The product direction is now explicitly a Swedish freelance-service marketplace
+for small businesses and independent specialists, built around:
 
-`service request -> offer -> chat -> delivery -> review`
+`assignment -> offer -> chat -> delivery -> review`
 
 The implementation intentionally keeps the existing customer/provider model for
 the MVP. Do not add businesses/business members, payments, an admin dashboard,

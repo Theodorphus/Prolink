@@ -7,11 +7,12 @@ export const metadata = {
   description: 'Logga in på Prolink och hantera dina uppdrag, offerter och meddelanden.',
 }
 
-export default function LoginPage({
-  searchParams,
-}: {
-  searchParams: { redirect?: string }
-}) {
+export default async function LoginPage(
+  props: {
+    searchParams: Promise<{ redirect?: string }>
+  }
+) {
+  const searchParams = await props.searchParams;
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-md">

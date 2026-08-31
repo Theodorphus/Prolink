@@ -38,7 +38,6 @@ export interface Job {
   employer_name: string | null
   employer_email: string | null
   contact_info: string | null
-  is_demo: boolean
   created_at: string
 }
 
@@ -146,7 +145,7 @@ export type Database = {
       }
       jobs: {
         Row: Job
-        Insert: Omit<Job, 'id' | 'created_at' | 'is_demo'> & { id?: string; is_demo?: boolean }
+        Insert: Omit<Job, 'id' | 'created_at'> & { id?: string }
         Update: Partial<Omit<Job, 'id' | 'created_at'>>
         Relationships: []
       }
