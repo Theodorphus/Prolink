@@ -84,7 +84,7 @@ export default function RegisterForm({ action }: RegisterFormProps) {
 
         <Input label="Namn" name="name" type="text" required autoComplete="name" />
         <Input label="E-post" name="email" type="email" required autoComplete="email" />
-        <Input label="Lösenord (minst 6 tecken)" name="password" type="password" required minLength={6} autoComplete="new-password" />
+        <Input label="Lösenord (minst 8 tecken)" name="password" type="password" required minLength={8} autoComplete="new-password" />
         <input type="hidden" name="role" value={selectedRole} />
 
         <SubmitButton />

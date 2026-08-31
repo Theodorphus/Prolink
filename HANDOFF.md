@@ -73,15 +73,40 @@ explicit decision.
    `.env.local` exists locally, remains gitignored, and must never be committed.
 2. Confirm `SUPABASE_SERVICE_ROLE_KEY` and `RESEND_API_KEY` are server-only and
    configure the verified `RESEND_FROM_EMAIL` sender.
-3. Enable Leaked Password Protection in Supabase Auth. It is currently disabled
-   and is the only actionable finding from the Supabase security advisors. This
-   is a dashboard setting and requires no code change.
+3. Enable Leaked Password Protection in Supabase Auth once the organization is
+   on a paid plan. It is currently disabled and is the only actionable finding
+   from the Supabase security advisors, but it **requires the Pro Plan or
+   above**, and the organization `frtsmkaudnjxdxbcczig` is on the Free plan as
+   of 2026-08-31. The advisor will keep reporting this until the plan is
+   upgraded; that is expected and not a regression. No code change is needed,
+   only the toggle at
+   `Authentication -> Providers -> Email` in the dashboard.
 4. Smoke-test CV access, attachment access, offer acceptance, delivery, and
    completion with separate customer and provider accounts. No offers exist in
    the database yet (0 rows), so the offer lifecycle has never been exercised
    against real data.
 5. Verify that the production deployment picked up the current `master`. See
    the deployment section below.
+
+### Password policy
+
+Leaked password protection is gated behind the Pro Plan, so the settings that
+are available on the Free plan were tightened instead on 2026-08-31:
+
+- `supabase/config.toml` now sets `minimum_password_length = 8` and
+  `password_requirements = "lower_upper_letters_digits"`. This file governs the
+  local development stack only.
+- **The hosted project must be changed separately in the dashboard.** The same
+  two settings live at `Authentication -> Providers -> Email`. Until they are
+  set there, the hosted project still accepts 6-character passwords.
+- Registration in `src/lib/actions/auth.ts` now requires 8 characters, matching
+  the intended server policy, and `RegisterForm` states the same minimum.
+- Login deliberately still accepts 6 characters so existing accounts created
+  under the old policy can still sign in. Raising it would lock those users out
+  without a password reset flow.
+- Supabase returns English error strings. `registerErrorMessage` translates the
+  cases a user can actually hit, including the leaked-password rejection, so the
+  message is already handled when the Pro toggle is switched on.
 
 ### Vercel
 
@@ -142,13 +167,17 @@ with the Gothenburg demo seed. This narrows the product to
 The Phase 1 database baseline is live and verified, so the remaining blockers
 are environment configuration rather than schema work:
 
-1. Enable Leaked Password Protection in Supabase Auth.
-2. Smoke-test the full offer lifecycle with separate customer and provider
+1. Smoke-test the full offer lifecycle with separate customer and provider
    accounts, since no offers exist yet. This is the highest-value remaining
    check: the transactional offer logic is the core of the product and has so
    far only been exercised by unit tests.
-3. Link the workspace to Vercel and pull the development environment variables.
-4. Confirm whether the production alias should be serving, given `live: false`.
+2. Apply the password length and character requirements to the hosted project in
+   the dashboard. The repository change only affects local development.
+3. Confirm whether the production alias should be serving, given `live: false`.
+4. Link the workspace to Vercel and pull the development environment variables.
+5. Decide whether the Pro Plan is worth it. Leaked password protection is the
+   only blocked security item, and it is the only thing that plan is needed for
+   here.
 
 After that, define Phase 2 scope before changing product UI or introducing the
 future business-account architecture. Decide explicitly whether to drop the now
