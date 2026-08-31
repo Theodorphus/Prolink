@@ -2,14 +2,102 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Designsystem.
+   Startsidan var byggd med ett eget visuellt språk (font-black, tät tracking,
+   stora radier) medan de inre sidorna använde Tailwinds standardvärden. Det gav
+   intrycket av två olika produkter, vilket underminerar förtroendet just där
+   användaren ska fatta beslut om pengar. Tokens nedan är den gemensamma
+   grunden. */
+:root {
+  --surface-page: #f6f8fc;
+  --surface-card: #ffffff;
+  --surface-sunken: #eef2f9;
+
+  --ink-strong: #0b1220;
+  --ink-body: #3f4a60;
+  --ink-muted: #697488;
+
+  --line-soft: #e6ebf3;
+  --line-strong: #d5dde9;
+
+  --brand: #1d4ed8;
+  --brand-strong: #1e40af;
+  --brand-tint: #eef3ff;
+
+  --radius-control: 0.75rem;
+  --radius-card: 1.25rem;
+  --radius-panel: 1.75rem;
+
+  /* Mjuka, lagrade skuggor i stället för en hård ram runt allt. */
+  --shadow-card: 0 1px 2px rgba(16, 24, 40, .04), 0 8px 24px -12px rgba(16, 24, 40, .12);
+  --shadow-lift: 0 2px 4px rgba(16, 24, 40, .04), 0 18px 40px -16px rgba(16, 24, 40, .22);
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;
   }
 
   body {
-    @apply text-gray-900;
-    background: #f5f7fb;
+    color: var(--ink-strong);
+    background: var(--surface-page);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Rubriker delar samma optiska tracking över hela produkten, inte bara på
+     startsidan. */
+  h1, h2, h3 {
+    letter-spacing: -0.028em;
+  }
+
+  h1 { letter-spacing: -0.038em; }
+
+  /* Synlig fokusmarkering för tangentbordsnavigering. Saknades helt utanför
+     knappar och fält. */
+  :focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+@layer components {
+  /* Standardytan för innehåll. Ersätter den hårda gray-200-ramen med en mjukare
+     linje plus djup, vilket läser som mer genomarbetat. */
+  .surface {
+    background: var(--surface-card);
+    border: 1px solid var(--line-soft);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+  }
+
+  .surface-interactive {
+    transition: box-shadow .25s ease, transform .25s ease, border-color .25s ease;
+  }
+
+  .surface-interactive:hover {
+    border-color: var(--line-strong);
+    box-shadow: var(--shadow-lift);
+    transform: translateY(-2px);
+  }
+
+  /* Gemensam sidrubrik så varje vy börjar likadant. */
+  .page-heading {
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    color: var(--ink-strong);
+  }
+
+  .page-eyebrow {
+    font-size: .6875rem;
+    font-weight: 700;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--brand);
+  }
+
+  .muted {
+    color: var(--ink-muted);
   }
 }
 

@@ -14,18 +14,24 @@ export default async function LoginPage(
 ) {
   const searchParams = await props.searchParams;
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <div className="flex min-h-[80vh] items-center justify-center px-4 py-16">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Logga in</h1>
-          <p className="mt-2 text-gray-600">
+        <div className="mb-8 text-center">
+          <h1 className="page-heading text-3xl">Välkommen tillbaka</h1>
+          <p className="muted mt-2.5 text-sm font-medium">
             Har du inget konto?{' '}
-            <Link href="/register" className="text-blue-600 hover:underline font-medium">
-              Registrera dig
+            <Link href="/register" className="font-semibold text-blue-700 underline-offset-4 hover:underline">
+              Skapa ett gratis
             </Link>
           </p>
         </div>
         <AuthForm action={login} submitLabel="Logga in" redirect={searchParams.redirect} />
+        <p className="muted mt-6 text-center text-xs">
+          Genom att logga in godkänner du våra{' '}
+          <Link href="/terms" className="underline underline-offset-2 hover:text-slate-700">användarvillkor</Link>
+          {' '}och{' '}
+          <Link href="/privacy" className="underline underline-offset-2 hover:text-slate-700">integritetspolicy</Link>.
+        </p>
       </div>
     </div>
   )

@@ -40,7 +40,7 @@ export default async function CreateOfferPage(props: { params: Promise<{ id: str
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-12">
-      <h1 className="text-2xl font-bold text-gray-900 mb-2">Skicka offert</h1>
+      <h1 className="page-heading mb-2 text-2xl">Skicka offert</h1>
 
       <Card className="mb-6 bg-blue-50 border-blue-200">
         <CardBody>

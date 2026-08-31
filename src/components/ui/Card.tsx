@@ -5,22 +5,31 @@ interface CardProps {
   className?: string
 }
 
-export function Card({ children, className }: CardProps) {
+interface RootCardProps extends CardProps {
+  /** Ger kortet hover-lyft. Använd bara när hela kortet är klickbart. */
+  interactive?: boolean
+}
+
+export function Card({ children, className, interactive }: RootCardProps) {
   return (
-    <div className={cn('bg-white border border-gray-200 rounded-xl shadow-sm', className)}>
+    <div className={cn('surface', interactive && 'surface-interactive', className)}>
       {children}
     </div>
   )
 }
 
 export function CardHeader({ children, className }: CardProps) {
-  return <div className={cn('px-6 py-4 border-b border-gray-100', className)}>{children}</div>
+  return <div className={cn('px-6 py-5 border-b border-slate-100', className)}>{children}</div>
 }
 
 export function CardBody({ children, className }: CardProps) {
-  return <div className={cn('px-6 py-4', className)}>{children}</div>
+  return <div className={cn('px-6 py-5', className)}>{children}</div>
 }
 
 export function CardFooter({ children, className }: CardProps) {
-  return <div className={cn('px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-xl', className)}>{children}</div>
+  return (
+    <div className={cn('px-6 py-4 border-t border-slate-100 bg-slate-50/70 rounded-b-[1.25rem]', className)}>
+      {children}
+    </div>
+  )
 }

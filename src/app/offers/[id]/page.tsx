@@ -76,7 +76,7 @@ export default async function OfferPage(
               <Link href={`/jobs/${job.id}`} className="text-sm text-blue-600 hover:underline">
                 ← {job.title}
               </Link>
-              <h1 className="text-2xl font-bold text-gray-900 mt-2">Offert</h1>
+              <h1 className="page-heading mt-2 text-2xl">Offert</h1>
             </div>
             <StatusBadge status={offer.status} />
           </div>

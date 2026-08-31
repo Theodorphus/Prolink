@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { PUBLIC_JOB_FIELDS } from '@/lib/jobs'
-import { formatDate } from '@/lib/utils'
+import { formatCurrency, formatDate } from '@/lib/utils'
 import JobFilters from '@/components/jobs/JobFilters'
 import { getCategoryLabel, getCategoryEmoji } from '@/lib/categories'
 
@@ -36,17 +36,20 @@ export default async function JobsPage(props: Props) {
   const { data: jobs } = await query
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-12">
-      <div className="flex items-center justify-between mb-8">
+    <div className="mx-auto max-w-5xl px-4 py-14 sm:px-6">
+      <div className="mb-9 flex flex-wrap items-end justify-between gap-5">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Hitta uppdrag</h1>
-          <p className="text-gray-600 mt-1">{jobs?.length ?? 0} öppna uppdrag</p>
+          <p className="page-eyebrow">Uppdrag</p>
+          <h1 className="page-heading mt-2.5 text-3xl sm:text-4xl">Hitta uppdrag</h1>
+          <p className="muted mt-2 text-sm font-medium">
+            {jobs?.length ?? 0} {jobs?.length === 1 ? 'öppet uppdrag' : 'öppna uppdrag'} just nu
+          </p>
         </div>
         <Link
           href="/jobs/create"
-          className="inline-flex items-center gap-1.5 bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          className="inline-flex items-center gap-2 rounded-xl bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-blue-900/20 transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-800 hover:shadow-lg hover:shadow-blue-900/25"
         >
-          + Publicera uppdrag
+          Publicera uppdrag
         </Link>
       </div>
 
@@ -54,62 +57,97 @@ export default async function JobsPage(props: Props) {
         <JobFilters />
       </Suspense>
 
-      <div className="space-y-4">
+      <div className="mt-7 space-y-3.5">
         {jobs?.map((job: any) => (
-          <Link key={job.id} href={`/jobs/${job.id}`} className="block group">
-            <div className="bg-white border border-neutral-300 rounded-2xl p-6 hover:border-neutral-500 hover:shadow-md transition-all duration-200">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="text-xl">{getCategoryEmoji(job.category)}</span>
-                    <h2 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+          <Link key={job.id} href={`/jobs/${job.id}`} className="group block">
+            <article className="surface surface-interactive p-6">
+              <div className="flex items-start justify-between gap-5">
+                <div className="min-w-0 flex-1">
+                  <div className="mb-2.5 flex items-center gap-3">
+                    <span
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-xl"
+                      aria-hidden
+                    >
+                      {getCategoryEmoji(job.category)}
+                    </span>
+                    <h2 className="truncate text-lg font-bold tracking-[-0.02em] text-slate-900 transition-colors group-hover:text-blue-700">
                       {job.title}
                     </h2>
                   </div>
-                  <p className="text-sm text-gray-600 line-clamp-2 mb-3">{job.description}</p>
-                  <div className="flex items-center gap-3 flex-wrap text-xs text-gray-500">
-                    <span className="font-medium">{job.customer?.name}</span>
-                    {job.location && <><span>·</span><span>📍 {job.location}</span></>}
-                    <span>·</span>
-                    <span>{formatDate(job.created_at)}</span>
+                  <p className="mb-4 line-clamp-2 text-sm leading-6 text-slate-600">{job.description}</p>
+
+                  <div className="flex flex-wrap items-center gap-2">
                     {job.category && (
-                      <span className="bg-blue-50 text-blue-600 font-medium px-2 py-0.5 rounded-full">
+                      <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 ring-1 ring-inset ring-blue-100">
                         {getCategoryLabel(job.category)}
                       </span>
                     )}
                     {job.work_type && (
-                      <span className="bg-gray-100 text-gray-600 font-medium px-2 py-0.5 rounded-full capitalize">
+                      <span className="rounded-full bg-slate-50 px-2.5 py-1 text-xs font-semibold capitalize text-slate-600 ring-1 ring-inset ring-slate-200">
                         {job.work_type}
                       </span>
                     )}
+                    {job.location && (
+                      <span className="text-xs font-medium text-slate-500">{job.location}</span>
+                    )}
+                  </div>
+
+                  {/* Avsändare och datum är sekundärt och skiljs av en linje så
+                      det inte konkurrerar med uppdragets innehåll. */}
+                  <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-slate-100 pt-3.5 text-xs font-medium text-slate-500">
+                    <span>{job.customer?.name ?? 'Prolink-kund'}</span>
+                    <span aria-hidden>·</span>
+                    <span>{formatDate(job.created_at)}</span>
                   </div>
                 </div>
-                <div className="text-right shrink-0">
+
+                <div className="shrink-0 text-right">
                   {job.budget ? (
                     <>
-                      <p className="font-semibold text-blue-600 text-lg">{new Intl.NumberFormat('sv-SE', { style: 'currency', currency: 'SEK', maximumFractionDigits: 0 }).format(job.budget)}</p>
-                      <p className="text-xs text-gray-400">budget</p>
+                      <p className="text-lg font-black tracking-[-0.02em] text-slate-900">
+                        {formatCurrency(job.budget)}
+                      </p>
+                      <p className="mt-0.5 text-xs font-medium text-slate-400">budget</p>
                     </>
                   ) : (
-                    <span className="text-sm bg-neutral-100 text-neutral-600 font-medium px-2.5 py-1 rounded-lg">
+                    <span className="inline-flex rounded-lg bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-600 ring-1 ring-inset ring-slate-200">
                       Öppen budget
                     </span>
                   )}
                 </div>
               </div>
-            </div>
+            </article>
           </Link>
         ))}
 
         {(!jobs || jobs.length === 0) && (
-          <div className="text-center py-16 text-gray-500">
+          <div className="surface px-6 py-20 text-center">
             {q ? (
-              <p className="text-lg">Inga uppdrag matchade &ldquo;{q}&rdquo;.</p>
+              <>
+                <p className="text-lg font-bold text-slate-900">
+                  Inga uppdrag matchade &ldquo;{q}&rdquo;
+                </p>
+                <p className="muted mx-auto mt-2 max-w-sm text-sm">
+                  Prova ett bredare sökord eller rensa filtren.
+                </p>
+                <Link
+                  href="/jobs"
+                  className="mt-6 inline-flex rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-800 shadow-sm transition hover:border-slate-300 hover:shadow-md"
+                >
+                  Rensa filter
+                </Link>
+              </>
             ) : (
               <>
-                <p className="text-lg">Inga öppna uppdrag just nu.</p>
-                <Link href="/jobs" className="mt-4 inline-flex text-sm text-blue-600 font-medium hover:underline">
-                  ← Rensa filter
+                <p className="text-lg font-bold text-slate-900">Inga öppna uppdrag just nu</p>
+                <p className="muted mx-auto mt-2 max-w-sm text-sm">
+                  Är du först ut? Publicera ett uppdrag och få offerter från frilansare.
+                </p>
+                <Link
+                  href="/jobs/create"
+                  className="mt-6 inline-flex rounded-xl bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-800 hover:shadow-lg"
+                >
+                  Publicera uppdrag
                 </Link>
               </>
             )}

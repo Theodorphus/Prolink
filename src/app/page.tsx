@@ -40,9 +40,35 @@ export default async function HomePage() {
           <div className="float-card relative mx-auto w-full max-w-xl lg:mx-0">
             <div className="absolute -inset-7 rotate-2 rounded-[2.75rem] bg-gradient-to-br from-blue-500/20 to-violet-500/10 blur-sm" />
             <div className="relative rounded-[2rem] border border-white/15 bg-white/[0.09] p-5 shadow-2xl shadow-black/30 backdrop-blur-2xl sm:p-7">
-              <div className="mb-6 flex items-center justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-300">Exempel på uppdrag</p><p className="mt-1 text-sm text-slate-400">Publicera på några minuter</p></div><div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/10 text-xl text-blue-200">✦</div></div>
-              <div className="rounded-2xl border border-white/10 bg-slate-950/45 p-5 shadow-inner"><p className="text-xs font-semibold text-blue-300">WEBBUTVECKLING</p><h2 className="mt-2 text-xl font-bold tracking-tight text-white">Ny webbplats för växande redovisningsbyrå</h2><p className="mt-3 text-sm leading-6 text-slate-300">Vi söker hjälp med design och utveckling av en modern webbplats i Next.js.</p><div className="mt-5 flex items-center justify-between border-t border-white/10 pt-4"><span className="rounded-full bg-emerald-400/15 px-3 py-1.5 text-xs font-bold text-emerald-300">Öppen för offerter</span><span className="text-sm font-black text-white">25 000 kr</span></div></div>
-              <div className="mt-4 grid grid-cols-2 gap-3"><div className="rounded-2xl bg-slate-950 p-4 text-white"><p className="text-2xl font-black">1</p><p className="mt-1 text-xs font-medium text-white/60">brief till alla</p></div><div className="rounded-2xl bg-blue-600 p-4 text-white"><p className="text-2xl font-black">3</p><p className="mt-1 text-xs font-medium text-white/70">enkla steg</p></div></div>
+              <div className="mb-6 flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-300">Så går det till</p>
+                  <p className="mt-1 text-sm text-slate-400">Från brief till klar leverans</p>
+                </div>
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/10 text-xl text-blue-200" aria-hidden>✦</div>
+              </div>
+
+              <ol className="space-y-3">
+                {[
+                  ['Du beskriver uppdraget', 'Behov, budget och tidsram i ett formulär.'],
+                  ['Frilansare lämnar offert', 'Du jämför pris, upplägg och tidigare omdömen.'],
+                  ['Ni gör klart i Prolink', 'Chatt, leverans och omdöme på samma ställe.'],
+                ].map(([title, copy], index) => (
+                  <li key={title} className="flex gap-3.5 rounded-2xl border border-white/10 bg-slate-950/45 p-4">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-500/20 text-xs font-black text-blue-200" aria-hidden>
+                      {index + 1}
+                    </span>
+                    <div>
+                      <p className="text-sm font-bold text-white">{title}</p>
+                      <p className="mt-1 text-xs leading-5 text-slate-400">{copy}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+
+              <p className="mt-5 border-t border-white/10 pt-4 text-center text-xs font-medium text-slate-400">
+                Kostnadsfritt att publicera. Inga bindningstider.
+              </p>
             </div>
           </div>
         </div>

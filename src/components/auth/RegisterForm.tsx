@@ -40,7 +40,7 @@ export default function RegisterForm({ action }: RegisterFormProps) {
   }, [state, router])
 
   return (
-    <div className="bg-white shadow-sm border border-gray-200 rounded-xl p-8 space-y-5">
+    <div className="surface p-8 space-y-5">
       {/* Role selector — shared between Google and email signup */}
       <div className="space-y-2">
         <label className="block text-sm font-medium text-gray-700">Jag är</label>
@@ -77,7 +77,7 @@ export default function RegisterForm({ action }: RegisterFormProps) {
 
       <form action={formAction} className="space-y-4">
         {state && 'error' in state && (
-          <div className="bg-red-50 text-red-700 border border-red-200 rounded-lg px-4 py-3 text-sm">
+          <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
             {state.error}
           </div>
         )}

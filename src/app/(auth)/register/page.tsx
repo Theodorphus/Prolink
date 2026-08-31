@@ -9,18 +9,24 @@ export const metadata = {
 
 export default function RegisterPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <div className="flex min-h-[80vh] items-center justify-center px-4 py-16">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Skapa konto</h1>
-          <p className="mt-2 text-gray-600">
+        <div className="mb-8 text-center">
+          <h1 className="page-heading text-3xl">Kom igång på Prolink</h1>
+          <p className="muted mt-2.5 text-sm font-medium">
             Har du redan ett konto?{' '}
-            <Link href="/login" className="text-blue-600 hover:underline font-medium">
+            <Link href="/login" className="font-semibold text-blue-700 underline-offset-4 hover:underline">
               Logga in
             </Link>
           </p>
         </div>
         <RegisterForm action={register} />
+        <p className="muted mt-6 text-center text-xs">
+          Genom att skapa ett konto godkänner du våra{' '}
+          <Link href="/terms" className="underline underline-offset-2 hover:text-slate-700">användarvillkor</Link>
+          {' '}och{' '}
+          <Link href="/privacy" className="underline underline-offset-2 hover:text-slate-700">integritetspolicy</Link>.
+        </p>
       </div>
     </div>
   )

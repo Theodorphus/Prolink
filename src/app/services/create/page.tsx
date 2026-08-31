@@ -42,7 +42,7 @@ export default async function CreateServicePage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-12">
-      <h1 className="text-3xl font-bold text-gray-900 mb-2">Lägg till tjänst</h1>
+      <h1 className="page-heading mb-2 text-3xl">Lägg till tjänst</h1>
       <p className="text-gray-600 mb-8">Presentera en av dina tjänster och nå potentiella kunder.</p>
       <CreateServiceForm />
     </div>
