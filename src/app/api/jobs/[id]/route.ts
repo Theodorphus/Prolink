@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { PUBLIC_JOB_FIELDS } from '@/lib/jobs'
 
 export async function GET(_: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
@@ -7,7 +8,7 @@ export async function GET(_: NextRequest, props: { params: Promise<{ id: string 
 
   const { data, error } = await supabase
     .from('jobs')
-    .select('*, customer:users(id, name, bio, avatar_url), offers(*, provider:users(id, name, avatar_url))')
+    .select(`${PUBLIC_JOB_FIELDS}, customer:users(id, name, bio, avatar_url), offers(*, provider:users(id, name, avatar_url))`)
     .eq('id', params.id)
     .single()
 

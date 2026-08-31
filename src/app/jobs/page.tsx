@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
+import { PUBLIC_JOB_FIELDS } from '@/lib/jobs'
 import { formatDate } from '@/lib/utils'
 import JobFilters from '@/components/jobs/JobFilters'
 import { getCategoryLabel, getCategoryEmoji } from '@/lib/categories'
@@ -21,7 +22,7 @@ export default async function JobsPage(props: Props) {
 
   let query = supabase
     .from('jobs')
-    .select('*, customer:users(name)')
+    .select(`${PUBLIC_JOB_FIELDS}, customer:users(name)`)
     .eq('status', 'open')
 
   if (q) query = query.or(`title.ilike.%${q}%,description.ilike.%${q}%`)

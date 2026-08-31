@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { PUBLIC_JOB_FIELDS } from '@/lib/jobs'
 import {
   categoryValue,
   InputValidationError,
@@ -27,7 +28,7 @@ export async function GET(request: NextRequest) {
 
   const { data, error } = await supabase
     .from('jobs')
-    .select('*, customer:users(id, name, avatar_url)')
+    .select(`${PUBLIC_JOB_FIELDS}, customer:users(id, name, avatar_url)`)
     .eq('status', status)
     .order('created_at', { ascending: false })
 

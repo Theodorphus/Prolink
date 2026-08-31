@@ -24,8 +24,14 @@ export default async function JobPage(props: { params: Promise<{ id: string }> }
   const { id } = await props.params
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  const { data: job } = await supabase.from('jobs').select('*, customer:users(id, name, bio, avatar_url)').eq('id', id).single()
+  // Kolumnerna speglar PUBLIC_JOB_FIELDS och utelämnar employer_email/contact_info.
+  // Literalen behålls här eftersom .single() förlorar typinferensen med en mall-literal.
+  const { data: job } = await supabase.from('jobs').select('id, customer_id, title, description, budget, status, created_at, category, salary, location, work_type, employer_name, customer:users(id, name, bio, avatar_url)').eq('id', id).single()
   if (!job) notFound()
+
+  // Supabase typar den inbäddade relationen som en array eftersom FK-relationen
+  // inte finns i de handunderhållna typerna. .single() ger alltid en rad.
+  const customer = Array.isArray(job.customer) ? job.customer[0] : job.customer
 
   const isOwner = user?.id === job.customer_id
   const { data: viewerProfile } = user ? await supabase.from('users').select('role').eq('id', user.id).single() : { data: null }
@@ -50,7 +56,7 @@ export default async function JobPage(props: { params: Promise<{ id: string }> }
                 <div className="min-w-0 flex-1"><div className="flex items-center gap-3 text-xs font-black uppercase tracking-wider text-blue-600"><span className="rounded-xl bg-blue-50 p-2 text-xl" aria-hidden>{getCategoryEmoji(job.category)}</span>{getCategoryLabel(job.category)}</div><h1 className="mt-5 text-3xl font-black tracking-[-0.035em] text-slate-950 sm:text-4xl">{job.title}</h1></div>
                 <span className={`rounded-full px-3 py-1.5 text-xs font-bold ${job.status === 'open' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'}`}>{job.status === 'open' ? 'Öppet för offerter' : 'Stängt'}</span>
               </div>
-              <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 border-y border-slate-100 py-4 text-sm font-medium text-slate-500"><span>{job.customer?.name ?? 'Prolink-kund'}</span><span>{formatDate(job.created_at)}</span>{job.location && <span>{job.location}</span>}{workType && <span>{workType}</span>}</div>
+              <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 border-y border-slate-100 py-4 text-sm font-medium text-slate-500"><span>{customer?.name ?? 'Prolink-kund'}</span><span>{formatDate(job.created_at)}</span>{job.location && <span>{job.location}</span>}{workType && <span>{workType}</span>}</div>
               <div className="mt-7 whitespace-pre-wrap text-base leading-8 text-slate-700">{job.description}</div>
             </section>
 
