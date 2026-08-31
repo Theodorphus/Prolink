@@ -1,13 +1,14 @@
 # Prolink handoff
 
-Last updated: 2026-08-31
+Last updated: 2026-08-31 (Phase 2)
 
 ## Current milestone
 
 Phase 1 (security, schema safety, and technical baseline) is implemented in the
 repository and applied to the hosted Supabase project. The framework has been
 upgraded to Next.js 16, and the employment-board features have been retired.
-Phase 2 has not started, and the homepage has not been redesigned.
+Phase 2 (product, trust and conversion) is implemented; see the Phase 2
+section below.
 The product direction is now explicitly a Swedish freelance-service marketplace
 for small businesses and independent specialists, built around:
 
@@ -161,6 +162,99 @@ with the Gothenburg demo seed. This narrows the product to
 - `npm run build`: passed, 18 routes generated.
 - `npm run lint`: 0 errors, 23 warnings. The warning rules are deliberately
   downgraded in `eslint.config.mjs`.
+
+## Phase 2 (2026-08-31)
+
+Product, trust and conversion work. No destructive database change, no payments,
+escrow, AI matching, company accounts or admin panel. The core flow is unchanged:
+`assignment -> offer -> chat -> delivery -> completion -> review`.
+
+### Public provider profiles
+
+`/profile/[id]` is no longer behind the proxy. The provider profile is the most
+important trust surface and had to be readable before signup.
+
+Verified as `anon` against the hosted database on 2026-08-31: a signed-out
+visitor can read profiles, services, reviews and jobs, gets **zero** offers, and
+is denied `user_private_profiles` at the grant level before RLS is even reached.
+The `users` grants expose only `id, role, name, bio, skills, hourly_rate,
+avatar_url, linkedin_url, created_at` to `anon` — phone and CV are not grantable.
+Editing still renders only for the signed-in owner, and contacting, offering and
+chatting still require login.
+
+### Migration 012
+
+Applied to the hosted project and verified, recorded there as
+`20260831050847_fix_review_policy_bypass`. The `reviews` table now has exactly
+one insert policy and one read policy.
+
+### What changed
+
+- Homepage repositioned around remote-delivered specialist services, with the
+  two paths (post an assignment vs. browse packaged services) explained near the
+  top instead of repeating one process twice.
+- Category cards said "Hitta specialist" but linked to the job list. They now
+  link to filtered services. Added `juridik` (Juridik & avtal); renamed
+  `foto-video` to "Foto, video & redigering" and `redovisning` to "Ekonomi &
+  redovisning". Category is free text in the database with no check constraint,
+  so this needed no migration.
+- Profile page rebuilt: services, skills, hourly rate, LinkedIn, member since,
+  average rating and review count, with explicit empty states.
+- Job detail: key facts as a scannable grid, description promoted to the main
+  content with its own heading, publisher card, and a panel explaining what
+  happens after an offer.
+- Service detail: full description, provider block with rating and skills, link
+  to the public profile, and contact CTA.
+- Shared `JobCard` and `ServiceCard` replace duplicated markup. Removed the
+  unused `TaskCard`, `ServiceCard`, `CategoryCard` and `StepCard` at
+  `src/components/`, plus an empty leftover `src/components/swipe/`. Verified
+  unused before deletion.
+- Mobile: hero heading scaled down, four priority categories with a "Visa alla
+  kategorier" disclosure, two recent jobs, and an "Alla uppdrag" link that is
+  visible on mobile where the header link is hidden.
+- Login now explains why an account is needed, keyed off the `redirect` the
+  proxy already sets, and states that publishing is free.
+- `useFormState` migrated to React 19 `useActionState`.
+- `.claude/settings.json` and `.claude/settings.local.json` pointed at a
+  `projects\Prolink` path missing the `Övrigt` folder, and at a non-existent
+  `Theod` user. Both corrected.
+
+### Deliberate limits
+
+- **Offer counts are not shown publicly.** RLS restricts `offers` to its
+  participants, so a public visitor would always be served `0` — a misleading
+  number rather than a safe one. The count is shown only to the job owner.
+- **Service prices are labelled "frånpris", not "fast pris."** The `services`
+  table has a single price column and no way to express scope, so calling it a
+  fixed price promises more than the data model carries.
+- **No purchase language.** Services cannot be ordered in Prolink, so the CTAs
+  say "Diskutera tjänsten" and "Kontakta leverantören", and both detail pages
+  state that payment is settled directly between the parties.
+- **No invented numbers.** Completed assignments cannot be counted from public
+  data without leaking offers, so no such figure is shown. Nothing about
+  verification, response time or activity is fabricated.
+
+### Recommended for a future database phase
+
+These need a migration and were deliberately not faked:
+
+- `services`: structured `deliverables`, `revisions`, `scope` and an optional
+  `price_type` so a service can state what is included and whether the price is
+  fixed or a starting point.
+- `offers`: a public, aggregated count per job (a view or counter column) so the
+  job page can show interest without exposing offers.
+- `users`: a counter or view for completed deliveries, to show experience
+  without reading the offer table.
+- Foreign-key relationships in the generated types, so embedded relations stop
+  being inferred as arrays and the manual `Array.isArray` normalisation can go.
+- Decide whether to drop the unused `applications` and `saved_jobs` tables.
+
+### Verification 2026-08-31 (Phase 2)
+
+- `npm run lint`: 0 errors, 23 warnings (rules deliberately downgraded).
+- `npm run typecheck`: passed.
+- `npm test`: 7/7 passed.
+- `npm run build`: passed, 18 routes. No dev indicators in the production output.
 
 ## Recommended next action
 

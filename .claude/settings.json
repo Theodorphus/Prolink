@@ -1,26 +1,17 @@
 {
   "permissions": {
     "allow": [
-      "Read(//c/Users/Theo/projects/Prolink/**)",
-      "Bash(npx create-next-app@14 . --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --yes)",
-      "Bash(cd /tmp)",
-      "Bash(npx create-next-app@14 prolink --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --yes)",
+      "Read(//c/Users/Theo/projects/Övrigt/Prolink/**)",
       "Bash(npm install *)",
-      "Bash(xcopy /tmp/prolink /c/Users/Theo/projects/Prolink /E /H /Y)",
-      "Bash(robocopy \"C:\\\\Users\\\\Theo\\\\AppData\\\\Local\\\\Temp\\\\prolink\" \"C:\\\\Users\\\\Theo\\\\projects\\\\Prolink\" /E /NFL /NJH)",
-      "Bash(npx tsc *)"
+      "Bash(npm run *)",
+      "Bash(npx tsc *)",
+      "Bash(npx next *)",
+      "Bash(npx eslint *)"
     ],
     "additionalDirectories": [
-      "C:\\Users\\Theo\\AppData\\Local\\Temp\\prolink",
-      "C:\\Users\\Theo\\projects\\Prolink\\src",
-      "C:\\Users\\Theo\\projects\\Prolink\\supabase",
-      "C:\\Users\\Theo\\projects\\Prolink\\src\\app\\(auth)",
-      "C:\\Users\\Theo\\projects\\Prolink\\src\\components",
-      "C:\\Users\\Theo\\projects\\Prolink\\src\\app\\api\\jobs",
-      "C:\\Users\\Theo\\projects\\Prolink\\src\\lib",
-      "C:\\Users\\Theo\\projects\\Prolink\\src\\app\\jobs",
-      "C:\\Users\\Theo\\projects\\Prolink\\src\\app\\offers",
-      "C:\\Users\\Theo\\projects\\Prolink\\src\\app\\services"
+      "C:\\Users\\Theo\\projects\\Övrigt\\Prolink\\src",
+      "C:\\Users\\Theo\\projects\\Övrigt\\Prolink\\supabase",
+      "C:\\Users\\Theo\\projects\\Övrigt\\Prolink\\tests"
     ]
   }
 }

@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useFormState, useFormStatus } from 'react-dom'
+import { useActionState, useEffect, useState } from 'react'
+import { useFormStatus } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -28,7 +28,7 @@ const roles = [
 ]
 
 export default function RegisterForm({ action }: RegisterFormProps) {
-  const [state, formAction] = useFormState<ActionState, FormData>(action, null)
+  const [state, formAction] = useActionState<ActionState, FormData>(action, null)
   const [selectedRole, setSelectedRole] = useState<string>('customer')
   const router = useRouter()
 

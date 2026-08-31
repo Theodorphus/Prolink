@@ -2,9 +2,8 @@ import Link from 'next/link'
 import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { PUBLIC_JOB_FIELDS } from '@/lib/jobs'
-import { formatCurrency, formatDate } from '@/lib/utils'
 import JobFilters from '@/components/jobs/JobFilters'
-import { getCategoryLabel, getCategoryEmoji } from '@/lib/categories'
+import JobCard from '@/components/jobs/JobCard'
 
 export const metadata = {
   title: 'Hitta frilansuppdrag',
@@ -59,65 +58,7 @@ export default async function JobsPage(props: Props) {
 
       <div className="mt-7 space-y-3.5">
         {jobs?.map((job: any) => (
-          <Link key={job.id} href={`/jobs/${job.id}`} className="group block">
-            <article className="surface surface-interactive p-6">
-              <div className="flex items-start justify-between gap-5">
-                <div className="min-w-0 flex-1">
-                  <div className="mb-2.5 flex items-center gap-3">
-                    <span
-                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-xl"
-                      aria-hidden
-                    >
-                      {getCategoryEmoji(job.category)}
-                    </span>
-                    <h2 className="truncate text-lg font-bold tracking-[-0.02em] text-slate-900 transition-colors group-hover:text-blue-700">
-                      {job.title}
-                    </h2>
-                  </div>
-                  <p className="mb-4 line-clamp-2 text-sm leading-6 text-slate-600">{job.description}</p>
-
-                  <div className="flex flex-wrap items-center gap-2">
-                    {job.category && (
-                      <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 ring-1 ring-inset ring-blue-100">
-                        {getCategoryLabel(job.category)}
-                      </span>
-                    )}
-                    {job.work_type && (
-                      <span className="rounded-full bg-slate-50 px-2.5 py-1 text-xs font-semibold capitalize text-slate-600 ring-1 ring-inset ring-slate-200">
-                        {job.work_type}
-                      </span>
-                    )}
-                    {job.location && (
-                      <span className="text-xs font-medium text-slate-500">{job.location}</span>
-                    )}
-                  </div>
-
-                  {/* Avsändare och datum är sekundärt och skiljs av en linje så
-                      det inte konkurrerar med uppdragets innehåll. */}
-                  <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-slate-100 pt-3.5 text-xs font-medium text-slate-500">
-                    <span>{job.customer?.name ?? 'Prolink-kund'}</span>
-                    <span aria-hidden>·</span>
-                    <span>{formatDate(job.created_at)}</span>
-                  </div>
-                </div>
-
-                <div className="shrink-0 text-right">
-                  {job.budget ? (
-                    <>
-                      <p className="text-lg font-black tracking-[-0.02em] text-slate-900">
-                        {formatCurrency(job.budget)}
-                      </p>
-                      <p className="mt-0.5 text-xs font-medium text-slate-400">budget</p>
-                    </>
-                  ) : (
-                    <span className="inline-flex rounded-lg bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-600 ring-1 ring-inset ring-slate-200">
-                      Öppen budget
-                    </span>
-                  )}
-                </div>
-              </div>
-            </article>
-          </Link>
+          <JobCard key={job.id} job={job} variant="row" />
         ))}
 
         {(!jobs || jobs.length === 0) && (

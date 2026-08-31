@@ -1,7 +1,12 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-const protectedRoutes = ['/jobs/create', '/services/create', '/profile', '/messages', '/offers']
+// /profile/[id] är avsiktligt publik: leverantörsprofilen är plattformens
+// viktigaste förtroendesida och måste gå att läsa innan man skapar konto.
+// Sidan hämtar bara publika kolumner för andra användare, och privata
+// uppgifter (telefon) ligger i user_private_profiles bakom egen RLS.
+// Redigeringsformuläret renderas bara för den inloggade ägaren.
+const protectedRoutes = ['/jobs/create', '/services/create', '/messages', '/offers']
 const authRoutes = ['/login', '/register']
 
 export async function proxy(request: NextRequest) {

@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useFormState, useFormStatus } from 'react-dom'
+import { useActionState, useEffect } from 'react'
+import { useFormStatus } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -26,7 +26,7 @@ function SubmitButton({ label }: { label: string }) {
 }
 
 export default function AuthForm({ action, submitLabel, redirect, next }: AuthFormProps) {
-  const [state, formAction] = useFormState<ActionState, FormData>(action, null)
+  const [state, formAction] = useActionState<ActionState, FormData>(action, null)
   const router = useRouter()
 
   useEffect(() => {
