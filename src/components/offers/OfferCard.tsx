@@ -17,16 +17,28 @@ interface OfferCardProps {
 export default function OfferCard({ offer, isOwner, currentUserId }: OfferCardProps) {
   const router = useRouter()
   const [loading, setLoading] = useState<'accept' | 'reject' | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   async function updateStatus(status: 'accepted' | 'rejected') {
     setLoading(status === 'accepted' ? 'accept' : 'reject')
-    const res = await fetch(`/api/offers/${offer.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
-    })
-    if (res.ok) router.refresh()
-    setLoading(null)
+    setError(null)
+    try {
+      const res = await fetch(`/api/offers/${offer.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      })
+      if (res.ok) {
+        router.refresh()
+        return
+      }
+      const body = await res.json().catch(() => null)
+      setError(body?.error ?? 'Något gick fel. Försök igen.')
+    } catch {
+      setError('Kunde inte nå servern. Kontrollera din uppkoppling.')
+    } finally {
+      setLoading(null)
+    }
   }
 
   const isOwnOffer = currentUserId === offer.provider_id
@@ -58,6 +70,11 @@ export default function OfferCard({ offer, isOwner, currentUserId }: OfferCardPr
 
       {(isOwner || isOwnOffer) && (
         <CardFooter>
+          {error && (
+            <p role="alert" className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+              {error}
+            </p>
+          )}
           <div className="flex gap-3">
             <Link
               href={`/offers/${offer.id}`}

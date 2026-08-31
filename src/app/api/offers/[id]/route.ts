@@ -5,6 +5,25 @@ import { sendOfferAcceptedEmail } from '@/lib/email'
 import { canTransitionOffer, OFFER_STATUSES } from '@/lib/marketplace-rules.mjs'
 import { InputValidationError, oneOf, uuidValue } from '@/lib/validation'
 
+// transition_offer i databasen kastar engelska felmeddelanden. De affärsregler
+// en användare faktiskt kan träffa översätts här så att gränssnittet är på
+// svenska och inte exponerar databasens formuleringar.
+function transitionErrorMessage(message: string): string {
+  const normalized = message.toLowerCase()
+
+  if (normalized.includes('already has a winning offer')) {
+    return 'Uppdraget har redan en accepterad offert.'
+  }
+  if (normalized.includes('no longer open')) {
+    return 'Uppdraget är inte längre öppet.'
+  }
+  if (normalized.includes('invalid offer transition')) {
+    return 'Offerten kan inte ändras till den statusen.'
+  }
+
+  return 'Offerten kunde inte uppdateras.'
+}
+
 export async function PATCH(request: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
   const supabase = await createClient()
@@ -56,7 +75,7 @@ export async function PATCH(request: NextRequest, props: { params: Promise<{ id:
   if (error) {
     if (error.code === '42501') return NextResponse.json({ error: 'Ej behörig' }, { status: 403 })
     if (error.code === '23505' || error.code === '23514') {
-      return NextResponse.json({ error: error.message }, { status: 409 })
+      return NextResponse.json({ error: transitionErrorMessage(error.message) }, { status: 409 })
     }
     return NextResponse.json({ error: 'Kunde inte uppdatera offerten' }, { status: 500 })
   }

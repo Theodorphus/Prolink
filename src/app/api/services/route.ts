@@ -15,7 +15,7 @@ export async function GET() {
     .select('*, provider:users(id, name, avatar_url, hourly_rate)')
     .order('created_at', { ascending: false })
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: 'Tjänsterna kunde inte hämtas' }, { status: 500 })
   return NextResponse.json(data)
 }
 

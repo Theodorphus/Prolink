@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
     if (error.code === '23505') {
       return NextResponse.json({ error: 'Du har redan lämnat ett omdöme' }, { status: 409 })
     }
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Omdömet kunde inte sparas' }, { status: 500 })
   }
 
   return NextResponse.json(data, { status: 201 })

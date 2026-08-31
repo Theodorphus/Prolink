@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { PUBLIC_JOB_FIELDS } from '@/lib/jobs'
 import { Card, CardBody } from '@/components/ui/Card'
 import { formatDate } from '@/lib/utils'
 import Image from 'next/image'
@@ -41,7 +42,7 @@ export default async function ProfilePage(props: { params: Promise<{ id: string 
 
   const { data: jobs } = await supabase
     .from('jobs')
-    .select('*')
+    .select(PUBLIC_JOB_FIELDS)
     .eq('customer_id', params.id)
     .order('created_at', { ascending: false })
     .limit(5)

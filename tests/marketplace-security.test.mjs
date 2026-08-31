@@ -108,3 +108,36 @@ test('security migration contains database enforcement for winner and private st
   assert.match(sql, /auth\.uid\(\) in \(o\.provider_id, j\.customer_id\)/i)
   assert.match(sql, /revoke select, insert, update on table public\.users from anon, authenticated/i)
 })
+
+test('the permissive review policy that bypassed the strict one is dropped', async () => {
+  // Migration 010 added a strict insert policy for reviews but left the older
+  // permissive policy in place. Postgres ORs permissive policies together, so
+  // any authenticated user could review any other user without a completed
+  // offer. Migration 012 removes the weak policy.
+  const migrationUrl = new URL('../supabase/migrations/012_fix_review_policy_bypass.sql', import.meta.url)
+  const sql = await readFile(migrationUrl, 'utf8')
+
+  assert.match(sql, /drop policy if exists "Inloggade kan skriva recensioner" on public\.reviews/i)
+
+  const baselineUrl = new URL('../supabase/migrations/010_phase1_security_baseline.sql', import.meta.url)
+  const baseline = await readFile(baselineUrl, 'utf8')
+  assert.match(baseline, /completed offer participants can write review/i)
+})
+
+test('public job selections never expose employer contact details', async () => {
+  // The public job queries must not return employer_email or contact_info.
+  // Both columns are readable by the anon role in the database, so the
+  // restriction has to happen in the selected column list.
+  const jobsUrl = new URL('../src/lib/jobs.ts', import.meta.url)
+  const source = await readFile(jobsUrl, 'utf8')
+
+  // Assert against the field list itself, not the file: the surrounding comment
+  // names both columns on purpose to explain why they are excluded.
+  const fieldList = source.match(/PUBLIC_JOB_FIELDS[\s\S]*?'([^']+)'/)
+  assert.ok(fieldList, 'PUBLIC_JOB_FIELDS måste vara en literal strängkonstant')
+
+  const fields = fieldList[1].split(',').map(field => field.trim())
+  assert.ok(!fields.includes('employer_email'), 'employer_email får inte ingå')
+  assert.ok(!fields.includes('contact_info'), 'contact_info får inte ingå')
+  assert.ok(fields.includes('title'), 'listan ska innehålla de publika fälten')
+})

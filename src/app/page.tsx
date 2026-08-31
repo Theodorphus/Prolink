@@ -1,15 +1,22 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { PUBLIC_JOB_FIELDS } from '@/lib/jobs'
 import { CATEGORIES, getCategoryEmoji, getCategoryLabel } from '@/lib/categories'
 import { formatCurrency } from '@/lib/utils'
-import type { Job, User } from '@/types/database'
+import type { PublicJob, User } from '@/types/database'
 
-type FeaturedJob = Job & { customer: Pick<User, 'name'> | null }
+type FeaturedJob = PublicJob & { customer: Pick<User, 'name'> | null }
 
 export default async function HomePage() {
   const supabase = await createClient()
-  const { data } = await supabase.from('jobs').select('*, customer:users(name)').eq('status', 'open').order('created_at', { ascending: false }).limit(6)
-  const jobs = (data ?? []) as FeaturedJob[]
+  const { data } = await supabase.from('jobs').select(`${PUBLIC_JOB_FIELDS}, customer:users(name)`).eq('status', 'open').order('created_at', { ascending: false }).limit(6)
+
+  // Supabase typar den inbäddade relationen som en array eftersom FK-relationen
+  // saknas i de handunderhållna typerna. Varje uppdrag har exakt en kund.
+  const jobs: FeaturedJob[] = (data ?? []).map(row => ({
+    ...row,
+    customer: Array.isArray(row.customer) ? row.customer[0] ?? null : row.customer,
+  })) as FeaturedJob[]
 
   return (
     <div className="bg-[#f5f7fb] text-slate-950">

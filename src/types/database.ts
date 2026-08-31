@@ -41,6 +41,12 @@ export interface Job {
   created_at: string
 }
 
+// Det publika urvalet av ett uppdrag. Motsvarar PUBLIC_JOB_FIELDS i
+// src/lib/jobs.ts och utelämnar employer_email och contact_info, som aldrig får
+// lämna servern i ett publikt svar. Typa publika jobblistor som PublicJob så
+// fångar kompilatorn försök att läsa de privata fälten.
+export type PublicJob = Omit<Job, 'employer_email' | 'contact_info'>
+
 export interface Application {
   id: string
   job_id: string

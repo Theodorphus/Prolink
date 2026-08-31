@@ -12,7 +12,7 @@ export async function GET(_: NextRequest, props: { params: Promise<{ id: string 
     .eq('id', params.id)
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 404 })
+  if (error) return NextResponse.json({ error: 'Uppdraget hittades inte' }, { status: 404 })
   return NextResponse.json(data)
 }
 
@@ -23,13 +23,22 @@ export async function DELETE(_: NextRequest, props: { params: Promise<{ id: stri
 
   if (!user) return NextResponse.json({ error: 'Ej inloggad' }, { status: 401 })
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('jobs')
     .delete()
     .eq('id', params.id)
     .eq('customer_id', user.id)
+    .select('id')
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: 'Uppdraget kunde inte tas bort' }, { status: 500 })
+
+  // Filtret på customer_id gör att ett försök att radera någon annans uppdrag
+  // returnerar noll rader utan fel. Utan den här kontrollen svarar API:t 200
+  // trots att ingenting togs bort.
+  if (!data || data.length === 0) {
+    return NextResponse.json({ error: 'Uppdraget hittades inte' }, { status: 404 })
+  }
+
   return NextResponse.json({ success: true })
 }
 
@@ -57,8 +66,10 @@ export async function PATCH(request: NextRequest, props: { params: Promise<{ id:
     .eq('id', params.id)
     .eq('customer_id', user.id)
     .select()
-    .single()
+    .maybeSingle()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: 'Uppdraget kunde inte uppdateras' }, { status: 500 })
+  if (!data) return NextResponse.json({ error: 'Uppdraget hittades inte' }, { status: 404 })
+
   return NextResponse.json(data)
 }

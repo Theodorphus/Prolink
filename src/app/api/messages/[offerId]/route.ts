@@ -51,7 +51,7 @@ export async function GET(_: NextRequest, props: { params: Promise<{ offerId: st
     .eq('offer_id', offerId)
     .order('created_at', { ascending: true })
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: 'Meddelandena kunde inte hämtas' }, { status: 500 })
   return NextResponse.json(data)
 }
 
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest, props: { params: Promise<{ offe
     .select('*, sender:users(id, name, avatar_url)')
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: 'Meddelandet kunde inte skickas' }, { status: 500 })
 
   // Email is best-effort and runs only after participant authorization.
   try {
