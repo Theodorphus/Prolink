@@ -2,37 +2,76 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Designsystem.
-   Startsidan var byggd med ett eget visuellt språk (font-black, tät tracking,
-   stora radier) medan de inre sidorna använde Tailwinds standardvärden. Det gav
-   intrycket av två olika produkter, vilket underminerar förtroendet just där
-   användaren ska fatta beslut om pengar. Tokens nedan är den gemensamma
-   grunden. */
+/* ============================================================================
+   PROLINK DESIGNSYSTEM
+   Nordisk, ljus estetik. En neutral gråskala med exakt en accentfärg, mjuka
+   gradienter, låg skuggopacitet och generöst med luft.
+
+   Tokens är den enda källan till färg, radie, skugga och rörelse. Sidorna ska
+   referera dessa, inte hårdkoda egna värden, så att produkten håller ihop.
+   ========================================================================= */
 :root {
-  --surface-page: #f6f8fc;
+  /* --- Ytor ------------------------------------------------------------- */
+  --surface-page: #f9fafb;
   --surface-card: #ffffff;
-  --surface-sunken: #eef2f9;
+  --surface-sunken: #f1f4f9;
+  --surface-inverse: #0f172a;
 
-  --ink-strong: #0b1220;
-  --ink-body: #3f4a60;
-  --ink-muted: #697488;
+  /* Mjuka gradienter. Används stort och lågmält, aldrig som platta färgblock. */
+  --gradient-soft: linear-gradient(135deg, #eef2ff 0%, #f0fdf4 100%);
+  --gradient-accent: linear-gradient(135deg, #6366f1 0%, #2dd4bf 100%);
+  --gradient-ink: linear-gradient(150deg, #0f172a 0%, #1e1b4b 55%, #0f172a 100%);
 
-  --line-soft: #e6ebf3;
-  --line-strong: #d5dde9;
+  /* --- Text ------------------------------------------------------------- */
+  --ink-strong: #0f172a;
+  --ink-body: #475569;
+  --ink-muted: #64748b;
+  --ink-inverse: #f8fafc;
 
-  --brand: #1d4ed8;
-  --brand-strong: #1e40af;
-  --brand-tint: #eef3ff;
+  /* --- Linjer ----------------------------------------------------------- */
+  --line-soft: #e8ecf3;
+  --line-strong: #d7dee9;
 
-  --radius-control: 0.75rem;
-  --radius-card: 1.25rem;
-  --radius-panel: 1.75rem;
+  /* --- Accent ----------------------------------------------------------- */
+  /* Indigo bär interaktion. Teal används sparsamt som sekundär signal, aldrig
+     som andra knappfärg, så att ögat vet var det ska klicka. */
+  --accent: #6366f1;
+  --accent-strong: #4f46e5;
+  --accent-deep: #4338ca;
+  --accent-tint: #eef2ff;
+  --accent-ring: rgba(99, 102, 241, .18);
 
-  /* Mjuka, lagrade skuggor i stället för en hård ram runt allt. */
-  --shadow-card: 0 1px 2px rgba(16, 24, 40, .04), 0 8px 24px -12px rgba(16, 24, 40, .12);
-  --shadow-lift: 0 2px 4px rgba(16, 24, 40, .04), 0 18px 40px -16px rgba(16, 24, 40, .22);
+  --teal: #2dd4bf;
+  --teal-deep: #0f766e;
+  --teal-tint: #f0fdfa;
+
+  /* --- Radier (8–16px) --------------------------------------------------- */
+  --radius-xs: 8px;
+  --radius-sm: 10px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-panel: 24px;
+  --radius-pill: 9999px;
+
+  /* --- Skuggor: suddiga, låg opacitet ------------------------------------ */
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, .04);
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, .04), 0 4px 12px -6px rgba(15, 23, 42, .08);
+  --shadow-md: 0 1px 2px rgba(15, 23, 42, .04), 0 12px 28px -12px rgba(15, 23, 42, .14);
+  --shadow-lg: 0 2px 4px rgba(15, 23, 42, .04), 0 24px 48px -20px rgba(15, 23, 42, .20);
+  --shadow-accent: 0 8px 24px -10px rgba(99, 102, 241, .45);
+
+  /* --- Rörelse ----------------------------------------------------------- */
+  /* En kort och en lång kurva. Allt som rör sig ska kännas som samma hand. */
+  --ease-out: cubic-bezier(.22, 1, .36, 1);
+  --ease-soft: cubic-bezier(.4, 0, .2, 1);
+  --dur-fast: 160ms;
+  --dur-base: 240ms;
+  --dur-slow: 520ms;
 }
 
+/* ============================================================================
+   BAS
+   ========================================================================= */
 @layer base {
   html {
     scroll-behavior: smooth;
@@ -42,46 +81,73 @@
     color: var(--ink-strong);
     background: var(--surface-page);
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
 
-  /* Rubriker delar samma optiska tracking över hela produkten, inte bara på
-     startsidan. */
-  h1, h2, h3 {
+  /* Manrope bär rubriker, Inter brödtext. Optisk tracking: ju större grad,
+     desto tätare spärr. */
+  h1, h2, h3, h4,
+  .page-heading {
+    font-family: var(--font-heading), var(--font-body), ui-sans-serif, sans-serif;
     letter-spacing: -0.028em;
   }
 
-  h1 { letter-spacing: -0.038em; }
+  h1 {
+    letter-spacing: -0.042em;
+  }
 
-  /* Synlig fokusmarkering för tangentbordsnavigering. Saknades helt utanför
-     knappar och fält. */
   :focus-visible {
-    outline: 2px solid var(--brand);
+    outline: 2px solid var(--accent);
     outline-offset: 2px;
-    border-radius: 4px;
+    border-radius: var(--radius-xs);
+  }
+
+  ::selection {
+    background: var(--accent-tint);
+    color: var(--accent-deep);
   }
 }
 
+/* ============================================================================
+   KOMPONENTER
+   ========================================================================= */
 @layer components {
-  /* Standardytan för innehåll. Ersätter den hårda gray-200-ramen med en mjukare
-     linje plus djup, vilket läser som mer genomarbetat. */
   .surface {
     background: var(--surface-card);
     border: 1px solid var(--line-soft);
-    border-radius: var(--radius-card);
-    box-shadow: var(--shadow-card);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
   }
 
   .surface-interactive {
-    transition: box-shadow .25s ease, transform .25s ease, border-color .25s ease;
+    transition:
+      box-shadow var(--dur-base) var(--ease-out),
+      transform var(--dur-base) var(--ease-out),
+      border-color var(--dur-base) var(--ease-out);
   }
 
   .surface-interactive:hover {
     border-color: var(--line-strong);
-    box-shadow: var(--shadow-lift);
-    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-3px);
   }
 
-  /* Gemensam sidrubrik så varje vy börjar likadant. */
+  /* Glasaccent. Endast ovanpå mörk eller gradientbotten, aldrig på vitt, där
+     effekten bara blir grumlig. */
+  .glass {
+    background: rgba(255, 255, 255, .08);
+    border: 1px solid rgba(255, 255, 255, .14);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+  }
+
+  .glass-light {
+    background: rgba(255, 255, 255, .72);
+    border: 1px solid rgba(255, 255, 255, .9);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+  }
+
   .page-heading {
     font-weight: 800;
     letter-spacing: -0.035em;
@@ -93,140 +159,145 @@
     font-weight: 700;
     letter-spacing: .16em;
     text-transform: uppercase;
-    color: var(--brand);
+    color: var(--accent-strong);
   }
 
   .muted {
     color: var(--ink-muted);
   }
+
+  /* Gradientkant utan extra DOM-element. */
+  .gradient-border {
+    position: relative;
+    background: var(--surface-card);
+  }
+
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: var(--gradient-accent);
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity var(--dur-base) var(--ease-out);
+    pointer-events: none;
+  }
+
+  .gradient-border:hover::before {
+    opacity: 1;
+  }
+
+  .accent-text {
+    background: var(--gradient-accent);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+  }
 }
 
-.premium-hero {
-  background:
-    radial-gradient(circle at 72% 28%, rgba(37, 99, 235, 0.22), transparent 30%),
-    radial-gradient(circle at 20% 78%, rgba(124, 58, 237, 0.14), transparent 28%),
-    linear-gradient(135deg, #050816 0%, #0a1025 48%, #071329 100%);
+/* ============================================================================
+   RÖRELSE
+   Entré sker en gång vid inladdning. Inget scroll-beroende beteende, eftersom
+   det kräver JavaScript och riskerar innehåll som aldrig visas om observern
+   missar. Allt är rent CSS och degraderar till synligt innehåll.
+   ========================================================================= */
+.reveal {
+  animation: reveal var(--dur-slow) var(--ease-out) both;
 }
 
-.hero-grid {
-  background-image:
-    linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);
-  background-size: 54px 54px;
-  mask-image: linear-gradient(to bottom, black, transparent 90%);
+/* Trappade fördröjningar för att skapa riktning i en sekvens. */
+.reveal-1 { animation-delay: 60ms; }
+.reveal-2 { animation-delay: 120ms; }
+.reveal-3 { animation-delay: 180ms; }
+.reveal-4 { animation-delay: 240ms; }
+.reveal-5 { animation-delay: 300ms; }
+
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: none; }
 }
 
-.mesh-orb {
+.float-slow {
+  animation: float 7s var(--ease-soft) infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* Mesh-gradient bakom hjälten. */
+.mesh {
   position: absolute;
-  border-radius: 9999px;
-  filter: blur(70px);
-  opacity: .55;
+  border-radius: var(--radius-pill);
+  filter: blur(80px);
   pointer-events: none;
-  animation: orb-drift 12s ease-in-out infinite alternate;
+  will-change: transform;
 }
 
-.mesh-orb-one {
-  width: 25rem;
-  height: 25rem;
-  right: -8rem;
-  top: 4rem;
-  background: rgba(59, 130, 246, .25);
+.mesh-drift {
+  animation: drift 16s var(--ease-soft) infinite alternate;
 }
 
-.mesh-orb-two {
-  width: 20rem;
-  height: 20rem;
-  left: 18%;
-  bottom: -10rem;
-  background: rgba(139, 92, 246, .18);
-  animation-delay: -5s;
+@keyframes drift {
+  from { transform: translate3d(-2%, -1%, 0) scale(1); }
+  to { transform: translate3d(5%, 4%, 0) scale(1.12); }
 }
 
-.gradient-text {
-  color: transparent;
-  background: linear-gradient(100deg, #93c5fd 0%, #60a5fa 42%, #c4b5fd 100%);
-  background-clip: text;
-  -webkit-background-clip: text;
-}
-
-.reveal-up {
-  animation: reveal-up .8s cubic-bezier(.2,.8,.2,1) both;
-}
-
-.float-card {
-  animation: card-in .9s .12s cubic-bezier(.2,.8,.2,1) both, card-float 6s 1.2s ease-in-out infinite;
-}
-
-.glow-button {
-  position: relative;
-  isolation: isolate;
-}
-
-.glow-button::after {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  z-index: -1;
-  border-radius: inherit;
-  background: linear-gradient(90deg, #3b82f6, #8b5cf6, #3b82f6);
-  background-size: 200% 100%;
-  filter: blur(12px);
-  opacity: .36;
-  animation: glow-shift 4s linear infinite;
-}
-
-.premium-card {
+/* Skimmer för skelettladdning. */
+.skeleton {
   position: relative;
   overflow: hidden;
+  background: var(--surface-sunken);
 }
 
-.premium-card::before {
+.skeleton::after {
   content: '';
   position: absolute;
   inset: 0;
-  pointer-events: none;
-  background: linear-gradient(120deg, transparent 20%, rgba(255,255,255,.85) 45%, transparent 70%);
-  transform: translateX(-120%);
-  transition: transform .7s ease;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, .7),
+    transparent
+  );
+  animation: shimmer 1.6s infinite;
 }
 
-.premium-card:hover::before {
-  transform: translateX(120%);
+@keyframes shimmer {
+  to { transform: translateX(100%); }
 }
 
-@keyframes reveal-up {
-  from { opacity: 0; transform: translateY(22px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes card-in {
-  from { opacity: 0; transform: translateY(28px) scale(.97); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-@keyframes card-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-9px); }
-}
-
-@keyframes orb-drift {
-  from { transform: translate3d(-2%, -2%, 0) scale(1); }
-  to { transform: translate3d(7%, 5%, 0) scale(1.1); }
-}
-
-@keyframes glow-shift {
-  to { background-position: 200% 0; }
-}
-
+/* Respektera systeminställningen. Innehållet ska stå still, inte försvinna. */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .mesh-orb, .reveal-up, .float-card, .glow-button::after { animation: none !important; }
-  .premium-card::before { display: none; }
+
+  .reveal,
+  .float-slow,
+  .mesh-drift,
+  .skeleton::after {
+    animation: none !important;
+  }
+
+  .reveal { opacity: 1; transform: none; }
+
+  .surface-interactive:hover { transform: none; }
+
+  *, *::before, *::after {
+    transition-duration: .01ms !important;
+  }
 }
 
-/* Transparent navbar over hero video */
+/* Genomskinlig navbar över hjälten. */
 [data-transparent='true'] .nav-header {
-  background: rgba(5, 8, 22, .64);
+  background: rgba(15, 23, 42, .58);
   border-color: rgba(255, 255, 255, .1);
   backdrop-filter: blur(18px);
 }
@@ -234,7 +305,7 @@
 [data-transparent='true'] .nav-header a,
 [data-transparent='true'] .nav-header button,
 [data-transparent='true'] .nav-header span {
-  color: rgba(255, 255, 255, 0.85) !important;
+  color: rgba(255, 255, 255, 0.88) !important;
 }
 
 [data-transparent='true'] .nav-header a:hover,
@@ -242,7 +313,6 @@
   color: #ffffff !important;
 }
 
-/* Primary CTA i navbar behåller sin styling */
 [data-transparent='true'] .nav-header .nav-cta {
   background: #ffffff !important;
   color: #0f172a !important;
@@ -250,13 +320,15 @@
 }
 
 [data-transparent='true'] .nav-header .nav-cta:hover {
-  background: #dbeafe !important;
+  background: #eef2ff !important;
 }
 
+/* ============================================================================
+   HJÄLPKLASSER
+   ========================================================================= */
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+  .text-balance { text-wrap: balance; }
+  .text-pretty { text-wrap: pretty; }
 
   .line-clamp-1 {
     display: -webkit-box;
@@ -284,7 +356,5 @@
     scrollbar-width: none;
   }
 
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
-  }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
 }
