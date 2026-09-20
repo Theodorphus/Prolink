@@ -207,3 +207,39 @@ test('konversationslistan ordnar inbäddade meddelanden explicit', async () => {
     'computeUnread ska inte mutera arrayen som förhandsvisningen läser'
   )
 })
+
+test('fritextsökningen kan inte injicera i postgrest-filtret', async () => {
+  // Söktermen interpolerades rakt in i en or()-sträng. Kommatecken, punkter
+  // och parenteser är syntax i PostgREST:s filterspråk, så en term som
+  // "zzzz%,id.not.is.null,title.ilike.%" bröt sig ur sitt eget villkor och
+  // blev ett extra predikat: en nonsenssökning returnerade hela tabellen.
+  // Verifierat mot den hostade databasen innan fixen (3 träffar -> 0).
+  const validationUrl = new URL('../src/lib/validation.ts', import.meta.url)
+  const source = await readFile(validationUrl, 'utf8')
+  assert.match(source, /export function searchTerm/, 'saneringen ska finnas')
+
+  const start = source.indexOf('export function searchTerm')
+  const searchTerm = new Function(
+    `${source.slice(start)
+      .replace('export function', 'function')
+      .replace('value: unknown, maxLength = 120): string | null', 'value, maxLength = 120)')}\nreturn searchTerm;`
+  )()
+
+  const payload = 'zzzz%,id.not.is.null,title.ilike.%'
+  const cleaned = searchTerm(payload)
+  assert.ok(!cleaned.includes(','), 'kommatecken avslutar ett villkor och måste bort')
+  assert.ok(!cleaned.includes('.'), 'punkt separerar kolumn och operator och måste bort')
+  assert.ok(cleaned.includes('\\%'), 'jokertecken ska vara escapade')
+  assert.equal(searchTerm('webb'), 'webb', 'vanliga sökningar ska vara oförändrade')
+  assert.equal(searchTerm('   '), null, 'tom sökning ska ge null')
+
+  // Båda sidorna måste faktiskt använda saneringen.
+  for (const page of ['../src/app/jobs/page.tsx', '../src/app/services/page.tsx']) {
+    const pageSource = await readFile(new URL(page, import.meta.url), 'utf8')
+    assert.match(pageSource, /searchTerm\(q\)/, `${page} ska sanera söktermen`)
+    assert.ok(
+      !/ilike\.%\$\{q\}%/.test(pageSource),
+      `${page} får inte interpolera den råa söktermen`
+    )
+  }
+})

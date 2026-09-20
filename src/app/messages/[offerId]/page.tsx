@@ -33,11 +33,18 @@ export default async function MessagesPage(props: { params: Promise<{ offerId: s
   // The database function updates only the current participant's read marker.
   await supabase.rpc('mark_offer_read', { p_offer_id: params.offerId })
 
-  const { data: messages } = await supabase
+  // Hela konversationen hämtades tidigare vid varje sidvisning. En långkörd
+  // chatt växer obegränsat, så de senaste meddelandena hämtas fallande och
+  // vänds sedan till stigande för visningen.
+  const MESSAGE_PAGE_SIZE = 100
+  const { data: latestMessages } = await supabase
     .from('messages')
     .select('*, sender:users(id, name, avatar_url)')
     .eq('offer_id', params.offerId)
-    .order('created_at', { ascending: true })
+    .order('created_at', { ascending: false })
+    .limit(MESSAGE_PAGE_SIZE)
+
+  const messages = (latestMessages ?? []).slice().reverse()
 
   const otherParty = isCustomer ? provider?.name : customer?.name
 

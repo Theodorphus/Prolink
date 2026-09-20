@@ -6,19 +6,36 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatCurrency(amount: number): string {
+  // Ett ogiltigt värde renderade tidigare den synliga texten "NaN kr".
+  if (!Number.isFinite(amount)) return ''
   return new Intl.NumberFormat('sv-SE', { style: 'currency', currency: 'SEK', maximumFractionDigits: 0 }).format(amount)
 }
 
+// Intl.DateTimeFormat.format() kastar RangeError på ett ogiltigt datum, vilket
+// hade tagit ner hela sidan. Kolumnerna är visserligen not null i databasen,
+// men funktionerna är exporterade och anropas på data från flera håll, så de
+// får hellre returnera tom sträng än krascha renderingen.
+function parseDate(date: string): Date | null {
+  const parsed = new Date(date)
+  return Number.isNaN(parsed.getTime()) ? null : parsed
+}
+
 export function formatDate(date: string): string {
-  return new Intl.DateTimeFormat('sv-SE', { dateStyle: 'medium' }).format(new Date(date))
+  const parsed = parseDate(date)
+  if (!parsed) return ''
+  return new Intl.DateTimeFormat('sv-SE', { dateStyle: 'medium' }).format(parsed)
 }
 
 export function formatDateTime(date: string): string {
-  return new Intl.DateTimeFormat('sv-SE', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(date))
+  const parsed = parseDate(date)
+  if (!parsed) return ''
+  return new Intl.DateTimeFormat('sv-SE', { dateStyle: 'short', timeStyle: 'short' }).format(parsed)
 }
 
 export function timeAgo(date: string): string {
-  const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000)
+  const parsed = parseDate(date)
+  if (!parsed) return ''
+  const seconds = Math.floor((Date.now() - parsed.getTime()) / 1000)
   if (seconds < 0) return 'just nu'
   if (seconds < 60) return 'just nu'
   if (seconds < 3600) {

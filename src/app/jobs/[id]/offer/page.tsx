@@ -28,13 +28,14 @@ export default async function CreateOfferPage(props: { params: Promise<{ id: str
   if (!job) notFound()
   if (job.status !== 'open') redirect(`/jobs/${params.id}`)
 
-  // Förhindra dubbla offerter
+  // Förhindra dubbla offerter. maybeSingle() i stället för single(), som
+  // loggar ett fel när ingen rad finns — vilket är det normala fallet här.
   const { data: existing } = await supabase
     .from('offers')
     .select('id')
     .eq('job_id', params.id)
     .eq('provider_id', user.id)
-    .single()
+    .maybeSingle()
 
   if (existing) redirect(`/offers/${existing.id}?already=1`)
 

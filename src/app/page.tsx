@@ -14,17 +14,31 @@ export const metadata = {
     'Prolink kopplar ihop svenska företag med frilansare inom IT, design, ekonomi, juridik och marknadsföring. Kostnadsfritt att publicera uppdrag.',
 }
 
-export default async function HomePage() {
+// Siffrorna låg tidigare i sidkomponenten, så hela startsidan väntade på tre
+// databasanrop innan något alls kunde skickas till webbläsaren. Det gjorde
+// Suspense-gränsen runt LatestJobs verkningslös. Nu streamas skalet direkt och
+// bara det här avsnittet väntar på sina siffror.
+async function TrustSectionWithCounts() {
   const supabase = await createClient()
 
-  // Verkliga siffror till förtroendeavsnittet. head + count hämtar bara
-  // antalet, inte raderna. Alla tre tabellerna är publikt läsbara.
+  // head + count hämtar bara antalet, inte raderna. Alla tre tabellerna är
+  // publikt läsbara.
   const [providers, openJobs, services] = await Promise.all([
     supabase.from('users').select('id', { count: 'exact', head: true }).eq('role', 'provider'),
     supabase.from('jobs').select('id', { count: 'exact', head: true }).eq('status', 'open'),
     supabase.from('services').select('id', { count: 'exact', head: true }),
   ])
 
+  return (
+    <TrustSection
+      providerCount={providers.count ?? 0}
+      openJobCount={openJobs.count ?? 0}
+      serviceCount={services.count ?? 0}
+    />
+  )
+}
+
+export default function HomePage() {
   return (
     <>
       <Hero />
@@ -53,11 +67,9 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <TrustSection
-        providerCount={providers.count ?? 0}
-        openJobCount={openJobs.count ?? 0}
-        serviceCount={services.count ?? 0}
-      />
+      <Suspense fallback={<TrustSection providerCount={0} openJobCount={0} serviceCount={0} pending />}>
+        <TrustSectionWithCounts />
+      </Suspense>
 
       {/* Avslutande CTA: en yta per målgrupp. */}
       <section className="px-4 py-20 sm:px-6 sm:py-24 lg:px-8">

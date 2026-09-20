@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { PUBLIC_JOB_FIELDS } from '@/lib/jobs'
 import JobFilters from '@/components/jobs/JobFilters'
 import JobCard from '@/components/jobs/JobCard'
+import { searchTerm } from '@/lib/validation'
 
 export const metadata = {
   title: 'Hitta frilansuppdrag',
@@ -24,7 +25,8 @@ export default async function JobsPage(props: Props) {
     .select(`${PUBLIC_JOB_FIELDS}, customer:users(name)`)
     .eq('status', 'open')
 
-  if (q) query = query.or(`title.ilike.%${q}%,description.ilike.%${q}%`)
+  const safeQuery = searchTerm(q)
+  if (safeQuery) query = query.or(`title.ilike.%${safeQuery}%,description.ilike.%${safeQuery}%`)
   if (category) query = query.eq('category', category)
   if (worktype) query = query.eq('work_type', worktype)
 

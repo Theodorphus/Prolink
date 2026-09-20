@@ -101,13 +101,14 @@ export default function EditProfileForm({ profile }: { profile: EditableProfile 
           <div className="space-y-1.5">
             <label htmlFor="profile-name" className="block text-sm font-medium text-gray-700">Namn <span className="text-red-500">*</span></label>
             <input id="profile-name"
+              autoComplete="name"
               name="name" defaultValue={profile.name} required className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
 
           <div className="space-y-1.5">
             <label htmlFor="profile-phone" className="block text-sm font-medium text-gray-700">Telefon</label>
             <input
-              id="profile-phone"
+              id="profile-phone" autoComplete="tel"
               name="phone"
               type="tel"
               defaultValue={profile.phone ?? ''}
@@ -159,7 +160,7 @@ export default function EditProfileForm({ profile }: { profile: EditableProfile 
           <div className="space-y-1.5">
             <label htmlFor="profile-linkedin" className="block text-sm font-medium text-gray-700">LinkedIn (valfritt)</label>
             <input
-              id="profile-linkedin"
+              id="profile-linkedin" autoComplete="url"
               name="linkedin_url"
               type="url"
               defaultValue={profile.linkedin_url ?? ''}

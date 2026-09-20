@@ -116,3 +116,27 @@ export function safeRelativePath(value: unknown, fallback = '/'): string {
   }
   return value
 }
+
+// Fritextsökningen interpolerades tidigare rakt in i en PostgREST-or-sträng:
+//   .or(`title.ilike.%${q}%,description.ilike.%${q}%`)
+// Kommatecken, parenteser och punkter är syntax i det filterspråket, så en
+// sökning som "zzzz%,id.not.is.null,title.ilike.%" bröt sig ur sitt eget
+// villkor och blev ett extra predikat i filterträdet — en nonsenssökning
+// returnerade då hela tabellen. RLS begränsar fortfarande vad som går att nå,
+// men filtret ska inte gå att styra utifrån.
+//
+// Tecknen nedan tas bort helt i stället för att escapas, eftersom PostgREST
+// saknar ett dokumenterat escape-format inuti or(). % och _ är dessutom
+// jokertecken i ilike och neutraliseras så att de söks bokstavligt.
+export function searchTerm(value: unknown, maxLength = 120): string | null {
+  if (typeof value !== 'string') return null
+
+  const stripped = value
+    .replace(/[(),.*:"'\\]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, maxLength)
+
+  if (!stripped) return null
+  return stripped.replace(/[%_]/g, match => `\\${match}`)
+}

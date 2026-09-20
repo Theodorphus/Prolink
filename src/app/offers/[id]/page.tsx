@@ -44,6 +44,10 @@ export default async function OfferPage(
 
   const job = Array.isArray(offer.job) ? offer.job[0] : offer.job
   const provider = Array.isArray(offer.provider) ? offer.provider[0] : offer.provider
+  // Villkoret läste job.customer?.name medan utskriften normaliserade arrayen.
+  // Var relationen en array blev villkoret falskt och kundnamnet försvann helt.
+  const rawCustomer = job && (Array.isArray(job.customer) ? job.customer[0] : job.customer)
+  const customerName = rawCustomer?.name ?? null
   if (!job) notFound()
 
   const isCustomer = user.id === job.customer_id
@@ -195,8 +199,8 @@ export default async function OfferPage(
               {job.budget && (
                 <p className="text-sm text-blue-600 mt-1">Budget: {formatCurrency(job.budget)}</p>
               )}
-              {job.customer?.name && (
-                <p className="text-xs text-gray-400 mt-2">Kund: {Array.isArray(job.customer) ? job.customer[0]?.name : job.customer.name}</p>
+              {customerName && (
+                <p className="text-xs text-gray-400 mt-2">Kund: {customerName}</p>
               )}
             </CardBody>
           </Card>
