@@ -17,6 +17,11 @@ export default async function MessagesOverviewPage() {
     .eq('provider_id', user.id)
     .in('status', ['accepted', 'delivered', 'completed'])
     .order('created_at', { ascending: false })
+    // Den inbäddade listan har ingen egen ordning om den inte anges. Utan
+    // detta returnerar Postgres raderna i godtycklig ordning, och både
+    // förhandsvisningen och sorteringen nedan utgår från att sista elementet
+    // är det senaste meddelandet.
+    .order('created_at', { ascending: true, referencedTable: 'messages' })
 
   // Jobs owned by user → offers on those jobs
   const { data: myJobs } = await supabase
@@ -33,14 +38,17 @@ export default async function MessagesOverviewPage() {
         .in('job_id', jobIds)
         .in('status', ['accepted', 'delivered', 'completed'])
         .order('created_at', { ascending: false })
+        .order('created_at', { ascending: true, referencedTable: 'messages' })
     : { data: [] }
 
+  // Sorterade tidigare en kopia fallande och tog [0], medan resten av sidan
+  // utgick från att sista elementet var det senaste. Nu när ordningen är
+  // garanterad stigande räcker at(-1), och .sort() muterar inte längre
+  // arrayen som förhandsvisningen läser.
   const computeUnread = (o: any, readAtField: string, userId: string) => {
     const msgs = (o.messages ?? []).filter((m: any) => m.sender_id !== userId)
-    if (msgs.length === 0) return false
-    const lastMsg = msgs.sort((a: any, b: any) =>
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    )[0]
+    const lastMsg = msgs.at(-1)
+    if (!lastMsg) return false
     if (!o[readAtField]) return true
     return new Date(lastMsg.created_at) > new Date(o[readAtField])
   }

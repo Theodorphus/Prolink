@@ -171,3 +171,39 @@ test('nytt uppdrag notifierar leverantörer', async () => {
   assert.match(source, /\.neq\('id', customerId\)/, 'kunden ska inte notifiera sig själv')
   assert.match(source, /catch/, 'notisen ska vara best effort och aldrig blockera publiceringen')
 })
+
+test('oauth-rollen kan bara sättas när kontot skapas', async () => {
+  // role kommer från en URL-parameter och kan sättas av vem som helst. Om den
+  // tillämpas vid varje inloggning kan ett besök på
+  // /auth/callback?role=customer tyst skriva om rollen för en befintlig
+  // leverantör. Inloggningsknappen skickar ingen roll; bara registreringen.
+  const callbackUrl = new URL('../src/app/auth/callback/route.ts', import.meta.url)
+  const source = await readFile(callbackUrl, 'utf8')
+
+  assert.match(source, /isNewUser/, 'rollen ska villkoras av att kontot är nytt')
+  assert.match(
+    source,
+    /if \(isNewUser && role/,
+    'rolluppdateringen måste vara villkorad av isNewUser'
+  )
+  assert.ok(
+    !/^\s*if \(role && \['customer', 'provider'\]\.includes\(role\)\) \{/m.test(source),
+    'den ovillkorade rolltilldelningen får inte finnas kvar'
+  )
+})
+
+test('konversationslistan ordnar inbäddade meddelanden explicit', async () => {
+  // .order() på frågan gäller offers, inte den inbäddade messages-listan.
+  // Utan referencedTable returnerar Postgres dem i godtycklig ordning, och
+  // både förhandsvisningen och sorteringen antar att sista elementet är det
+  // senaste meddelandet.
+  const pageUrl = new URL('../src/app/messages/page.tsx', import.meta.url)
+  const source = await readFile(pageUrl, 'utf8')
+
+  const embeddedOrders = source.match(/referencedTable: 'messages'/g) ?? []
+  assert.equal(embeddedOrders.length, 2, 'båda frågorna ska ordna messages explicit')
+  assert.ok(
+    !/msgs\.sort\(/.test(source),
+    'computeUnread ska inte mutera arrayen som förhandsvisningen läser'
+  )
+})
