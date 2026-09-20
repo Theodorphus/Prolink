@@ -95,15 +95,22 @@ export async function POST(request: NextRequest) {
 
   // Notisen är best effort: ett mejlavbrott får aldrig hindra att uppdraget
   // publiceras, så felet loggas i stället för att returneras.
-  notifyProviders({
-    jobId: data.id,
-    title: input.title,
-    category: input.category,
-    budget: input.budget,
-    customerId: user.id,
-  }).catch(notificationError => {
+  //
+  // Den måste däremot inväntas. Utan await returnerar svaret direkt och
+  // körmiljön fryser instansen innan utskicken hunnit göras, så notisen
+  // försvann tyst i produktion trots att uppdraget skapades. Verifierat:
+  // uppdrag skapades med 201, men inget mejl nådde Resend.
+  try {
+    await notifyProviders({
+      jobId: data.id,
+      title: input.title,
+      category: input.category,
+      budget: input.budget,
+      customerId: user.id,
+    })
+  } catch (notificationError) {
     console.error('new job notification failed:', notificationError)
-  })
+  }
 
   return NextResponse.json(data, { status: 201 })
 }

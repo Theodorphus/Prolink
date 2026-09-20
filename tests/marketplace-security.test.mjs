@@ -170,6 +170,19 @@ test('nytt uppdrag notifierar leverantörer', async () => {
   assert.match(source, /\.eq\('role', 'provider'\)/, 'bara leverantörer ska notifieras')
   assert.match(source, /\.neq\('id', customerId\)/, 'kunden ska inte notifiera sig själv')
   assert.match(source, /catch/, 'notisen ska vara best effort och aldrig blockera publiceringen')
+
+  // Notisen måste inväntas. Utan await returnerar svaret direkt och den
+  // serverlösa instansen fryses innan utskicken hunnit göras: uppdraget
+  // skapades med 201 men inget mejl nådde Resend. Verifierat i produktion.
+  assert.match(
+    source,
+    /await notifyProviders\(/,
+    'notifyProviders måste inväntas, annars hinner utskicket inte göras'
+  )
+  assert.ok(
+    !/^\s*notifyProviders\(/m.test(source),
+    'notifyProviders får inte anropas utan await'
+  )
 })
 
 test('oauth-rollen kan bara sättas när kontot skapas', async () => {
