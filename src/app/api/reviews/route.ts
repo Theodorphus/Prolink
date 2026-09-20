@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { rateLimitMessage, withinRateLimit } from '@/lib/rate-limit'
 import {
   InputValidationError,
   optionalText,
@@ -11,6 +12,10 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) return NextResponse.json({ error: 'Ej inloggad' }, { status: 401 })
+
+  if (!(await withinRateLimit(supabase, 'reviews:create'))) {
+    return NextResponse.json({ error: rateLimitMessage('reviews:create') }, { status: 429 })
+  }
 
   let input: { offerId: string; revieweeId: string; rating: number; comment: string | null }
   try {

@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getCategoryLabel } from '@/lib/categories'
 import { sendNewJobEmail } from '@/lib/email'
 import { PUBLIC_JOB_FIELDS } from '@/lib/jobs'
+import { rateLimitMessage, withinRateLimit } from '@/lib/rate-limit'
 import {
   categoryValue,
   InputValidationError,
@@ -44,6 +45,10 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) return NextResponse.json({ error: 'Ej inloggad' }, { status: 401 })
+
+  if (!(await withinRateLimit(supabase, 'jobs:create'))) {
+    return NextResponse.json({ error: rateLimitMessage('jobs:create') }, { status: 429 })
+  }
 
   let input: {
     title: string

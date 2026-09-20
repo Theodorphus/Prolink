@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { rateLimitMessage, withinRateLimit } from '@/lib/rate-limit'
 import {
   categoryValue,
   InputValidationError,
@@ -27,6 +28,10 @@ export async function POST(request: NextRequest) {
 
   const { data: profile } = await supabase.from('users').select('role').eq('id', user.id).single()
   if (profile?.role !== 'provider') return NextResponse.json({ error: 'Endast leverantörer kan skapa tjänster' }, { status: 403 })
+
+  if (!(await withinRateLimit(supabase, 'services:create'))) {
+    return NextResponse.json({ error: rateLimitMessage('services:create') }, { status: 429 })
+  }
 
   let input: {
     title: string

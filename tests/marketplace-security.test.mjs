@@ -243,3 +243,72 @@ test('fritextsökningen kan inte injicera i postgrest-filtret', async () => {
     )
   }
 })
+
+test('skrivande endpoints är hastighetsbegränsade', async () => {
+  // Produkten hade ingen begränsning alls. Alla skrivande rutter kräver
+  // inloggning, men ett enda konto kunde skapa obegränsat många uppdrag,
+  // offerter och meddelanden i en slinga — och varje offert och meddelande
+  // utlöser dessutom ett mejlutskick.
+  const routes = [
+    ['../src/app/api/jobs/route.ts', 'jobs:create'],
+    ['../src/app/api/offers/route.ts', 'offers:create'],
+    ['../src/app/api/services/route.ts', 'services:create'],
+    ['../src/app/api/messages/[offerId]/route.ts', 'messages:send'],
+    ['../src/app/api/reviews/route.ts', 'reviews:create'],
+  ]
+
+  for (const [route, action] of routes) {
+    const source = await readFile(new URL(route, import.meta.url), 'utf8')
+    assert.ok(
+      source.includes(`withinRateLimit(supabase, '${action}')`),
+      `${route} ska kontrollera kvoten för ${action}`
+    )
+    assert.match(source, /status: 429/, `${route} ska svara 429 när kvoten är slut`)
+  }
+
+  // Räknaren måste ligga i databasen. Applikationen kör serverlöst, så en
+  // minnesbaserad räknare hade begränsat per instans i stället för per
+  // användare och i praktiken inte begränsat någonting.
+  const migration = await readFile(
+    new URL('../supabase/migrations/013_rate_limiting.sql', import.meta.url),
+    'utf8'
+  )
+  assert.match(migration, /create table if not exists public\.rate_limits/)
+  assert.match(migration, /security definer/, 'funktionen måste kringgå RLS för att kunna räkna')
+  assert.match(
+    migration,
+    /revoke all on table public\.rate_limits from anon, authenticated/,
+    'en klient får inte kunna rensa sin egen räknare'
+  )
+  assert.match(migration, /auth\.uid\(\)/, 'kvoten ska räknas per inloggad användare')
+})
+
+test('tjänstekategorier hålls i synk mellan kod och databas', async () => {
+  // Två av tre tjänster var osynliga i bläddringen: en hade category = null och
+  // en hade 'ekonomi', ett värde som aldrig funnits i CATEGORIES (Phase 2 döpte
+  // om etiketten, inte värdet). Eftersom /services filtrerar med
+  // .eq('category', ...) matchar sådana rader ingen kategori alls.
+  const categoriesSource = await readFile(
+    new URL('../src/lib/categories.ts', import.meta.url),
+    'utf8'
+  )
+  const values = [...categoriesSource.matchAll(/\{ value: '([^']+)'/g)].map(m => m[1])
+  assert.ok(values.length >= 5, 'kategorilistan ska kunna läsas ur källkoden')
+
+  const migration = await readFile(
+    new URL('../supabase/migrations/014_service_category_required.sql', import.meta.url),
+    'utf8'
+  )
+
+  const constraint = migration.match(/services_category_valid\s*\n\s*check \(category in \(([^)]+)\)/)
+  assert.ok(constraint, 'kontrollvillkoret ska finnas i migrationen')
+
+  const allowed = [...constraint[1].matchAll(/'([^']+)'/g)].map(m => m[1])
+  assert.deepEqual(
+    [...allowed].sort(),
+    [...values].sort(),
+    'villkoret i databasen måste spegla CATEGORIES exakt'
+  )
+
+  assert.match(migration, /alter column category set not null/, 'kategori ska vara obligatorisk')
+})

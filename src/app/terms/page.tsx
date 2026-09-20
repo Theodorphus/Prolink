@@ -1,3 +1,4 @@
+import { CONTACT_EMAIL } from '@/lib/site'
 export const metadata = {
   title: 'Användarvillkor',
   description: 'Läs Prolinks användarvillkor och förstå dina rättigheter och skyldigheter som användare av plattformen.',
@@ -61,7 +62,7 @@ export default function TermsPage() {
 
         <section>
           <h2 className="text-xl font-bold text-gray-900 mb-3">8. Uppsägning</h2>
-          <p>Vi förbehåller oss rätten att stänga av eller ta bort konton som bryter mot dessa villkor. Du kan när som helst begära radering av ditt konto via <a href="mailto:hej@prolink.se" className="text-blue-600 hover:underline">hej@prolink.se</a>.</p>
+          <p>Vi förbehåller oss rätten att stänga av eller ta bort konton som bryter mot dessa villkor. Du kan när som helst begära radering av ditt konto via <a href={`mailto:${CONTACT_EMAIL}`} className="text-blue-600 hover:underline">{CONTACT_EMAIL}</a>.</p>
         </section>
 
         <section>
@@ -71,7 +72,7 @@ export default function TermsPage() {
 
         <section>
           <h2 className="text-xl font-bold text-gray-900 mb-3">10. Kontakt</h2>
-          <p>Frågor om dessa villkor skickas till <a href="mailto:hej@prolink.se" className="text-blue-600 hover:underline">hej@prolink.se</a>.</p>
+          <p>Frågor om dessa villkor skickas till <a href={`mailto:${CONTACT_EMAIL}`} className="text-blue-600 hover:underline">{CONTACT_EMAIL}</a>.</p>
         </section>
 
       </div>
