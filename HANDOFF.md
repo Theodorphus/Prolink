@@ -552,6 +552,66 @@ De delade `Input`- och `Textarea`-primitiverna visade sig redan ha korrekta
   sina adresser på den. Lokalt genereras `localhost:3000`-URL:er, och saknas
   variabeln i produktion publiceras de till Google.
 
+## Omgång 4: det som gick att lösa i kod (2026-09-20)
+
+### Hastighetsbegränsning införd
+
+Migration 013 och `src/lib/rate-limit.ts`. Alla fem skrivande endpoints är
+täckta: uppdrag, offerter, tjänster, meddelanden och omdömen.
+
+Räknaren ligger i databasen, inte i processminnet. Applikationen kör
+serverlöst, så en minnesbaserad räknare hade begränsat per instans i stället
+för per användare. Tabellen är låst med RLS utan policies och nås bara via en
+`security definer`-funktion, så en klient kan inte rensa sin egen räknare.
+Vid databasfel släpps anropet igenom och felet loggas: ett trasigt
+begränsningssystem ska inte göra produkten oanvändbar.
+
+### Två av tre tjänster var osynliga
+
+Bredare än den null-rad som noterades tidigare. En andra rad har värdet
+`ekonomi`, som **aldrig funnits i `CATEGORIES`**. Phase 2 döpte om etiketten
+för `redovisning` till "Ekonomi & redovisning" men migrerade aldrig radens
+värde. Eftersom `/services` filtrerar med `.eq('category', ...)` matchar båda
+raderna ingen kategori alls.
+
+Migration 014 rättar värdena, fyller i den saknade kategorin, gör kolumnen
+`not null` och låser värdemängden med ett kontrollvillkor. Ett test jämför
+villkoret mot `CATEGORIES` i koden så att de inte glider isär.
+
+### Sitemap kunde publicera localhost
+
+`SITE_URL` föll tillbaka på localhost när `NEXT_PUBLIC_APP_URL` saknades.
+Nu används Vercels egna `VERCEL_PROJECT_PRODUCTION_URL` och `VERCEL_URL` som
+mellansteg; de sätts automatiskt i varje deployment. Risken är därmed
+hanterad i kod, men variabeln bör ändå sättas.
+
+### Deployen: 7,8 MB -> 104 kB
+
+De fem avvecklade mediefilerna är borttagna ur git och ligger i `.gitignore`.
+De finns kvar lokalt och i historiken.
+
+### Kontaktadressen samlad
+
+`CONTACT_EMAIL` i `src/lib/site.ts` ersätter sju hårdkodade förekomster. Kan
+sättas med `NEXT_PUBLIC_CONTACT_EMAIL`.
+
+## Kvarstår: kräver ditt beslut eller åtkomst
+
+Följande gick **inte** att lösa i kod, och varför:
+
+1. **Migration 013 och 014 är inte applicerade.** De ligger i repot men är
+   inte körda mot den hostade databasen. Att köra DDL mot produktion är ett
+   beslut du ska fatta, inte något som ska ske automatiskt. 014 ändrar
+   dessutom två verkliga rader. Kör dem i Supabase-dashboarden eller med
+   `supabase db push`, i ordning.
+2. **Avsändardomänen i Resend.** Kräver dashboard-åtkomst. Utan den skickas
+   inga mejl alls, inklusive de nya leverantörsnotiserna.
+3. **`CONTACT_EMAIL` pekar fortfarande på `hej@prolink.se`**, och `prolink.se`
+   saknar MX-post. Vilken adress som ska gälla är ett verksamhetsbeslut.
+4. **`NEXT_PUBLIC_APP_URL` i Vercel.** CLI:t är utloggat lokalt och inloggning
+   kräver interaktiv autentisering.
+5. **Lösenordspolicyn i hostade Supabase.** Endast dashboarden.
+
 ## Verified state on 2026-09-20
 
 - Vercel: the workspace **is** linked (`.vercel/repo.json`, project
