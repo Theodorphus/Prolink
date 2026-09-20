@@ -451,6 +451,107 @@ blivit osynlig. En egen `accent-ring`-token pekar nu på det redan existerande
   kategorifiltreringen. Uppdateringen nekades av behörighetsskäl.
 - Lösenordspolicyn i den hostade dashboarden.
 
+## Systematisk genomgång 2026-09-20 (omgång 2 och 3)
+
+Utöver mejl-, prestanda- och SEO-arbetet gjordes två genomgångar av
+korrekthet, säkerhet och tillgänglighet i hela produkten.
+
+### Filterinjektion i fritextsökningen
+
+Den allvarligaste tekniska bristen som hittades. Söktermen interpolerades rakt
+in i en PostgREST-or-sträng:
+
+    .or(`title.ilike.%${q}%,description.ilike.%${q}%`)
+
+Kommatecken, punkter och parenteser är syntax i filterspråket. Söktermen
+`zzzz%,id.not.is.null,title.ilike.%` bröt sig därför ur sitt eget villkor och
+blev ett extra predikat i filterträdet, så en nonsenssökning returnerade hela
+tabellen. Verifierat mot den hostade databasen och därefter i en körande
+produktionsserver: 3 träffar före fixen, 0 efter, medan "hemsida" fortfarande
+ger sin korrekta enda träff.
+
+RLS begränsade hela tiden vad som gick att nå, så ingen data låg blottad. Men
+filtret ska inte gå att styra utifrån. Saneringen ligger i `searchTerm()` i
+`src/lib/validation.ts` och används av både `/jobs` och `/services`.
+
+### Rollkapning via OAuth-callbacken
+
+`/auth/callback` läste `role` från en URL-parameter och tillämpade den vid
+varje anrop, inte bara vid registrering. Ett besök på
+`/auth/callback?code=...&role=customer` skrev därmed tyst om rollen för en
+befintlig leverantör, som sedan inte längre kunde lämna offerter. Rollen sätts
+nu bara när kontot faktiskt skapas.
+
+Värt att notera: den första fixen jämförde `created_at` med `last_sign_in_at`.
+En kontroll mot databasen visade att de skiljer sig ett par sekunder åt **även
+för helt nya konton**, så villkoret hade aldrig slagit till och rollen aldrig
+satts. Ett tiosekundersfönster används i stället.
+
+### Övriga buggar
+
+- **Konversationslistan** litade på en ordning som inte fanns. `.order()` i
+  frågan gäller `offers`, inte den inbäddade `messages`-listan. Sidan antog
+  samtidigt två olika saker: `computeUnread` sorterade fallande och tog `[0]`,
+  medan förhandsvisningen tog `at(-1)`. Både oläst-markeringen och textutdraget
+  kunde bli fel. `.sort()` muterade dessutom samma array som visningen läste.
+- **Kundnamnet försvann** på offertsidan: villkoret läste `job.customer?.name`
+  medan utskriften normaliserade en eventuell array.
+- **`max_price=abc`** gav `Number('abc')` = NaN, och `price=lte.NaN` filtrerar
+  inte alls utan returnerar hela tabellen.
+- **Stäng- och ta bort-knapparna** för uppdrag svalde fel tyst.
+  `CloseJobButton` kontrollerade inte svaret alls.
+- **Datum- och valutaformatterarna** kraschade (`RangeError`) respektive skrev
+  ut den synliga texten "NaN kr" på ogiltiga värden.
+
+### Säkerhet och tillgänglighet
+
+- Säkerhetsheaders saknades helt; produktionen levererade bara HSTS från
+  Vercel. Lade till `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy` och
+  `Permissions-Policy`. Offertsidorna har ettklicksknappar, så clickjacking är
+  relevant. Verifierat mot en lokal produktionsserver.
+- Mobilmenyn gick att tabba in i när den var stängd: panelen tas inte ur DOM
+  utan skjuts utanför bild. Nu `inert` och `aria-hidden`, plus Escape,
+  `aria-controls` och dold backdrop.
+- Hoppa-till-innehållet-länk saknades helt.
+
+### Prestanda
+
+- `salary` och `employer_name` hörde till den avvecklade anställningstavlan.
+  De hämtades på **varje** jobbfråga i hela produkten men renderades aldrig,
+  och är null på samtliga rader. Borttagna ur urvalet.
+- Chatten hämtade hela konversationen vid varje sidvisning, utan tak. Nu de
+  100 senaste.
+- Startsidan väntade på tre räknefrågor innan något kunde skickas till
+  webbläsaren, vilket gjorde Suspense-gränsen runt `LatestJobs` verkningslös.
+- Uppdragssidans rollfråga och offertlista kördes i följd, nu parallellt.
+
+### Granskat utan åtgärd
+
+Följande gicks igenom och visade sig vara korrekt: `validation.ts` (blockerar
+`javascript:`-URL:er, open redirects och path traversal), inga N+1-loopar,
+`remotePatterns` korrekt begränsat, ChatWindow har rätt ordning och
+dedup-skydd, alla API-rutter kräver auth, rubrikstrukturen har exakt en `h1`
+per sida, och samtliga interna länkar pekar på rutter som finns.
+
+De delade `Input`- och `Textarea`-primitiverna visade sig redan ha korrekta
+`htmlFor`, `aria-invalid` och `aria-describedby`.
+
+### Kvarstår, med motivering
+
+- **Ingen rate limiting.** Alla endpoints kräver inloggning, så exponeringen
+  är begränsad till registrerade konton. Att införa det kräver infrastruktur
+  (Upstash eller Vercel KV) och är ett eget beslut.
+- **`hej@prolink.se` går inte att nå.** Adressen står som kontakt för
+  personuppgiftsansvarig i integritetspolicyn, i användarvillkoren, i FAQ och i
+  sidfoten. `prolink.se` saknar MX-post, så domänen kan inte ta emot e-post
+  alls. Det är en efterlevnadsbrist i GDPR-texten, inte bara en trasig länk.
+- **`GET /api/jobs/[id]`** bäddar in `offers(*)`. RLS ger noll rader till en
+  utomstående i dag, verifierat, men `*` är sprött om policyn någonsin luckras
+  upp. Rutten används inte av gränssnittet.
+- **`NEXT_PUBLIC_APP_URL` måste sättas i Vercel.** Sitemap och robots bygger
+  sina adresser på den. Lokalt genereras `localhost:3000`-URL:er, och saknas
+  variabeln i produktion publiceras de till Google.
+
 ## Verified state on 2026-09-20
 
 - Vercel: the workspace **is** linked (`.vercel/repo.json`, project
