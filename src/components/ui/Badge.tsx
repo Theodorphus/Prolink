@@ -9,7 +9,7 @@ const variants: Record<BadgeVariant, string> = {
   success: 'bg-emerald-50 text-emerald-800 ring-1 ring-inset ring-emerald-200',
   warning: 'bg-amber-50 text-amber-800 ring-1 ring-inset ring-amber-200',
   danger: 'bg-red-50 text-red-800 ring-1 ring-inset ring-red-200',
-  info: 'bg-blue-50 text-blue-800 ring-1 ring-inset ring-blue-200',
+  info: 'bg-accent-tint text-accent-deep ring-1 ring-inset ring-accent-ring',
 }
 
 interface BadgeProps {
@@ -39,7 +39,7 @@ const DOTS: Record<BadgeVariant, string> = {
   success: 'bg-emerald-500',
   warning: 'bg-amber-500',
   danger: 'bg-red-500',
-  info: 'bg-blue-500',
+  info: 'bg-accent',
 }
 
 export function StatusBadge({ status }: { status: string }) {

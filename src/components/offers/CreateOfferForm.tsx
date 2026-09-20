@@ -48,12 +48,14 @@ export default function CreateOfferForm({ jobId }: { jobId: string }) {
 
           {/* Pristyp */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Pristyp</label>
-            <div className="grid grid-cols-2 gap-3">
+            <span id="pristyp-label" className="block text-sm font-medium text-gray-700">Pristyp</span>
+            <div role="radiogroup" aria-labelledby="pristyp-label" className="grid grid-cols-2 gap-3">
               {(['fixed', 'hourly'] as const).map((type) => (
                 <button
                   key={type}
                   type="button"
+                  role="radio"
+                  aria-checked={priceType === type}
                   onClick={() => setPriceType(type)}
                   className={`rounded-lg border p-3 text-left transition-colors ${
                     priceType === type

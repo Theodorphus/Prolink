@@ -13,13 +13,13 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     // en nedtryckning vid klick gör knappen taktil i stället för platt.
     const base =
       'inline-flex items-center justify-center font-semibold rounded-xl transition-all duration-200 ' +
-      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-600 ' +
+      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent ' +
       'disabled:opacity-45 disabled:cursor-not-allowed disabled:shadow-none disabled:hover:translate-y-0 ' +
       'active:translate-y-0'
 
     const variants = {
       primary:
-        'bg-blue-700 text-white shadow-sm shadow-blue-900/20 hover:bg-blue-800 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-900/25',
+        'bg-accent-strong text-white shadow-sm hover:bg-accent-deep hover:-translate-y-0.5 hover:shadow-accent',
       secondary:
         'bg-white text-slate-800 border border-slate-200 shadow-sm hover:border-slate-300 hover:-translate-y-0.5 hover:shadow-md',
       ghost: 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',

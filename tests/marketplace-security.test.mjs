@@ -141,3 +141,33 @@ test('public job selections never expose employer contact details', async () => 
   assert.ok(!fields.includes('contact_info'), 'contact_info får inte ingå')
   assert.ok(fields.includes('title'), 'listan ska innehålla de publika fälten')
 })
+
+test('utskick kastar i stället för att tyst svälja ett nekat svar', async () => {
+  // Resend kastar inte vid HTTP-fel utan returnerar { data, error }. Tidigare
+  // returnerades resultatet rakt av, så ett nekat utskick (403 för overifierad
+  // avsändardomän) såg ut som ett lyckat anrop och anroparnas try/catch fångade
+  // ingenting. Felet blev därmed helt osynligt i produktion.
+  const emailUrl = new URL('../src/lib/email.ts', import.meta.url)
+  const source = await readFile(emailUrl, 'utf8')
+
+  assert.match(source, /if \(result\.error\)/, 'svaret från Resend måste felkontrolleras')
+  assert.match(source, /throw new Error\(`Resend nekade utskicket/, 'ett nekat utskick ska kasta')
+  assert.ok(
+    !/return resend\.emails\.send\(/.test(source),
+    'inget utskick får gå förbi send()-omslaget'
+  )
+  assert.match(source, /export function emailConfigurationProblem/, 'felkonfiguration ska kunna upptäckas')
+})
+
+test('nytt uppdrag notifierar leverantörer', async () => {
+  // Marknadsplatsen saknade notis åt utbudshållet: ingen leverantör fick veta
+  // att ett uppdrag publicerats, vilket är en rimlig delförklaring till noll
+  // offerter. Regressionsskyddet säkrar att kopplingen finns kvar.
+  const routeUrl = new URL('../src/app/api/jobs/route.ts', import.meta.url)
+  const source = await readFile(routeUrl, 'utf8')
+
+  assert.match(source, /sendNewJobEmail/, 'uppdragsrutten ska skicka notismejl')
+  assert.match(source, /\.eq\('role', 'provider'\)/, 'bara leverantörer ska notifieras')
+  assert.match(source, /\.neq\('id', customerId\)/, 'kunden ska inte notifiera sig själv')
+  assert.match(source, /catch/, 'notisen ska vara best effort och aldrig blockera publiceringen')
+})

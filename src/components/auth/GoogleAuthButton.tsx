@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { SITE_URL } from '@/lib/site'
 
 interface GoogleAuthButtonProps {
   role?: string
@@ -15,7 +16,7 @@ export default function GoogleAuthButton({ role, next }: GoogleAuthButtonProps) 
     setLoading(true)
     const supabase = createClient()
 
-    const base = process.env.NEXT_PUBLIC_APP_URL ?? window.location.origin
+    const base = SITE_URL || window.location.origin
     const callbackUrl = new URL('/auth/callback', base)
     if (next) callbackUrl.searchParams.set('next', next)
     if (role) callbackUrl.searchParams.set('role', role)

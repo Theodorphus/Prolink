@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { getCategoryLabel } from '@/lib/categories'
+import { sendNewJobEmail } from '@/lib/email'
 import { PUBLIC_JOB_FIELDS } from '@/lib/jobs'
 import {
   categoryValue,
@@ -84,5 +87,76 @@ export async function POST(request: NextRequest) {
     .single()
 
   if (error) return NextResponse.json({ error: 'Jobbet kunde inte sparas' }, { status: 500 })
+
+  // Notisen är best effort: ett mejlavbrott får aldrig hindra att uppdraget
+  // publiceras, så felet loggas i stället för att returneras.
+  notifyProviders({
+    jobId: data.id,
+    title: input.title,
+    category: input.category,
+    budget: input.budget,
+    customerId: user.id,
+  }).catch(notificationError => {
+    console.error('new job notification failed:', notificationError)
+  })
+
   return NextResponse.json(data, { status: 201 })
+}
+
+// Leverantörer som matchar uppdragets kategori underrättas. Matchningen är
+// medvetet enkel: kategorin jämförs mot leverantörens kompetenser, och alla
+// leverantörer får notisen när ingen matchar, eftersom en tom marknadsplats
+// vinner mer på räckvidd än på precision.
+async function notifyProviders({
+  jobId,
+  title,
+  category,
+  budget,
+  customerId,
+}: {
+  jobId: string
+  title: string
+  category: string
+  budget: number | null
+  customerId: string
+}) {
+  const admin = createAdminClient()
+
+  const { data: providers } = await admin
+    .from('users')
+    .select('id, skills')
+    .eq('role', 'provider')
+    .neq('id', customerId)
+
+  if (!providers?.length) return
+
+  const categoryLabel = getCategoryLabel(category)
+  const normalisedCategory = category.toLowerCase()
+  const normalisedLabel = categoryLabel.toLowerCase()
+
+  const matches = providers.filter(provider =>
+    (provider.skills ?? []).some((skill: string) => {
+      const normalisedSkill = String(skill).toLowerCase()
+      return normalisedSkill.includes(normalisedCategory)
+        || normalisedCategory.includes(normalisedSkill)
+        || normalisedLabel.includes(normalisedSkill)
+    })
+  )
+
+  const recipients = matches.length ? matches : providers
+
+  const results = await Promise.allSettled(
+    recipients.map(async provider => {
+      const { data: auth, error: authError } = await admin.auth.admin.getUserById(provider.id)
+      if (authError) throw authError
+      const email = auth.user?.email
+      if (!email) return
+      await sendNewJobEmail({ to: email, jobTitle: title, categoryLabel, budget, jobId })
+    })
+  )
+
+  const failed = results.filter(result => result.status === 'rejected')
+  if (failed.length) {
+    console.error(`new job notification: ${failed.length}/${recipients.length} utskick misslyckades`, (failed[0] as PromiseRejectedResult).reason)
+  }
 }

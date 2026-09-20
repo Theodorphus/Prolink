@@ -43,8 +43,8 @@ export default function RegisterForm({ action }: RegisterFormProps) {
     <div className="surface p-8 space-y-5">
       {/* Role selector — shared between Google and email signup */}
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">Jag är</label>
-        <div className="grid grid-cols-2 gap-3">
+        <span id="roll-label" className="block text-sm font-medium text-gray-700">Jag är</span>
+        <div role="radiogroup" aria-labelledby="roll-label" className="grid grid-cols-2 gap-3">
           {roles.map(({ value, label, desc }) => (
             <label
               key={value}

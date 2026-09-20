@@ -57,10 +57,11 @@ export default function CreateServiceForm() {
           />
 
           <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-gray-700">
+            <label htmlFor="service-category" className="block text-sm font-medium text-gray-700">
               Kategori <span className="text-red-500">*</span>
             </label>
             <select
+              id="service-category"
               name="category"
               required
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
