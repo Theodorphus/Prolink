@@ -27,7 +27,7 @@ export default async function JobPage(props: { params: Promise<{ id: string }> }
   // Literalen behålls här eftersom .single() förlorar typinferensen med en mall-literal.
   const { data: job } = await supabase
     .from('jobs')
-    .select('id, customer_id, title, description, budget, status, created_at, category, salary, location, work_type, employer_name, customer:users(id, name, bio, avatar_url, created_at)')
+    .select('id, customer_id, title, description, budget, status, created_at, category, location, work_type, customer:users(id, name, bio, avatar_url, created_at)')
     .eq('id', id)
     .single()
 
@@ -38,18 +38,24 @@ export default async function JobPage(props: { params: Promise<{ id: string }> }
   const customer = Array.isArray(job.customer) ? job.customer[0] : job.customer
 
   const isOwner = user?.id === job.customer_id
-  const { data: viewerProfile } = user
-    ? await supabase.from('users').select('role').eq('id', user.id).single()
-    : { data: null }
-  const isProvider = viewerProfile?.role === 'provider'
 
-  const { data: offers } = isOwner
-    ? await supabase
-        .from('offers')
-        .select('id, price, price_type, timeline, description, status, provider:users(name, avatar_url)')
-        .eq('job_id', job.id)
-        .order('created_at', { ascending: false })
-    : { data: null }
+  // Rollfrågan och ägarens offertlista är oberoende av varandra och kördes
+  // tidigare i följd. Den egna offerten behöver rollen först, så den hämtas
+  // efteråt. RLS skyddar urvalet i båda fallen.
+  const [{ data: viewerProfile }, { data: offers }] = await Promise.all([
+    user
+      ? supabase.from('users').select('role').eq('id', user.id).single()
+      : Promise.resolve({ data: null }),
+    isOwner
+      ? supabase
+          .from('offers')
+          .select('id, price, price_type, timeline, description, status, provider:users(name, avatar_url)')
+          .eq('job_id', job.id)
+          .order('created_at', { ascending: false })
+      : Promise.resolve({ data: null }),
+  ])
+
+  const isProvider = viewerProfile?.role === 'provider'
 
   const { data: existingOffer } = user && isProvider
     ? await supabase.from('offers').select('id, status').eq('job_id', job.id).eq('provider_id', user.id).maybeSingle()

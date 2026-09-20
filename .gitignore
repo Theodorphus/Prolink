@@ -37,3 +37,12 @@ next-env.d.ts
 
 .vercel
 .env*
+
+# Avvecklade mediefiler. Ersatta av favicon-32.png, apple-touch-icon.png och
+# og-image.jpg, som är hundratals gånger mindre. Filerna ligger kvar lokalt och
+# i git-historiken, men ska inte deployas igen.
+/public/Favicon.png
+/public/Copilot_20260430_140059.png
+/public/cta-bg.png
+/public/Herovid2_opt.mp4
+/public/ChatGPT Image Apr 29, 2026, 07_15_43 PM.png

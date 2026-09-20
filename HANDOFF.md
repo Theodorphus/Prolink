@@ -1,6 +1,6 @@
 # Prolink handoff
 
-Last updated: 2026-08-31 (Phase 2)
+Last updated: 2026-09-20 (offer lifecycle smoke test)
 
 ## Current milestone
 
@@ -62,19 +62,14 @@ explicit decision.
 
 ## Still required before deployment
 
-1. Link the local workspace to the Vercel project and pull the development
-   environment variables. There is no `.vercel/` directory in the workspace, so
-   the project is not linked locally:
+Revised 2026-09-20. Items 1, 4 and 5 of the previous list are resolved; see
+"Verified state on 2026-09-20" at the end of this file.
 
-   ```bash
-   vercel link --scope webbdev --project prolink
-   vercel env pull .env.local --environment=development
-   ```
-
-   `.env.local` exists locally, remains gitignored, and must never be committed.
-2. Confirm `SUPABASE_SERVICE_ROLE_KEY` and `RESEND_API_KEY` are server-only and
-   configure the verified `RESEND_FROM_EMAIL` sender.
-3. Enable Leaked Password Protection in Supabase Auth once the organization is
+1. **Fix outgoing email — the one open defect.** `RESEND_FROM_EMAIL` is unset
+   and the fallback sender `noreply@prolink.se` is not a verified Resend domain,
+   so every transactional mail fails with 403 and does so silently. Details in
+   the email section below.
+2. Enable Leaked Password Protection in Supabase Auth once the organization is
    on a paid plan. It is currently disabled and is the only actionable finding
    from the Supabase security advisors, but it **requires the Pro Plan or
    above**, and the organization `frtsmkaudnjxdxbcczig` is on the Free plan as
@@ -82,12 +77,17 @@ explicit decision.
    upgraded; that is expected and not a regression. No code change is needed,
    only the toggle at
    `Authentication -> Providers -> Email` in the dashboard.
-4. Smoke-test CV access, attachment access, offer acceptance, delivery, and
-   completion with separate customer and provider accounts. No offers exist in
-   the database yet (0 rows), so the offer lifecycle has never been exercised
-   against real data.
-5. Verify that the production deployment picked up the current `master`. See
-   the deployment section below.
+3. Apply the password length and character requirements to the hosted project.
+   The repository change governs local development only.
+
+Resolved since the previous revision:
+
+- The workspace **is** linked to Vercel and `.env.local` is populated (only
+  `RESEND_FROM_EMAIL` is missing).
+- Production **is** serving current `master`.
+- The offer lifecycle **has** now been exercised against real data: 32/32 checks
+  passed. CV and attachment access were not part of that run, since the CV
+  upload feature was retired on 2026-08-31 and no attachments exist.
 
 ### Password policy
 
@@ -124,8 +124,9 @@ performed; both were wrong. There is no account ownership mismatch.
   and reported `READY`.
 - Domains: `prolink-one.vercel.app`, `prolink-webbdev.vercel.app`,
   `prolink-git-master-webbdev.vercel.app`.
-- The project reports `live: false`, so confirm in the dashboard whether the
-  production alias is intentionally not serving yet.
+- The project reported `live: false` on 2026-08-31, but as of 2026-09-20
+  `https://prolink-one.vercel.app/` returns 200 and serves current `master`, so
+  the production alias is live.
 - Listing deployments over the API returned 403 with the current credentials, so
   deployment history must be checked in the dashboard.
 
@@ -256,23 +257,370 @@ These need a migration and were deliberately not faked:
 - `npm test`: 7/7 passed.
 - `npm run build`: passed, 18 routes. No dev indicators in the production output.
 
+## Smoke test of the offer lifecycle (2026-09-20)
+
+The highest-value remaining check from the previous revision is **done**. The
+full lifecycle was exercised against the hosted database with three real
+authenticated accounts (customer, provider, second provider), driven through
+PostgREST with user JWTs so that RLS and `auth.uid()` applied exactly as they do
+in the app. The service-role key was used only to inject one race-condition row
+and to clean up afterwards.
+
+**32 of 32 checks passed.** All test data was removed afterwards; the database
+is back to 16 users, 3 jobs, 3 services and 0 offers/reviews/messages.
+
+Positive path, end to end:
+
+- Customer publishes a request; provider submits an offer.
+- Customer accepts. The request is automatically set to `closed`.
+- Provider marks delivered; customer completes. Offer ends at `completed`.
+- Customer leaves a review on the completed offer.
+- Both parties exchange messages inside the offer; `mark_offer_read` works.
+
+Authorization, all correctly refused:
+
+- A customer cannot offer on their own request (403).
+- A provider cannot accept their own offer.
+- `pending -> completed` is rejected as an invalid transition.
+- A customer cannot mark an offer delivered.
+- A provider cannot complete an offer.
+- A provider cannot offer on a request that is no longer open (403).
+- A duplicate review on the same offer is rejected (409).
+- A second offer cannot win a request that already has a winner, even when the
+  pending row predates the accept. Exactly one winner remained.
+
+Confidentiality, verified with a real outsider account and with `anon`:
+
+- A non-participant reads zero messages from the conversation and is refused by
+  `mark_offer_read`.
+- `anon` reads zero offers and zero messages, and is refused
+  `user_private_profiles` at the grant level (401).
+- The public `users` projection exposes no phone, CV or email column.
+- One user cannot read another user's private profile.
+
+Two incidental findings, neither a product defect:
+
+- A signup that omits `name`/`role` in the auth metadata fails on the
+  `users_name_length` check constraint. `src/lib/actions/auth.ts` always sends
+  both, so the real form is unaffected. Worth knowing before adding any other
+  signup path (OAuth, invites, seed scripts).
+- A provider may submit only one offer per request, enforced by a unique
+  constraint on `(job_id, provider_id)`.
+
+## Transactional email is broken in production (2026-09-20)
+
+**This is a real defect and the only thing the smoke test found that affects
+users.** No transactional email can be delivered:
+
+```
+POST https://api.resend.com/emails
+403  The prolink.se domain is not verified.
+```
+
+- `RESEND_FROM_EMAIL` is not set in `.env.local`, so `src/lib/email.ts` falls
+  back to `noreply@prolink.se`, and that domain is not verified in Resend.
+- All three senders are affected: new offer, offer accepted, and the third
+  template in `src/lib/email.ts`.
+- The failure is **silent**. Both call sites wrap the send in `try/catch` and
+  only `console.error`, deliberately, so that a mail outage cannot break the
+  offer flow. The consequence is that in production a customer is never told an
+  offer arrived, and nobody sees an error.
+- The Resend API key is send-restricted, so the domain list could not be read
+  over the API; verify in the Resend dashboard.
+
+Fix: either verify `prolink.se` in Resend, or set `RESEND_FROM_EMAIL` to an
+already verified sender, in both Vercel and `.env.local`. Then re-send one test
+message to confirm a 200.
+
 ## Recommended next action
 
-The Phase 1 database baseline is live and verified, so the remaining blockers
-are environment configuration rather than schema work:
+The offer lifecycle is now proven end to end, so the remaining items are
+configuration and distribution rather than core logic.
 
-1. Smoke-test the full offer lifecycle with separate customer and provider
-   accounts, since no offers exist yet. This is the highest-value remaining
-   check: the transactional offer logic is the core of the product and has so
-   far only been exercised by unit tests.
+1. **Fix outgoing email.** Verify the domain or point `RESEND_FROM_EMAIL` at a
+   verified sender. Until this is done, the marketplace cannot notify anyone,
+   which undermines the whole `offer -> chat -> delivery` loop.
 2. Apply the password length and character requirements to the hosted project in
-   the dashboard. The repository change only affects local development.
-3. Confirm whether the production alias should be serving, given `live: false`.
-4. Link the workspace to Vercel and pull the development environment variables.
-5. Decide whether the Pro Plan is worth it. Leaked password protection is the
-   only blocked security item, and it is the only thing that plan is needed for
-   here.
+   the dashboard. The repository change only affects local development, so the
+   hosted project still accepts 6-character passwords.
+3. Decide whether the Pro Plan is worth it. Leaked password protection is the
+   only blocked security item and the only thing that plan is needed for here.
+4. One service row has `category: null`, so it is invisible to category
+   filtering on the homepage. Either set a category or make the filter tolerate
+   nulls.
+5. Decide explicitly whether to drop the unused `applications` (4 rows) and
+   `saved_jobs` (2 rows) tables.
 
-After that, define Phase 2 scope before changing product UI or introducing the
-future business-account architecture. Decide explicitly whether to drop the now
-unused `applications` and `saved_jobs` tables.
+### The real problem is distribution, not features
+
+Worth stating plainly, because it should shape whatever comes next. The database
+holds 16 users (10 customers, 6 providers), 3 requests and 3 services. The most
+recent signup was 2026-07-25, roughly two months before this revision. There has
+never been a single offer, message or review from a real user.
+
+The code for the whole `assignment -> offer -> chat -> delivery -> review` loop
+is complete and now verified. The list under "Recommended for a future database
+phase" — structured deliverables, public offer counts, delivery counters — adds
+detail to a funnel that nobody is currently entering. None of it explains why 16
+users produced zero offers.
+
+Before building more product surface, get a handful of real assignments through
+the loop end to end, with working email. That will reveal what actually blocks a
+transaction far better than another schema change will.
+
+## Förbättringar genomförda 2026-09-20
+
+Efter smoke-testet åtgärdades följande. Allt är verifierat med
+`npm run build`, `npm run typecheck`, `npm run lint` (0 errors) och
+`npm test` (9/9, två nya regressionstester).
+
+### Mejl slutar misslyckas tyst
+
+- `src/lib/email.ts` skickar allt genom ett `send()`-omslag som kontrollerar
+  `result.error`. Resend **kastar inte** vid HTTP-fel, så ett nekat utskick
+  returnerades tidigare som ett lyckat anrop och anroparnas `try/catch` fångade
+  ingenting. Det är därför 403-felet aldrig syntes.
+- `emailConfigurationProblem()` upptäcker saknad `RESEND_API_KEY` eller
+  `RESEND_FROM_EMAIL` och loggar ett tydligt fel vid modulens uppstart.
+- **Kvarstår för dig:** verifiera domänen i Resend eller sätt
+  `RESEND_FROM_EMAIL` till en redan verifierad avsändare. Koden kan inte lösa
+  det åt sig själv.
+
+### Leverantörer notifieras om nya uppdrag
+
+Den saknade notisen åt utbudssidan är byggd. `POST /api/jobs` anropar nu
+`notifyProviders()`, som matchar uppdragets kategori mot leverantörernas
+kompetenser och faller tillbaka på samtliga leverantörer när ingen matchar —
+en tom marknadsplats vinner mer på räckvidd än på precision. Utskicket är best
+effort och kan aldrig hindra att uppdraget publiceras.
+
+### Prestanda
+
+- Faviconen var **1,37 MB** (1024×1024). Nu `favicon-32.png` på **0,8 kB** plus
+  `apple-touch-icon.png` på 7,5 kB.
+- OG-bilden var **2,0 MB**, vilket överskrider gränsen hos många scrapers, så
+  länkförhandsvisningar sannolikt inte fungerade. Nu `og-image.jpg`, 1200×630,
+  **89 kB**.
+- Fem gamla filer i `public/` (~6,6 MB) har inga referenser kvar i koden och kan
+  raderas: `Favicon.png`, `Copilot_20260430_140059.png`, `cta-bg.png`,
+  `Herovid2_opt.mp4` och `ChatGPT Image Apr 29…png`. Raderingen nekades av
+  behörighetsskäl och behöver göras manuellt.
+
+### En enda källa för sajtens adress
+
+`src/lib/site.ts` (`SITE_URL`, `absoluteUrl`). Tidigare hade `layout.tsx`,
+`email.ts` och `GoogleAuthButton.tsx` tre olika reservvärden för samma sak, och
+OG-taggen pekade hårdkodat på `https://prolink.se` medan sajten ligger på
+`prolink-one.vercel.app`.
+
+### SEO och felhantering
+
+- `src/app/robots.ts` och `src/app/sitemap.ts` — båda gav tidigare 404.
+  Kartan byggs dynamiskt från öppna uppdrag, tjänster och leverantörsprofiler,
+  och faller tillbaka på de statiska sidorna om databasen inte svarar.
+- `src/app/not-found.tsx` och `src/app/error.tsx` ersätter Next.js generiska
+  kraschsida.
+
+### Tillgänglighet
+
+Etiketter i `CreateJobForm`, `EditProfileForm` och `CreateServiceForm` låg som
+syskon till fälten utan `htmlFor`, så skärmläsare läste upp dem som namnlösa.
+Alla är nu kopplade med `htmlFor`/`id`. Knappgrupperna för pristyp och roll har
+fått `role="radiogroup"` med `aria-checked`. De delade `Input`- och
+`Textarea`-primitiverna visade sig redan vara korrekta.
+
+### Designsystemet
+
+`Button`, `Input`, `Textarea` och `Badge` använder nu accent-tokens i stället
+för `blue-*`. De renderas på nästan varje sida, så det är den största effekten
+per ändring. Resten av produkten har fortfarande ~175 `blue-*` och två
+konkurrerande neutralskalor (`gray` och `slate`); en full migrering är ett eget
+arbete som bör göras sida för sida med visuell kontroll.
+
+Under arbetet upptäcktes att `ring-accent/25` **inte genererade någon CSS
+alls** — opacitetsmodifierare fungerar inte på en naken `var()`. Ringen hade
+blivit osynlig. En egen `accent-ring`-token pekar nu på det redan existerande
+`--accent-ring`, verifierat i den byggda CSS:en.
+
+### Kvarstår
+
+- Verifiera avsändardomänen i Resend (enda kvarvarande funktionella felet).
+- Radera de fem oanvända filerna i `public/`.
+- Sätt kategori på tjänsten `bf1a15e7-07da-4784-861e-d0225c0b6081`
+  ("Webbutveckling"), som har `category: null` och därför är osynlig i
+  kategorifiltreringen. Uppdateringen nekades av behörighetsskäl.
+- Lösenordspolicyn i den hostade dashboarden.
+
+## Systematisk genomgång 2026-09-20 (omgång 2 och 3)
+
+Utöver mejl-, prestanda- och SEO-arbetet gjordes två genomgångar av
+korrekthet, säkerhet och tillgänglighet i hela produkten.
+
+### Filterinjektion i fritextsökningen
+
+Den allvarligaste tekniska bristen som hittades. Söktermen interpolerades rakt
+in i en PostgREST-or-sträng:
+
+    .or(`title.ilike.%${q}%,description.ilike.%${q}%`)
+
+Kommatecken, punkter och parenteser är syntax i filterspråket. Söktermen
+`zzzz%,id.not.is.null,title.ilike.%` bröt sig därför ur sitt eget villkor och
+blev ett extra predikat i filterträdet, så en nonsenssökning returnerade hela
+tabellen. Verifierat mot den hostade databasen och därefter i en körande
+produktionsserver: 3 träffar före fixen, 0 efter, medan "hemsida" fortfarande
+ger sin korrekta enda träff.
+
+RLS begränsade hela tiden vad som gick att nå, så ingen data låg blottad. Men
+filtret ska inte gå att styra utifrån. Saneringen ligger i `searchTerm()` i
+`src/lib/validation.ts` och används av både `/jobs` och `/services`.
+
+### Rollkapning via OAuth-callbacken
+
+`/auth/callback` läste `role` från en URL-parameter och tillämpade den vid
+varje anrop, inte bara vid registrering. Ett besök på
+`/auth/callback?code=...&role=customer` skrev därmed tyst om rollen för en
+befintlig leverantör, som sedan inte längre kunde lämna offerter. Rollen sätts
+nu bara när kontot faktiskt skapas.
+
+Värt att notera: den första fixen jämförde `created_at` med `last_sign_in_at`.
+En kontroll mot databasen visade att de skiljer sig ett par sekunder åt **även
+för helt nya konton**, så villkoret hade aldrig slagit till och rollen aldrig
+satts. Ett tiosekundersfönster används i stället.
+
+### Övriga buggar
+
+- **Konversationslistan** litade på en ordning som inte fanns. `.order()` i
+  frågan gäller `offers`, inte den inbäddade `messages`-listan. Sidan antog
+  samtidigt två olika saker: `computeUnread` sorterade fallande och tog `[0]`,
+  medan förhandsvisningen tog `at(-1)`. Både oläst-markeringen och textutdraget
+  kunde bli fel. `.sort()` muterade dessutom samma array som visningen läste.
+- **Kundnamnet försvann** på offertsidan: villkoret läste `job.customer?.name`
+  medan utskriften normaliserade en eventuell array.
+- **`max_price=abc`** gav `Number('abc')` = NaN, och `price=lte.NaN` filtrerar
+  inte alls utan returnerar hela tabellen.
+- **Stäng- och ta bort-knapparna** för uppdrag svalde fel tyst.
+  `CloseJobButton` kontrollerade inte svaret alls.
+- **Datum- och valutaformatterarna** kraschade (`RangeError`) respektive skrev
+  ut den synliga texten "NaN kr" på ogiltiga värden.
+
+### Säkerhet och tillgänglighet
+
+- Säkerhetsheaders saknades helt; produktionen levererade bara HSTS från
+  Vercel. Lade till `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy` och
+  `Permissions-Policy`. Offertsidorna har ettklicksknappar, så clickjacking är
+  relevant. Verifierat mot en lokal produktionsserver.
+- Mobilmenyn gick att tabba in i när den var stängd: panelen tas inte ur DOM
+  utan skjuts utanför bild. Nu `inert` och `aria-hidden`, plus Escape,
+  `aria-controls` och dold backdrop.
+- Hoppa-till-innehållet-länk saknades helt.
+
+### Prestanda
+
+- `salary` och `employer_name` hörde till den avvecklade anställningstavlan.
+  De hämtades på **varje** jobbfråga i hela produkten men renderades aldrig,
+  och är null på samtliga rader. Borttagna ur urvalet.
+- Chatten hämtade hela konversationen vid varje sidvisning, utan tak. Nu de
+  100 senaste.
+- Startsidan väntade på tre räknefrågor innan något kunde skickas till
+  webbläsaren, vilket gjorde Suspense-gränsen runt `LatestJobs` verkningslös.
+- Uppdragssidans rollfråga och offertlista kördes i följd, nu parallellt.
+
+### Granskat utan åtgärd
+
+Följande gicks igenom och visade sig vara korrekt: `validation.ts` (blockerar
+`javascript:`-URL:er, open redirects och path traversal), inga N+1-loopar,
+`remotePatterns` korrekt begränsat, ChatWindow har rätt ordning och
+dedup-skydd, alla API-rutter kräver auth, rubrikstrukturen har exakt en `h1`
+per sida, och samtliga interna länkar pekar på rutter som finns.
+
+De delade `Input`- och `Textarea`-primitiverna visade sig redan ha korrekta
+`htmlFor`, `aria-invalid` och `aria-describedby`.
+
+### Kvarstår, med motivering
+
+- **Ingen rate limiting.** Alla endpoints kräver inloggning, så exponeringen
+  är begränsad till registrerade konton. Att införa det kräver infrastruktur
+  (Upstash eller Vercel KV) och är ett eget beslut.
+- **`hej@prolink.se` går inte att nå.** Adressen står som kontakt för
+  personuppgiftsansvarig i integritetspolicyn, i användarvillkoren, i FAQ och i
+  sidfoten. `prolink.se` saknar MX-post, så domänen kan inte ta emot e-post
+  alls. Det är en efterlevnadsbrist i GDPR-texten, inte bara en trasig länk.
+- **`GET /api/jobs/[id]`** bäddar in `offers(*)`. RLS ger noll rader till en
+  utomstående i dag, verifierat, men `*` är sprött om policyn någonsin luckras
+  upp. Rutten används inte av gränssnittet.
+- **`NEXT_PUBLIC_APP_URL` måste sättas i Vercel.** Sitemap och robots bygger
+  sina adresser på den. Lokalt genereras `localhost:3000`-URL:er, och saknas
+  variabeln i produktion publiceras de till Google.
+
+## Omgång 4: det som gick att lösa i kod (2026-09-20)
+
+### Hastighetsbegränsning införd
+
+Migration 013 och `src/lib/rate-limit.ts`. Alla fem skrivande endpoints är
+täckta: uppdrag, offerter, tjänster, meddelanden och omdömen.
+
+Räknaren ligger i databasen, inte i processminnet. Applikationen kör
+serverlöst, så en minnesbaserad räknare hade begränsat per instans i stället
+för per användare. Tabellen är låst med RLS utan policies och nås bara via en
+`security definer`-funktion, så en klient kan inte rensa sin egen räknare.
+Vid databasfel släpps anropet igenom och felet loggas: ett trasigt
+begränsningssystem ska inte göra produkten oanvändbar.
+
+### Två av tre tjänster var osynliga
+
+Bredare än den null-rad som noterades tidigare. En andra rad har värdet
+`ekonomi`, som **aldrig funnits i `CATEGORIES`**. Phase 2 döpte om etiketten
+för `redovisning` till "Ekonomi & redovisning" men migrerade aldrig radens
+värde. Eftersom `/services` filtrerar med `.eq('category', ...)` matchar båda
+raderna ingen kategori alls.
+
+Migration 014 rättar värdena, fyller i den saknade kategorin, gör kolumnen
+`not null` och låser värdemängden med ett kontrollvillkor. Ett test jämför
+villkoret mot `CATEGORIES` i koden så att de inte glider isär.
+
+### Sitemap kunde publicera localhost
+
+`SITE_URL` föll tillbaka på localhost när `NEXT_PUBLIC_APP_URL` saknades.
+Nu används Vercels egna `VERCEL_PROJECT_PRODUCTION_URL` och `VERCEL_URL` som
+mellansteg; de sätts automatiskt i varje deployment. Risken är därmed
+hanterad i kod, men variabeln bör ändå sättas.
+
+### Deployen: 7,8 MB -> 104 kB
+
+De fem avvecklade mediefilerna är borttagna ur git och ligger i `.gitignore`.
+De finns kvar lokalt och i historiken.
+
+### Kontaktadressen samlad
+
+`CONTACT_EMAIL` i `src/lib/site.ts` ersätter sju hårdkodade förekomster. Kan
+sättas med `NEXT_PUBLIC_CONTACT_EMAIL`.
+
+## Kvarstår: kräver ditt beslut eller åtkomst
+
+Följande gick **inte** att lösa i kod, och varför:
+
+1. **Migration 013 och 014 är inte applicerade.** De ligger i repot men är
+   inte körda mot den hostade databasen. Att köra DDL mot produktion är ett
+   beslut du ska fatta, inte något som ska ske automatiskt. 014 ändrar
+   dessutom två verkliga rader. Kör dem i Supabase-dashboarden eller med
+   `supabase db push`, i ordning.
+2. **Avsändardomänen i Resend.** Kräver dashboard-åtkomst. Utan den skickas
+   inga mejl alls, inklusive de nya leverantörsnotiserna.
+3. **`CONTACT_EMAIL` pekar fortfarande på `hej@prolink.se`**, och `prolink.se`
+   saknar MX-post. Vilken adress som ska gälla är ett verksamhetsbeslut.
+4. **`NEXT_PUBLIC_APP_URL` i Vercel.** CLI:t är utloggat lokalt och inloggning
+   kräver interaktiv autentisering.
+5. **Lösenordspolicyn i hostade Supabase.** Endast dashboarden.
+
+## Verified state on 2026-09-20
+
+- Vercel: the workspace **is** linked (`.vercel/repo.json`, project
+  `prj_CnAC151RpS9mKBPNilQYFOAQ8bcv`, team `webbdev`). Earlier revisions said it
+  was not; that is no longer true.
+- `.env.local` contains all required keys except `RESEND_FROM_EMAIL`.
+- Production **is** serving: `https://prolink-one.vercel.app/` returns 200 and
+  the markup contains the `reveal` entrance classes and the 4rem display heading
+  from `13a08b1`, so the deployed build matches current `master`. The earlier
+  `live: false` note is stale.
+- `npm run typecheck`: passed. `npm test`: 7/7 passed.
+- Migrations 001-012 present locally and applied to the hosted project.

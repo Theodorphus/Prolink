@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendNewMessageEmail } from '@/lib/email'
 import { isOfferParticipant } from '@/lib/marketplace-rules.mjs'
+import { rateLimitMessage, withinRateLimit } from '@/lib/rate-limit'
 import {
   attachmentPath,
   InputValidationError,
@@ -29,6 +30,10 @@ export async function GET(_: NextRequest, props: { params: Promise<{ offerId: st
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) return NextResponse.json({ error: 'Ej inloggad' }, { status: 401 })
+
+  if (!(await withinRateLimit(supabase, 'messages:send'))) {
+    return NextResponse.json({ error: rateLimitMessage('messages:send') }, { status: 429 })
+  }
 
   let offerId: string
   try {
@@ -61,6 +66,10 @@ export async function POST(request: NextRequest, props: { params: Promise<{ offe
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) return NextResponse.json({ error: 'Ej inloggad' }, { status: 401 })
+
+  if (!(await withinRateLimit(supabase, 'messages:send'))) {
+    return NextResponse.json({ error: rateLimitMessage('messages:send') }, { status: 429 })
+  }
 
   let offerId: string
   let content: string

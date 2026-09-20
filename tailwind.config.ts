@@ -53,6 +53,9 @@ const config: Config = {
           strong: 'var(--accent-strong)',
           deep: 'var(--accent-deep)',
           tint: 'var(--accent-tint)',
+          // Förberedd genomskinlig accent. Opacitetsmodifierare (accent/25)
+          // fungerar inte på en naken var(), så ringfärgen får en egen token.
+          ring: 'var(--accent-ring)',
         },
       },
 

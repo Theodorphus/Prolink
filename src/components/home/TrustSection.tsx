@@ -17,10 +17,15 @@ export default function TrustSection({
   providerCount,
   openJobCount,
   serviceCount,
+  // Siffrorna hämtas i en egen Suspense-gräns. Under laddningen visas en
+  // neutral platshållare i stället för nollor, som annars hade hunnit läsas
+  // som riktiga värden innan de byttes ut.
+  pending = false,
 }: {
   providerCount: number
   openJobCount: number
   serviceCount: number
+  pending?: boolean
 }) {
   const stats = [
     { value: providerCount, label: providerCount === 1 ? 'frilansare' : 'frilansare', suffix: '' },
@@ -81,7 +86,7 @@ export default function TrustSection({
                 className="text-5xl font-extrabold tracking-[-0.04em]"
                 style={{ color: 'var(--accent-deep)' }}
               >
-                {stat.value}
+                {pending ? <span className="opacity-30">–</span> : stat.value}
               </p>
               <p className="muted mt-2 text-sm font-semibold">{stat.label}</p>
             </div>

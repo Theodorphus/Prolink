@@ -7,17 +7,26 @@ export default function DeleteJobButton({ jobId, compact = false }: { jobId: str
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
+  const [error, setError] = useState('')
 
+  // Ett misslyckat anrop stängde tidigare bekräftelsen utan att säga något,
+  // så uppdraget såg ut att finnas kvar utan förklaring.
   async function handleDelete() {
     setLoading(true)
+    setError('')
     try {
       const res = await fetch(`/api/jobs/${jobId}`, { method: 'DELETE' })
       if (res.ok) {
+        setShowConfirm(false)
         router.refresh()
+        return
       }
+      const data = await res.json().catch(() => null)
+      setError(data?.error ?? 'Uppdraget kunde inte tas bort.')
+    } catch {
+      setError('Uppdraget kunde inte tas bort. Kontrollera anslutningen.')
     } finally {
       setLoading(false)
-      setShowConfirm(false)
     }
   }
 
@@ -46,6 +55,9 @@ export default function DeleteJobButton({ jobId, compact = false }: { jobId: str
             <p className="text-sm text-gray-500 mb-6">
               Uppdraget och alla offerter raderas permanent. Det går inte att ångra.
             </p>
+            {error && (
+              <p role="alert" className="-mt-3 mb-4 text-sm text-red-600">{error}</p>
+            )}
             <div className="flex gap-3">
               <button
                 onClick={() => setShowConfirm(false)}

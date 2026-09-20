@@ -99,13 +99,16 @@ export default function EditProfileForm({ profile }: { profile: EditableProfile 
 
           {/* Basinfo */}
           <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-gray-700">Namn <span className="text-red-500">*</span></label>
-            <input name="name" defaultValue={profile.name} required className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <label htmlFor="profile-name" className="block text-sm font-medium text-gray-700">Namn <span className="text-red-500">*</span></label>
+            <input id="profile-name"
+              autoComplete="name"
+              name="name" defaultValue={profile.name} required className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
 
           <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-gray-700">Telefon</label>
+            <label htmlFor="profile-phone" className="block text-sm font-medium text-gray-700">Telefon</label>
             <input
+              id="profile-phone" autoComplete="tel"
               name="phone"
               type="tel"
               defaultValue={profile.phone ?? ''}
@@ -115,8 +118,9 @@ export default function EditProfileForm({ profile }: { profile: EditableProfile 
           </div>
 
           <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-gray-700">Om mig</label>
+            <label htmlFor="profile-bio" className="block text-sm font-medium text-gray-700">Om mig</label>
             <textarea
+              id="profile-bio"
               name="bio"
               defaultValue={profile.bio ?? ''}
               rows={3}
@@ -128,9 +132,10 @@ export default function EditProfileForm({ profile }: { profile: EditableProfile 
           {profile.role === 'provider' && (
             <>
               <div className="space-y-1.5">
-                <label className="block text-sm font-medium text-gray-700">Timpris (SEK/h)</label>
+                <label htmlFor="profile-hourly-rate" className="block text-sm font-medium text-gray-700">Timpris (SEK/h)</label>
                 <input
-                  name="hourly_rate"
+                  id="profile-hourly-rate"
+              name="hourly_rate"
                   type="number"
                   min="0"
                   defaultValue={profile.hourly_rate?.toString() ?? ''}
@@ -139,10 +144,11 @@ export default function EditProfileForm({ profile }: { profile: EditableProfile 
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="block text-sm font-medium text-gray-700">Kompetenser (kommaseparerade)</label>
+                <label htmlFor="profile-skills" className="block text-sm font-medium text-gray-700">Kompetenser (kommaseparerade)</label>
                 <input
                   type="text"
-                  value={skillsInput}
+                  id="profile-skills"
+              value={skillsInput}
                   onChange={e => setSkillsInput(e.target.value)}
                   placeholder="T.ex. Next.js, SEO, Redovisning, Figma"
                   className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -152,8 +158,9 @@ export default function EditProfileForm({ profile }: { profile: EditableProfile 
           )}
 
           <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-gray-700">LinkedIn (valfritt)</label>
+            <label htmlFor="profile-linkedin" className="block text-sm font-medium text-gray-700">LinkedIn (valfritt)</label>
             <input
+              id="profile-linkedin" autoComplete="url"
               name="linkedin_url"
               type="url"
               defaultValue={profile.linkedin_url ?? ''}

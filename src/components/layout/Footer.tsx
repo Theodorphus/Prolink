@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { CONTACT_EMAIL } from '@/lib/site'
 
 const links = {
   Plattform: [
@@ -44,8 +45,8 @@ export default function Footer() {
                 </li>
               ))}
             </ul>
-            <a href="mailto:hej@prolink.se" className="mt-4 inline-block text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
-              hej@prolink.se
+            <a href={`mailto:${CONTACT_EMAIL}`} className="mt-4 inline-block text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
+              {CONTACT_EMAIL}
             </a>
           </div>
 

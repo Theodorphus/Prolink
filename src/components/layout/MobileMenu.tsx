@@ -32,6 +32,17 @@ export default function MobileMenu({
     setOpen(false)
   }, [pathname])
 
+  // Escape ska stänga en öppen overlay. Saknades helt, så en tangentbords-
+  // användare kunde bara ta sig ur menyn genom att klicka.
+  useEffect(() => {
+    if (!open) return
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [open])
+
   // Lock body scroll while open
   useEffect(() => {
     if (open) {
@@ -49,6 +60,7 @@ export default function MobileMenu({
         onClick={() => setOpen((v) => !v)}
         aria-label={open ? 'Stäng meny' : 'Öppna meny'}
         aria-expanded={open}
+        aria-controls="mobil-meny"
         className="relative z-[70] flex h-11 w-11 items-center justify-center rounded-lg text-gray-700 active:bg-gray-100"
       >
         <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
@@ -63,13 +75,21 @@ export default function MobileMenu({
       {/* Backdrop */}
       <div
         onClick={close}
+        aria-hidden="true"
         className={`fixed inset-0 z-[60] bg-black/40 transition-opacity duration-200 ${
           open ? 'opacity-100' : 'pointer-events-none opacity-0'
         }`}
       />
 
       {/* Slide-down panel */}
+      {/* Panelen tas inte ur DOM när den stängs, utan skjuts utanför bild.
+          Utan inert och aria-hidden går det därför att tabba in i en osynlig
+          meny, och skärmläsare läser upp länkar som inte syns. */}
       <nav
+        id="mobil-meny"
+        aria-label="Huvudmeny"
+        aria-hidden={!open}
+        inert={!open}
         className={`fixed inset-x-0 top-0 z-[65] origin-top bg-white shadow-2xl transition-transform duration-300 ease-out ${
           open ? 'translate-y-0' : '-translate-y-full'
         }`}

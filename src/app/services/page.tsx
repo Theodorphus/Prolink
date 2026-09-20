@@ -3,6 +3,7 @@ import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import ServiceFilters from '@/components/services/ServiceFilters'
 import ServiceCard from '@/components/services/ServiceCard'
+import { searchTerm } from '@/lib/validation'
 
 export const metadata = {
   title: 'Tjänster – Hitta freelancers',
@@ -29,11 +30,15 @@ export default async function ServicesPage(props: Props) {
     .select('*, provider:users(id, name, avatar_url)')
 
   if (q) {
-    query = query.or(`title.ilike.%${q}%,description.ilike.%${q}%`)
+    const safeQuery = searchTerm(q)
+    if (safeQuery) query = query.or(`title.ilike.%${safeQuery}%,description.ilike.%${safeQuery}%`)
   }
 
-  if (max_price) {
-    query = query.lte('price', Number(max_price))
+  // Number('abc') ger NaN, och price=lte.NaN filtrerar inte alls utan
+  // returnerar hela tabellen. Ett ogiltigt värde ska ignoreras i stället.
+  const maxPrice = Number(max_price)
+  if (max_price && Number.isFinite(maxPrice) && maxPrice > 0) {
+    query = query.lte('price', maxPrice)
   }
 
   if (category) {
