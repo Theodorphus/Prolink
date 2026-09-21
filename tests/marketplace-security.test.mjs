@@ -244,3 +244,32 @@ test('tjänstekategorier hålls i synk mellan kod och databas', async () => {
 
   assert.match(migration, /alter column category set not null/, 'kategori ska vara obligatorisk')
 })
+
+test('varje kategorilandningssida har eget innehåll', async () => {
+  // Sidorna finns för att rankas i sök. En sida som bara upprepar samma text
+  // med ett annat filter är tunt innehåll som varken rankar eller hjälper
+  // besökaren, så varje kategori måste ha egen rubrik, egna exempel och egna
+  // frågor.
+  const source = await readFile(new URL('../src/lib/category-content.ts', import.meta.url), 'utf8')
+
+  const headings = [...source.matchAll(/heading:\s*'([^']+)'/g)].map(m => m[1])
+  assert.ok(headings.length >= 8, `förväntade minst 8 landningssidor, fick ${headings.length}`)
+  assert.equal(new Set(headings).size, headings.length, 'varje sida måste ha en unik rubrik')
+
+  const descriptions = [...source.matchAll(/description:\s*\n?\s*'([^']+)'/g)].map(m => m[1])
+  assert.equal(new Set(descriptions).size, descriptions.length, 'metabeskrivningarna måste vara unika')
+  for (const d of descriptions) {
+    assert.ok(d.length <= 175, `metabeskrivning för lång (${d.length} tecken): ${d.slice(0, 50)}…`)
+  }
+
+  // Kategorier utan innehåll får inte länkas från rutnätet på startsidan,
+  // eftersom sidan då skulle ge 404.
+  const grid = await readFile(new URL('../src/components/home/CompetenceGrid.tsx', import.meta.url), 'utf8')
+  if (grid.includes('/hitta/')) {
+    assert.match(grid, /category\.value !== 'annat'/, 'annat saknar landningssida och måste filtreras bort')
+  }
+
+  // Sidorna ska finnas i sitemapen, annars hittar sökmotorerna dem inte.
+  const sitemaps = await readFile(new URL('../src/lib/sitemaps.ts', import.meta.url), 'utf8')
+  assert.match(sitemaps, /\/hitta\//, 'landningssidorna måste ingå i sitemapen')
+})

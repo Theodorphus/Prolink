@@ -44,7 +44,7 @@ export default function CompetenceGrid() {
           {categories.map(category => (
             <Link
               key={category.value}
-              href={`/services?category=${category.value}`}
+              href={`/hitta/${category.value}`}
               className={`gradient-border surface surface-interactive group flex flex-col p-6 ${
                 priority.has(category.value) ? '' : 'hidden sm:flex'
               }`}
@@ -80,7 +80,7 @@ export default function CompetenceGrid() {
               .map(category => (
                 <Link
                   key={category.value}
-                  href={`/services?category=${category.value}`}
+                  href={`/hitta/${category.value}`}
                   className="surface flex flex-col p-6"
                 >
                   <span
