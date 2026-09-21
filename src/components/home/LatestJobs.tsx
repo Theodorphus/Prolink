@@ -1,5 +1,6 @@
+import { unstable_cache } from 'next/cache'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/public'
 import { PUBLIC_JOB_FIELDS } from '@/lib/jobs'
 import { formatCurrency, timeAgo } from '@/lib/utils'
 import { getCategoryEmoji, getCategoryLabel } from '@/lib/categories'
@@ -32,15 +33,23 @@ export function LatestJobsSkeleton() {
   )
 }
 
-export default async function LatestJobs() {
-  const supabase = await createClient()
-  const { data } = await supabase
+const latestJobs = unstable_cache(async () => {
+  const supabase = createPublicClient()
+  const { data, error } = await supabase
     .from('jobs')
-    .select(`${PUBLIC_JOB_FIELDS}, customer:users(name)`)
+    .select(`${PUBLIC_JOB_FIELDS}, customer:users!jobs_customer_id_fkey(name)`)
     .eq('status', 'open')
     .order('created_at', { ascending: false })
     .limit(6)
 
+  if (error) throw new Error('Uppdragen kunde inte hämtas.')
+  return data
+}, ['public-latest-jobs'], { revalidate: 60 })
+
+export default async function LatestJobs() {
+  let data
+  try { data = await latestJobs() }
+  catch { return <p className="mt-6 text-sm text-slate-500">Uppdragen kunde inte hämtas. <Link href="/jobs" className="underline">Försök igen</Link></p> }
   // Supabase typar den inbäddade relationen som en array eftersom FK-relationen
   // saknas i de handunderhållna typerna. Varje uppdrag har exakt en kund.
   const jobs: FeaturedJob[] = (data ?? []).map(row => ({

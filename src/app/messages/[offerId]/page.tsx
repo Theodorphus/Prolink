@@ -1,5 +1,5 @@
 import { notFound, redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getUser } from '@/lib/supabase/server'
 import ChatWindow from '@/components/chat/ChatWindow'
 import type { MessageWithSender } from '@/types/database'
 
@@ -8,25 +8,24 @@ export const metadata = { title: 'Chatt' }
 export default async function MessagesPage(props: { params: Promise<{ offerId: string }> }) {
   const params = await props.params;
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await getUser()
 
   if (!user) redirect('/login')
 
   const { data: offer } = await supabase
     .from('offers')
-    .select('id, status, provider_id, job:jobs(id, title, customer_id, customer:users(name)), provider:users(name)')
+    .select('id, status, provider_id, job:jobs(id, title, customer_id, customer:users!jobs_customer_id_fkey(name)), provider:users(name)')
     .eq('id', params.offerId)
     .single()
 
   if (!offer) notFound()
 
-  const offerAny = offer as any
-  const job = Array.isArray(offerAny.job) ? offerAny.job[0] : offerAny.job
-  const provider = Array.isArray(offerAny.provider) ? offerAny.provider[0] : offerAny.provider
+  const job = Array.isArray(offer.job) ? offer.job[0] : offer.job
+  const provider = Array.isArray(offer.provider) ? offer.provider[0] : offer.provider
   const customer = Array.isArray(job?.customer) ? job?.customer[0] : job?.customer
 
   const isCustomer = user.id === job?.customer_id
-  const isProvider = user.id === offerAny.provider_id
+  const isProvider = user.id === offer.provider_id
 
   if (!isCustomer && !isProvider) redirect('/')
 
@@ -36,12 +35,12 @@ export default async function MessagesPage(props: { params: Promise<{ offerId: s
   // Hela konversationen hämtades tidigare vid varje sidvisning. En långkörd
   // chatt växer obegränsat, så de senaste meddelandena hämtas fallande och
   // vänds sedan till stigande för visningen.
-  const MESSAGE_PAGE_SIZE = 100
+  const MESSAGE_PAGE_SIZE = 50
   const { data: latestMessages } = await supabase
     .from('messages')
     .select('*, sender:users(id, name, avatar_url)')
     .eq('offer_id', params.offerId)
-    .order('created_at', { ascending: false })
+    .order('created_at', { ascending: false }).order('id', { ascending: false })
     .limit(MESSAGE_PAGE_SIZE)
 
   const messages = (latestMessages ?? []).slice().reverse()

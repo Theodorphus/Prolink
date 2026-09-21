@@ -1,5 +1,6 @@
 import { CONTACT_EMAIL } from '@/lib/site'
 export const metadata = {
+  alternates: { canonical: '/faq' },
   title: 'Vanliga frågor',
   description: 'Svar på de vanligaste frågorna om Prolink – hur uppdrag fungerar, hur du skickar offerter och hur betalning hanteras.',
 }

@@ -26,6 +26,8 @@ export default function MarkDeliveredButton({ offerId }: { offerId: string }) {
         const data = await res.json()
         setError(data.error ?? 'Något gick fel.')
       }
+    } catch {
+      setError('Kunde inte uppdatera. Kontrollera anslutningen och försök igen.')
     } finally {
       setLoading(false)
     }
@@ -38,7 +40,7 @@ export default function MarkDeliveredButton({ offerId }: { offerId: string }) {
         <p className="text-xs text-gray-500 mb-4">
           Markera som levererat när du är klar. Kunden bekräftar sedan att uppdraget är slutfört.
         </p>
-        {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
+        {error && <p role="alert" className="text-sm text-red-600 mb-3">{error}</p>}
         <Button className="w-full" onClick={handle} loading={loading}>
           ✓ Markera som levererat
         </Button>

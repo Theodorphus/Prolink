@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
-import { sendNewMessageEmail } from '@/lib/email'
 import { isOfferParticipant } from '@/lib/marketplace-rules.mjs'
-import { rateLimitMessage, withinRateLimit } from '@/lib/rate-limit'
 import {
   attachmentPath,
   InputValidationError,
@@ -24,16 +21,12 @@ async function getOfferContext(supabase: Awaited<ReturnType<typeof createClient>
   return { offer: data, job }
 }
 
-export async function GET(_: NextRequest, props: { params: Promise<{ offerId: string }> }) {
+export async function GET(request: NextRequest, props: { params: Promise<{ offerId: string }> }) {
   const params = await props.params;
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) return NextResponse.json({ error: 'Ej inloggad' }, { status: 401 })
-
-  if (!(await withinRateLimit(supabase, 'messages:send'))) {
-    return NextResponse.json({ error: rateLimitMessage('messages:send') }, { status: 429 })
-  }
 
   let offerId: string
   try {
@@ -50,14 +43,33 @@ export async function GET(_: NextRequest, props: { params: Promise<{ offerId: st
     return NextResponse.json({ error: 'Ej behörig' }, { status: 403 })
   }
 
-  const { data, error } = await supabase
+  const after = request.nextUrl.searchParams.get('after')
+  const afterId = request.nextUrl.searchParams.get('after_id')
+  const before = request.nextUrl.searchParams.get('before')
+  const beforeId = request.nextUrl.searchParams.get('before_id')
+  let query = supabase
     .from('messages')
     .select('*, sender:users(id, name, avatar_url)')
     .eq('offer_id', offerId)
-    .order('created_at', { ascending: true })
+    .order('created_at', { ascending: !!after }).order('id', { ascending: !!after }).limit(50)
+  if (before && beforeId) {
+    try {
+      const id = uuidValue(beforeId, 'Meddelande')
+      const time = new Date(before).toISOString()
+      query = query.or(`created_at.lt.${time},and(created_at.eq.${time},id.lt.${id})`)
+    } catch { return NextResponse.json({ error: 'Ogiltig sidmarkör' }, { status: 400 }) }
+  }
+  if (after && afterId) {
+    try {
+      const id = uuidValue(afterId, 'Meddelande')
+      const time = new Date(after).toISOString()
+      query = query.or(`created_at.gt.${time},and(created_at.eq.${time},id.gt.${id})`)
+    } catch { return NextResponse.json({ error: 'Ogiltig sidmarkör' }, { status: 400 }) }
+  }
+  const { data, error } = await query
 
   if (error) return NextResponse.json({ error: 'Meddelandena kunde inte hämtas' }, { status: 500 })
-  return NextResponse.json(data)
+  return NextResponse.json(after ? data : data.reverse())
 }
 
 export async function POST(request: NextRequest, props: { params: Promise<{ offerId: string }> }) {
@@ -67,16 +79,14 @@ export async function POST(request: NextRequest, props: { params: Promise<{ offe
 
   if (!user) return NextResponse.json({ error: 'Ej inloggad' }, { status: 401 })
 
-  if (!(await withinRateLimit(supabase, 'messages:send'))) {
-    return NextResponse.json({ error: rateLimitMessage('messages:send') }, { status: 429 })
-  }
-
   let offerId: string
+  let id: string
   let content: string
   let storedAttachmentPath: string | null
   try {
     offerId = uuidValue(params.offerId, 'Offert')
     const body = await request.json()
+    id = body.id ? uuidValue(body.id, 'Meddelande') : crypto.randomUUID()
     content = optionalText(body.content, 'Meddelande', 5000) ?? ''
     storedAttachmentPath = attachmentPath(body.attachment_path, offerId)
     if (!content && !storedAttachmentPath) {
@@ -94,9 +104,13 @@ export async function POST(request: NextRequest, props: { params: Promise<{ offe
     return NextResponse.json({ error: 'Ej behörig' }, { status: 403 })
   }
 
+  const { data: existing } = await supabase.from('messages').select('*, sender:users(id, name, avatar_url)').eq('id', id).eq('sender_id', user.id).eq('offer_id', offerId).maybeSingle()
+  if (existing) return NextResponse.json(existing)
+
   const { data: message, error } = await supabase
     .from('messages')
     .insert({
+      id,
       offer_id: offerId,
       sender_id: user.id,
       content,
@@ -106,29 +120,13 @@ export async function POST(request: NextRequest, props: { params: Promise<{ offe
     .select('*, sender:users(id, name, avatar_url)')
     .single()
 
-  if (error) return NextResponse.json({ error: 'Meddelandet kunde inte skickas' }, { status: 500 })
-
-  // Email is best-effort and runs only after participant authorization.
-  try {
-    const recipientId = user.id === context.offer.provider_id
-      ? context.job.customer_id
-      : context.offer.provider_id
-    const admin = createAdminClient()
-    const { data: recipientAuth, error: authError } = await admin.auth.admin.getUserById(recipientId)
-    if (authError) throw authError
-    const sender = Array.isArray(message.sender) ? message.sender[0] : message.sender
-
-    if (recipientAuth.user?.email) {
-      await sendNewMessageEmail({
-        to: recipientAuth.user.email,
-        senderName: sender?.name ?? '',
-        jobTitle: context.job.title,
-        offerId,
-      })
-    }
-  } catch (notificationError) {
-    console.error('new message notification failed:', notificationError)
+  if (error?.code === '23505') {
+    const { data: saved } = await supabase.from('messages').select('*, sender:users(id, name, avatar_url)').eq('id', id).eq('sender_id', user.id).eq('offer_id', offerId).maybeSingle()
+    if (saved) return NextResponse.json(saved)
   }
+  if (error?.code === '54000') return NextResponse.json({ error: 'För många försök. Vänta en stund och försök igen.' }, { status: 429, headers: { 'Retry-After': '300' } })
+
+  if (error) return NextResponse.json({ error: 'Meddelandet kunde inte skickas' }, { status: 500 })
 
   return NextResponse.json(message, { status: 201 })
 }

@@ -22,11 +22,13 @@ export default function WriteReviewForm({ offerId, revieweeId, revieweeName }: W
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (loading) return
     if (rating === 0) { setError('Välj ett betyg'); return }
 
     setLoading(true)
     setError('')
 
+    try {
     const res = await fetch('/api/reviews', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -40,7 +42,8 @@ export default function WriteReviewForm({ offerId, revieweeId, revieweeName }: W
       const data = await res.json()
       setError(data.error ?? 'Något gick fel')
     }
-    setLoading(false)
+    } catch { setError('Kunde inte skicka. Kontrollera anslutningen och försök igen.') }
+    finally { setLoading(false) }
   }
 
   if (done) {
@@ -64,15 +67,15 @@ export default function WriteReviewForm({ offerId, revieweeId, revieweeName }: W
       <CardBody>
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>
+            <p role="alert" className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>
           )}
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-gray-700">Betyg</label>
             <StarRating value={rating} onChange={setRating} size="lg" />
           </div>
           <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-gray-700">Omdöme <span className="text-gray-400 font-normal">(valfritt)</span></label>
-            <textarea
+            <label htmlFor="review-comment" className="block text-sm font-medium text-gray-700">Omdöme <span className="text-gray-400 font-normal">(valfritt)</span></label>
+            <textarea id="review-comment" maxLength={2000}
               value={comment}
               onChange={e => setComment(e.target.value)}
               rows={3}

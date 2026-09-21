@@ -43,7 +43,7 @@ export default function TrustSection({
     },
     {
       title: 'Omdömen först efter genomfört uppdrag',
-      body: 'Bara parter i ett slutfört uppdrag kan lämna omdöme. Regeln är låst i databasen, inte bara i gränssnittet.',
+      body: 'Bara parter i ett slutfört uppdrag kan lämna omdöme. Du får se erfarenheter från verkliga samarbeten.',
       icon: (
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       ),
@@ -57,7 +57,7 @@ export default function TrustSection({
     },
     {
       title: 'Privata uppgifter stannar privata',
-      body: 'Telefonnummer och CV ligger bakom separata behörigheter och lämnar aldrig servern i ett publikt svar.',
+      body: 'Ditt telefonnummer och ditt CV visas inte på din publika profil.',
       icon: (
         <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
       ),
@@ -73,8 +73,8 @@ export default function TrustSection({
             Ny plattform, tydliga spelregler
           </h2>
           <p className="mt-4 text-lg leading-8 text-slate-600">
-            Prolink är i ett tidigt skede. Vi visar hellre de faktiska siffrorna än lånar
-            trovärdighet vi inte byggt än.
+            Prolink är i ett tidigt skede. Hjälp oss bygga nätverket genom att publicera ett uppdrag eller en tjänst. Vi visar den
+            aktivitet som finns just nu.
           </p>
         </div>
 
@@ -94,7 +94,7 @@ export default function TrustSection({
         </div>
 
         <p className="muted mt-5 text-center text-sm">
-          Siffrorna uppdateras direkt från plattformen.{' '}
+          Siffrorna uppdateras ungefär varje minut.{' '}
           <Link href="/jobs" className="font-semibold text-indigo-600 underline-offset-4 hover:underline">
             Se uppdragen själv
           </Link>

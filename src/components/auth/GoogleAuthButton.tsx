@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { SITE_URL } from '@/lib/site'
 
 interface GoogleAuthButtonProps {
   role?: string
@@ -10,24 +9,32 @@ interface GoogleAuthButtonProps {
 }
 
 export default function GoogleAuthButton({ role, next }: GoogleAuthButtonProps) {
+  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
   async function handleClick() {
     setLoading(true)
+    setError('')
+    try {
     const supabase = createClient()
 
-    const base = SITE_URL || window.location.origin
+    const base = window.location.origin
     const callbackUrl = new URL('/auth/callback', base)
     if (next) callbackUrl.searchParams.set('next', next)
     if (role) callbackUrl.searchParams.set('role', role)
 
-    await supabase.auth.signInWithOAuth({
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: callbackUrl.toString() },
     })
+    if (error) throw error
+    } catch { setError('Inloggningen kunde inte startas. Försök igen.') }
+    finally { setLoading(false) }
   }
 
   return (
+    <div>
+    {error && <p role="alert" className="mb-2 text-sm text-red-700">{error}</p>}
     <button
       type="button"
       onClick={handleClick}
@@ -42,5 +49,6 @@ export default function GoogleAuthButton({ role, next }: GoogleAuthButtonProps) 
       </svg>
       {loading ? 'Omdirigerar...' : 'Fortsätt med Google'}
     </button>
+    </div>
   )
 }

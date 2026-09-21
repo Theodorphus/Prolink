@@ -1,6 +1,6 @@
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getUser } from '@/lib/supabase/server'
 import { Card, CardBody, CardHeader } from '@/components/ui/Card'
 import { StatusBadge } from '@/components/ui/Badge'
 import { formatCurrency, formatDate } from '@/lib/utils'
@@ -17,8 +17,9 @@ export async function generateMetadata(props: { params: Promise<{ id: string }> 
     .select('job:jobs(title)')
     .eq('id', params.id)
     .single()
-  const jobTitle = (data?.job as any)?.title
+  const jobTitle = (Array.isArray(data?.job) ? data.job[0] : data?.job)?.title
   return {
+    robots: { index: false, follow: false },
     title: jobTitle ? `Offert – ${jobTitle}` : 'Offert',
     description: 'Se offertdetaljer, acceptera eller avslå offerter och kommunicera med leverantören.',
   }
@@ -30,13 +31,13 @@ export default async function OfferPage(
   const searchParams = await props.searchParams;
   const params = await props.params;
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await getUser()
 
   if (!user) redirect('/login')
 
   const { data: offer } = await supabase
     .from('offers')
-    .select('*, provider:users(id, name, bio, avatar_url, skills, hourly_rate), job:jobs(id, title, description, budget, customer_id, customer:users(id, name))')
+    .select('*, provider:users(id, name, bio, avatar_url, skills, hourly_rate), job:jobs(id, title, description, budget, customer_id, customer:users!jobs_customer_id_fkey(id, name))')
     .eq('id', params.id)
     .single()
 

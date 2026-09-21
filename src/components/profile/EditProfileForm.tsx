@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { Card, CardBody, CardHeader } from '@/components/ui/Card'
 import { createClient } from '@/lib/supabase/client'
+import { CATEGORIES } from '@/lib/categories'
 import AvatarUpload from '@/components/profile/AvatarUpload'
 import type { User, UserPrivateProfile } from '@/types/database'
 import {
@@ -14,7 +15,7 @@ import {
   requiredText,
 } from '@/lib/validation'
 
-type EditableProfile = User & Pick<UserPrivateProfile, 'phone'>
+type EditableProfile = User & Pick<UserPrivateProfile, 'phone'> & { email_jobs?: boolean; email_messages?: boolean; notification_categories?: string[] }
 
 export default function EditProfileForm({ profile }: { profile: EditableProfile }) {
   const router = useRouter()
@@ -66,6 +67,9 @@ export default function EditProfileForm({ profile }: { profile: EditableProfile 
         .upsert({
           user_id: profile.id,
           phone: optionalText(form.get('phone'), 'Telefon', 50),
+          email_jobs: form.get('email_jobs') === 'on',
+          email_messages: form.get('email_messages') === 'on',
+          notification_categories: form.getAll('notification_categories'),
           updated_at: new Date().toISOString(),
         }, { onConflict: 'user_id' })
 
@@ -97,6 +101,14 @@ export default function EditProfileForm({ profile }: { profile: EditableProfile 
             />
           </div>
 
+          <fieldset className="space-y-3 rounded-xl border p-4">
+            <legend className="font-semibold">Mejlnotiser</legend>
+            <label className="flex gap-2"><input type="checkbox" name="email_jobs" defaultChecked={profile.email_jobs ?? true} /> Nya uppdrag</label>
+            <label className="flex gap-2"><input type="checkbox" name="email_messages" defaultChecked={profile.email_messages ?? true} /> Chattnotiser (högst en per konversation per 15 minuter)</label>
+            <p className="text-sm text-slate-600">Välj kategorier för uppdragsnotiser. Inget valt betyder alla kategorier.</p>
+            <div className="grid gap-2 sm:grid-cols-2">{CATEGORIES.map(c => <label key={c.value} className="flex gap-2 text-sm"><input type="checkbox" name="notification_categories" value={c.value} defaultChecked={profile.notification_categories?.includes(c.value)} />{c.label}</label>)}</div>
+            <p className="text-xs text-slate-500">Riktade förfrågningar, offerter och avtalsbesked skickas alltid.</p>
+          </fieldset>
           {/* Basinfo */}
           <div className="space-y-1.5">
             <label htmlFor="profile-name" className="block text-sm font-medium text-gray-700">Namn <span className="text-red-500">*</span></label>

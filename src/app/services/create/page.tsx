@@ -1,16 +1,17 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getUser } from '@/lib/supabase/server'
 import CreateServiceForm from '@/components/services/CreateServiceForm'
 
 export const metadata = {
+  robots: { index: false, follow: false },
   title: 'Erbjud en tjänst',
   description: 'Publicera din tjänst på Prolink och nå nya kunder som söker din kompetens.',
 }
 
 export default async function CreateServicePage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await getUser()
 
   if (!user) redirect('/login?redirect=/services/create')
 

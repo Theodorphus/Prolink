@@ -15,9 +15,11 @@ export default function CreateOfferForm({ jobId }: { jobId: string }) {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    if (loading) return
     setLoading(true)
     setError('')
 
+    try {
     const form = new FormData(e.currentTarget)
 
     const res = await fetch('/api/offers', {
@@ -36,6 +38,8 @@ export default function CreateOfferForm({ jobId }: { jobId: string }) {
     if (!res.ok) { setError(data.error); setLoading(false); return }
 
     router.push(`/offers/${data.id}`)
+    } catch { setError('Kunde inte skicka. Kontrollera anslutningen och försök igen.') }
+    finally { setLoading(false) }
   }
 
   return (
@@ -81,14 +85,14 @@ export default function CreateOfferForm({ jobId }: { jobId: string }) {
 
           <Input
             label="Tidsestimat / Leveranstid"
-            name="timeline"
+            name="timeline" minLength={2} maxLength={120}
             required
             placeholder="T.ex. 10 arbetsdagar, 2 veckor"
           />
 
           <Textarea
             label="Offertbeskrivning"
-            name="description"
+            name="description" minLength={10} maxLength={5000}
             required
             rows={6}
             placeholder="Beskriv vad du ska leverera, hur du tänker lösa uppdraget och varför du är rätt person..."

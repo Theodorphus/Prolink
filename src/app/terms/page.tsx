@@ -1,5 +1,6 @@
 import { CONTACT_EMAIL } from '@/lib/site'
 export const metadata = {
+  alternates: { canonical: '/terms' },
   title: 'Användarvillkor',
   description: 'Läs Prolinks användarvillkor och förstå dina rättigheter och skyldigheter som användare av plattformen.',
 }

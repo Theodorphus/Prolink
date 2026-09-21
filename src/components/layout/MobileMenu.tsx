@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { logout } from '@/lib/actions/auth'
@@ -15,7 +15,7 @@ interface MobileUser {
   name: string
 }
 
-export default function MobileMenu({
+function Menu({
   links,
   user,
 }: {
@@ -23,24 +23,36 @@ export default function MobileMenu({
   user: MobileUser | null
 }) {
   const [open, setOpen] = useState(false)
+  const root = useRef<HTMLDivElement>(null)
+  const toggle = useRef<HTMLButtonElement>(null)
   const pathname = usePathname()
 
   const close = () => setOpen(false)
 
-  // Close on route change
-  useEffect(() => {
-    setOpen(false)
-  }, [pathname])
 
-  // Escape ska stänga en öppen overlay. Saknades helt, så en tangentbords-
-  // användare kunde bara ta sig ur menyn genom att klicka.
+
   useEffect(() => {
     if (!open) return
+    const previous = document.activeElement as HTMLElement | null
+    const background = [...document.querySelectorAll<HTMLElement>('main, footer')]
+    const inertBefore = background.map(element => element.inert)
+    background.forEach(element => { element.inert = true })
+    root.current?.querySelector<HTMLElement>('nav a, nav button')?.focus()
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') setOpen(false)
+      if (event.key === 'Escape') { event.preventDefault(); setOpen(false) }
+      if (event.key === 'Tab') {
+        const items = [...(root.current?.querySelectorAll<HTMLElement>('button:not(:disabled), a[href]') ?? [])]
+        const first = items[0], last = items.at(-1)
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus() }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus() }
+      }
     }
     document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
+    return () => {
+      background.forEach((element, index) => { element.inert = inertBefore[index] })
+      document.removeEventListener('keydown', onKeyDown)
+      previous?.focus()
+    }
   }, [open])
 
   // Lock body scroll while open
@@ -54,8 +66,8 @@ export default function MobileMenu({
   }, [open])
 
   return (
-    <div className="md:hidden">
-      <button
+    <div ref={root} className="md:hidden">
+      <button ref={toggle}
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label={open ? 'Stäng meny' : 'Öppna meny'}
@@ -157,4 +169,9 @@ export default function MobileMenu({
       </nav>
     </div>
   )
+}
+
+export default function MobileMenu(props: { links: NavLink[]; user: MobileUser | null }) {
+  const pathname = usePathname()
+  return <Menu key={pathname} {...props} />
 }

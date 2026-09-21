@@ -15,7 +15,6 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: { default: 'Prolink', template: '%s | Prolink' },
   description: 'Hitta frilansare, tjänster och uppdrag inom webb, design, marknadsföring, redovisning och IT.',
-  alternates: { canonical: '/' },
   icons: {
     icon: [{ url: '/favicon-32.png', sizes: '32x32', type: 'image/png' }],
     apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],

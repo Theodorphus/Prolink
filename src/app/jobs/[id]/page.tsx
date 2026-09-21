@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getUser } from '@/lib/supabase/server'
 import { Card, CardBody } from '@/components/ui/Card'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { getCategoryEmoji, getCategoryLabel } from '@/lib/categories'
@@ -13,6 +13,8 @@ export async function generateMetadata(props: { params: Promise<{ id: string }> 
   const supabase = await createClient()
   const { data } = await supabase.from('jobs').select('title, description').eq('id', id).single()
   return {
+    alternates: { canonical: `/jobs/${id}` },
+    openGraph: { title: data?.title ?? 'Prolink', url: `/jobs/${id}` },
     title: data?.title ?? 'Uppdrag',
     description: data?.description?.slice(0, 155) ?? 'Se uppdraget och lämna en offert på Prolink.',
   }
@@ -21,16 +23,17 @@ export async function generateMetadata(props: { params: Promise<{ id: string }> 
 export default async function JobPage(props: { params: Promise<{ id: string }> }) {
   const { id } = await props.params
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await getUser()
 
   // Kolumnerna speglar PUBLIC_JOB_FIELDS och utelämnar employer_email/contact_info.
   // Literalen behålls här eftersom .single() förlorar typinferensen med en mall-literal.
-  const { data: job } = await supabase
+  const { data: job, error: detailError } = await supabase
     .from('jobs')
-    .select('id, customer_id, title, description, budget, status, created_at, category, location, work_type, customer:users(id, name, bio, avatar_url, created_at)')
+    .select('id, customer_id, title, description, budget, status, created_at, category, location, work_type, customer:users!jobs_customer_id_fkey(id, name, bio, avatar_url, created_at)')
     .eq('id', id)
     .single()
 
+  if (detailError && detailError.code !== 'PGRST116') throw new Error('Sidan kunde inte hämtas.')
   if (!job) notFound()
 
   // Supabase typar den inbäddade relationen som en array eftersom FK-relationen

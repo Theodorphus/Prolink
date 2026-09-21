@@ -2,6 +2,8 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { SITE_URL } from '@/lib/site'
+import type { ActionState } from '@/types/auth'
 import { createClient } from '@/lib/supabase/server'
 import {
   emailValue,
@@ -11,7 +13,6 @@ import {
   safeRelativePath,
 } from '@/lib/validation'
 
-type ActionState = { error: string } | { success: true; redirectTo: string } | null
 
 export async function login(_: ActionState, formData: FormData): Promise<ActionState> {
   const supabase = await createClient()
@@ -20,7 +21,7 @@ export async function login(_: ActionState, formData: FormData): Promise<ActionS
   let password: string
   try {
     email = emailValue(formData.get('email'))
-    password = requiredText(formData.get('password'), 'Lösenord', 6, 128)
+    password = passwordValue(formData.get('password'), 6)
   } catch (error) {
     return { error: error instanceof InputValidationError ? error.message : 'Ogiltiga uppgifter.' }
   }
@@ -73,18 +74,20 @@ export async function register(_: ActionState, formData: FormData): Promise<Acti
   let role: 'customer' | 'provider'
   try {
     email = emailValue(formData.get('email'))
-    password = requiredText(formData.get('password'), 'Lösenord', 8, 128)
+    password = passwordValue(formData.get('password'), 8)
     name = requiredText(formData.get('name'), 'Namn', 1, 100)
     role = oneOf(formData.get('role'), ['customer', 'provider'] as const, 'Roll')
   } catch (error) {
     return { error: error instanceof InputValidationError ? error.message : 'Ogiltiga uppgifter.' }
   }
 
-  const { error } = await supabase.auth.signUp({
+  const redirectTo = safeRelativePath(formData.get('redirect'))
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
       data: { name, role },
+      emailRedirectTo: `${SITE_URL}/auth/callback?next=${encodeURIComponent(redirectTo)}`,
     },
   })
 
@@ -93,7 +96,8 @@ export async function register(_: ActionState, formData: FormData): Promise<Acti
   }
 
   revalidatePath('/', 'layout')
-  return { success: true, redirectTo: '/' }
+  if (!data.session) return { message: 'Kontot är skapat. Bekräfta din e-post via länken i mejlet innan du loggar in.' }
+  return { success: true, redirectTo }
 }
 
 export async function logout() {
@@ -101,4 +105,49 @@ export async function logout() {
   await supabase.auth.signOut()
   revalidatePath('/', 'layout')
   redirect('/login')
+}
+
+function passwordValue(value: FormDataEntryValue | null, min: number): string {
+  if (typeof value !== 'string' || value.length < min || value.length > 128) {
+    throw new InputValidationError(`Lösenordet måste vara ${min}–128 tecken.`)
+  }
+  return value
+}
+
+export async function requestPasswordReset(_: ActionState, form: FormData): Promise<ActionState> {
+  try {
+    const email = emailValue(form.get('email'))
+    const supabase = await createClient()
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${SITE_URL}/auth/callback?next=/reset-password`,
+    })
+    if (error) return { error: 'Mejlet kunde inte skickas. Vänta en stund och försök igen.' }
+    return { message: 'Om adressen har ett konto får du ett mejl med en återställningslänk.' }
+  } catch { return { error: 'Ange en giltig e-postadress.' } }
+}
+
+export async function resendConfirmation(_: ActionState, form: FormData): Promise<ActionState> {
+  try {
+    const email = emailValue(form.get('email'))
+    const next = safeRelativePath(form.get('redirect'))
+    const supabase = await createClient()
+    const { error } = await supabase.auth.resend({ type: 'signup', email, options: {
+      emailRedirectTo: `${SITE_URL}/auth/callback?next=${encodeURIComponent(next)}`,
+    } })
+    if (error) return { error: 'Kunde inte skicka bekräftelsen. Vänta en stund och försök igen.' }
+    return { message: 'Om kontot väntar på bekräftelse skickas ett nytt mejl.' }
+  } catch { return { error: 'Ange en giltig e-postadress.' } }
+}
+
+export async function resetPassword(_: ActionState, form: FormData): Promise<ActionState> {
+  try {
+    const password = passwordValue(form.get('password'), 8)
+    if (password !== form.get('confirm')) return { error: 'Lösenorden stämmer inte överens.' }
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: 'Länken har gått ut. Begär en ny återställningslänk.' }
+    const { error } = await supabase.auth.updateUser({ password })
+    if (error) return { error: 'Lösenordet kunde inte sparas. Kontrollera att det är tillräckligt starkt.' }
+    return { success: true, redirectTo: '/' }
+  } catch (error) { return { error: error instanceof Error ? error.message : 'Kunde inte ändra lösenordet.' } }
 }

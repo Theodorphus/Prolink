@@ -1,5 +1,5 @@
 import { notFound, redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getUser } from '@/lib/supabase/server'
 import CreateOfferForm from '@/components/offers/CreateOfferForm'
 import { Card, CardBody } from '@/components/ui/Card'
 import { formatCurrency } from '@/lib/utils'
@@ -12,7 +12,7 @@ export const metadata = {
 export default async function CreateOfferPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await getUser()
 
   if (!user) redirect(`/login?redirect=/jobs/${params.id}/offer`)
 

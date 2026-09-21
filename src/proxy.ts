@@ -41,10 +41,11 @@ export async function proxy(request: NextRequest) {
   if (isProtected && !user) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
-    url.searchParams.set('redirect', pathname)
+    url.search = ''
+    url.searchParams.set('redirect', pathname + request.nextUrl.search)
     const redirectResponse = NextResponse.redirect(url)
     supabaseResponse.cookies.getAll().forEach(cookie =>
-      redirectResponse.cookies.set(cookie.name, cookie.value)
+      redirectResponse.cookies.set(cookie)
     )
     return redirectResponse
   }
@@ -52,7 +53,7 @@ export async function proxy(request: NextRequest) {
   if (isAuthRoute && user) {
     const redirectResponse = NextResponse.redirect(new URL('/', request.url))
     supabaseResponse.cookies.getAll().forEach(cookie =>
-      redirectResponse.cookies.set(cookie.name, cookie.value)
+      redirectResponse.cookies.set(cookie)
     )
     return redirectResponse
   }
@@ -61,5 +62,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|sitemaps/|api/cron/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
 }

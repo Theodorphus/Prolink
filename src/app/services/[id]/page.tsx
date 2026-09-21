@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getUser } from '@/lib/supabase/server'
 import { Card, CardBody } from '@/components/ui/Card'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { getCategoryEmoji, getCategoryLabel } from '@/lib/categories'
@@ -13,6 +13,8 @@ export async function generateMetadata(props: { params: Promise<{ id: string }> 
   const supabase = await createClient()
   const { data } = await supabase.from('services').select('title, description').eq('id', params.id).single()
   return {
+    alternates: { canonical: `/services/${params.id}` },
+    openGraph: { title: data?.title ?? 'Prolink', url: `/services/${params.id}` },
     title: data?.title ?? 'Tjänst',
     description: data?.description?.slice(0, 155) ?? 'Se tjänstedetaljer och kontakta leverantören på Prolink.',
   }
@@ -21,14 +23,15 @@ export async function generateMetadata(props: { params: Promise<{ id: string }> 
 export default async function ServicePage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await getUser()
 
-  const { data: service } = await supabase
+  const { data: service, error: detailError } = await supabase
     .from('services')
     .select('*, provider:users(id, name, bio, avatar_url, skills, hourly_rate, linkedin_url, created_at)')
     .eq('id', params.id)
     .single()
 
+  if (detailError && detailError.code !== 'PGRST116') throw new Error('Sidan kunde inte hämtas.')
   if (!service) notFound()
 
   const provider = Array.isArray(service.provider) ? service.provider[0] : service.provider
@@ -43,14 +46,10 @@ export default async function ServicePage(props: { params: Promise<{ id: string 
     .order('created_at', { ascending: false })
     .limit(3)
 
-  const { count: reviewCount } = await supabase
-    .from('reviews')
-    .select('id', { count: 'exact', head: true })
-    .eq('reviewee_id', provider.id)
-
-  const avgRating = reviews && reviews.length > 0
-    ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-    : null
+  const { data: summary, error: summaryError } = await supabase.rpc('review_summary', { p_user_id: provider.id }).single()
+  if (summaryError) throw new Error('Omdömen kunde inte hämtas.')
+  const reviewCount = (summary as { total: number; average: number | null }).total
+  const avgRating = (summary as { total: number; average: number | null }).average
 
   const isOwn = user?.id === provider.id
 
@@ -89,8 +88,8 @@ export default async function ServicePage(props: { params: Promise<{ id: string 
                 {typeof reviewCount === 'number' && reviewCount > 0 ? ` (${reviewCount})` : ''}
               </h2>
               <div className="surface divide-y divide-slate-100 px-6">
-                {reviews.map((review: any) => (
-                  <ReviewCard key={review.id} review={review} />
+                {reviews.map((review) => (
+                  <ReviewCard key={review.id} review={{ ...review, reviewer: Array.isArray(review.reviewer) ? review.reviewer[0] : review.reviewer }} />
                 ))}
               </div>
               {typeof reviewCount === 'number' && reviewCount > reviews.length && (
@@ -115,7 +114,8 @@ export default async function ServicePage(props: { params: Promise<{ id: string 
                 {/* Databasen har ett enda prisfält utan omfattning, så priset
                     märks som frånpris i stället för fast pris. */}
                 <p className="muted mt-1 text-xs font-medium">
-                  frånpris · slutligt pris avtalas med leverantören
+                  frånpris · {service.vat_included === true ? 'inklusive moms' : service.vat_included === false ? 'exklusive moms' : 'be leverantören ange moms'}
+                  <br />Slutligt pris och omfattning avtalas med leverantören
                 </p>
               </div>
 
@@ -130,14 +130,14 @@ export default async function ServicePage(props: { params: Promise<{ id: string 
                 </p>
               ) : user ? (
                 <Link
-                  href={`/profile/${provider.id}`}
+                  href={`/jobs/create?service=${service.id}`}
                   className="block rounded-xl bg-blue-700 px-5 py-3.5 text-center text-sm font-bold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-800 hover:shadow-lg"
                 >
-                  Diskutera tjänsten
+                  Skicka förfrågan
                 </Link>
               ) : (
                 <Link
-                  href={`/login?redirect=/services/${service.id}`}
+                  href={`/login?redirect=${encodeURIComponent(`/jobs/create?service=${service.id}`)}`}
                   className="block rounded-xl bg-blue-700 px-5 py-3.5 text-center text-sm font-bold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-800 hover:shadow-lg"
                 >
                   Logga in för att kontakta

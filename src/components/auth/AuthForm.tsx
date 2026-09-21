@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import GoogleAuthButton from '@/components/auth/GoogleAuthButton'
 
-type ActionState = { error: string } | { success: true; redirectTo: string } | null
+import type { ActionState } from '@/types/auth'
 
 interface AuthFormProps {
   action: (state: ActionState, formData: FormData) => Promise<ActionState>
@@ -38,7 +38,7 @@ export default function AuthForm({ action, submitLabel, redirect, next }: AuthFo
 
   return (
     <div className="surface p-8 space-y-5">
-      <GoogleAuthButton next={next} />
+      <GoogleAuthButton next={next ?? redirect} />
 
       <div className="flex items-center gap-3">
         <div className="flex-1 h-px bg-gray-200" />

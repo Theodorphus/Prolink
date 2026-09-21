@@ -1,3 +1,5 @@
+import Pagination from '@/components/ui/Pagination'
+import { pageNumber, PAGE_SIZE } from '@/lib/pagination'
 import Link from 'next/link'
 import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
@@ -7,22 +9,24 @@ import JobCard from '@/components/jobs/JobCard'
 import { searchTerm } from '@/lib/validation'
 
 export const metadata = {
+  alternates: { canonical: '/jobs' },
   title: 'Hitta frilansuppdrag',
   description: 'Bläddra bland öppna uppdrag inom webb, design, marknadsföring, redovisning och IT.',
 }
 
 interface Props {
-  searchParams: Promise<{ q?: string; sort?: string; category?: string; worktype?: string }>
+  searchParams: Promise<{ page?: string; q?: string; sort?: string; category?: string; worktype?: string }>
 }
 
 export default async function JobsPage(props: Props) {
   const searchParams = await props.searchParams;
+  const page = pageNumber(searchParams.page)
   const supabase = await createClient()
   const { q, sort = 'newest', category, worktype } = searchParams
 
   let query = supabase
     .from('jobs')
-    .select(`${PUBLIC_JOB_FIELDS}, customer:users(name)`)
+    .select(`${PUBLIC_JOB_FIELDS}, customer:users!jobs_customer_id_fkey(name)`, { count: 'exact' })
     .eq('status', 'open')
 
   const safeQuery = searchTerm(q)
@@ -34,7 +38,8 @@ export default async function JobsPage(props: Props) {
     ? query.order('created_at', { ascending: true })
     : query.order('created_at', { ascending: false })
 
-  const { data: jobs } = await query
+  const { data: jobs, count, error } = await query.order('id', { ascending: false }).range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1)
+  if (error) throw new Error('Listan kunde inte hämtas. Försök igen.')
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-14 sm:px-6">
@@ -43,7 +48,7 @@ export default async function JobsPage(props: Props) {
           <p className="page-eyebrow">Uppdrag</p>
           <h1 className="page-heading mt-2.5 text-3xl sm:text-4xl">Hitta uppdrag</h1>
           <p className="muted mt-2 text-sm font-medium">
-            {jobs?.length ?? 0} {jobs?.length === 1 ? 'öppet uppdrag' : 'öppna uppdrag'} just nu
+            {count ?? 0} {jobs?.length === 1 ? 'öppet uppdrag' : 'öppna uppdrag'} just nu
           </p>
         </div>
         <Link
@@ -59,8 +64,8 @@ export default async function JobsPage(props: Props) {
       </Suspense>
 
       <div className="mt-7 space-y-3.5">
-        {jobs?.map((job: any) => (
-          <JobCard key={job.id} job={job} variant="row" />
+        {jobs?.map((job) => (
+          <JobCard key={job.id} job={{ ...job, customer: Array.isArray(job.customer) ? job.customer[0] : job.customer }} variant="row" />
         ))}
 
         {(!jobs || jobs.length === 0) && (
@@ -97,6 +102,7 @@ export default async function JobsPage(props: Props) {
           </div>
         )}
       </div>
+      <Pagination page={page} total={count ?? 0} pageSize={PAGE_SIZE} pathname="/jobs" params={searchParams} />
     </div>
   )
 }

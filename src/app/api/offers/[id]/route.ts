@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
-import { sendOfferAcceptedEmail } from '@/lib/email'
 import { canTransitionOffer, OFFER_STATUSES } from '@/lib/marketplace-rules.mjs'
 import { InputValidationError, oneOf, uuidValue } from '@/lib/validation'
 
@@ -78,23 +76,6 @@ export async function PATCH(request: NextRequest, props: { params: Promise<{ id:
       return NextResponse.json({ error: transitionErrorMessage(error.message) }, { status: 409 })
     }
     return NextResponse.json({ error: 'Kunde inte uppdatera offerten' }, { status: 500 })
-  }
-
-  if (status === 'accepted' && offer.status !== 'accepted') {
-    try {
-      const admin = createAdminClient()
-      const { data: providerAuth, error: authError } = await admin.auth.admin.getUserById(offer.provider_id)
-      if (authError) throw authError
-      if (providerAuth.user?.email) {
-        await sendOfferAcceptedEmail({
-          to: providerAuth.user.email,
-          jobTitle: job.title,
-          offerId: offer.id,
-        })
-      }
-    } catch (notificationError) {
-      console.error('offer accepted notification failed:', notificationError)
-    }
   }
 
   const { data } = await supabase.from('offers').select('*').eq('id', offerId).single()

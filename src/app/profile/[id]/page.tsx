@@ -1,7 +1,9 @@
+import Pagination from '@/components/ui/Pagination'
+import { pageNumber, PAGE_SIZE } from '@/lib/pagination'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getUser } from '@/lib/supabase/server'
 import { PUBLIC_JOB_FIELDS } from '@/lib/jobs'
 import { Card, CardBody } from '@/components/ui/Card'
 import { formatCurrency, formatDate } from '@/lib/utils'
@@ -19,64 +21,67 @@ export async function generateMetadata(props: { params: Promise<{ id: string }> 
 
   const role = data.role === 'provider' ? 'Frilansare' : 'Kund'
   return {
+    alternates: { canonical: `/profile/${params.id}` },
+    openGraph: { title: data?.name ?? 'Prolink', url: `/profile/${params.id}` },
     title: data.name,
     description: data.bio?.slice(0, 155) ?? `${data.name} på Prolink. ${role} i det svenska nätverket för specialisttjänster.`,
   }
 }
 
-export default async function ProfilePage(props: { params: Promise<{ id: string }> }) {
+export default async function ProfilePage(props: { params: Promise<{ id: string }>; searchParams: Promise<{ page?: string }> }) {
+  const searchParams = await props.searchParams
+  const page = pageNumber(searchParams.page)
   const params = await props.params
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await getUser()
 
   // Endast publika kolumner. Telefon ligger i user_private_profiles bakom egen
   // RLS och hämtas bara för den inloggade ägaren nedan.
-  const { data: profile } = await supabase
+  const { data: profile, error: detailError } = await supabase
     .from('users')
     .select('id, role, name, bio, skills, hourly_rate, avatar_url, linkedin_url, created_at')
     .eq('id', params.id)
     .single()
 
+  if (detailError && detailError.code !== 'PGRST116') throw new Error('Sidan kunde inte hämtas.')
   if (!profile) notFound()
 
   const isOwn = user?.id === params.id
   const isProvider = profile.role === 'provider'
 
-  const { data: privateProfile } = isOwn
+  const { data: privateProfile, error: privateError } = isOwn
     ? await supabase
         .from('user_private_profiles')
-        .select('phone')
+        .select('phone, email_jobs, email_messages, notification_categories')
         .eq('user_id', params.id)
         .maybeSingle()
-    : { data: null }
+    : { data: null, error: null }
 
-  const [{ data: jobs }, { data: reviews }, { data: services }] = await Promise.all([
+  if (privateError) throw new Error('Dina inställningar kunde inte hämtas.')
+
+  const [{ data: jobs, count: jobCount, error: jobError }, { data: reviews, count: reviewCount, error: reviewError }, { data: services, count: serviceCount, error: serviceError }] = await Promise.all([
     supabase
       .from('jobs')
-      .select(PUBLIC_JOB_FIELDS)
+      .select(PUBLIC_JOB_FIELDS, { count: 'exact' })
       .eq('customer_id', params.id)
       .order('created_at', { ascending: false })
-      .limit(5),
+      .order('id').range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1),
     supabase
       .from('reviews')
-      .select('*, reviewer:users(id, name, avatar_url)')
+      .select('*, reviewer:users(id, name, avatar_url)', { count: 'exact' })
       .eq('reviewee_id', params.id)
-      .order('created_at', { ascending: false }),
+      .order('created_at', { ascending: false }).order('id').range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1),
     supabase
       .from('services')
-      .select('id, title, description, price, delivery_time, category')
+      .select('id, title, description, price, delivery_time, category', { count: 'exact' })
       .eq('provider_id', params.id)
-      .order('created_at', { ascending: false }),
+      .order('created_at', { ascending: false }).order('id').range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1),
   ])
 
-  const avgRating = reviews && reviews.length > 0
-    ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-    : null
-
-  // Antalet omdömen är den enda leveranssiffra som går att härleda säkert från
-  // publik data. Offerttabellen är läsbar endast för sina parter, så antalet
-  // genomförda uppdrag kan inte räknas här utan att läcka.
-  const reviewCount = reviews?.length ?? 0
+  if (jobError || reviewError || serviceError) throw new Error('Profilens innehåll kunde inte hämtas.')
+  const { data: summary, error: summaryError } = await supabase.rpc('review_summary', { p_user_id: params.id }).single()
+  if (summaryError) throw new Error('Omdömen kunde inte hämtas.')
+  const avgRating = (summary as { average: number | null }).average
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-14 sm:px-6">
@@ -169,14 +174,14 @@ export default async function ProfilePage(props: { params: Promise<{ id: string 
               {!isOwn && isProvider && (
                 user ? (
                   <Link
-                    href="/jobs/create"
+                    href={`/jobs/create?provider=${profile.id}`}
                     className="block rounded-xl bg-blue-700 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-800 hover:shadow-lg"
                   >
-                    Publicera ett uppdrag
+                    Skicka förfrågan
                   </Link>
                 ) : (
                   <Link
-                    href={`/login?redirect=/profile/${profile.id}`}
+                    href={`/login?redirect=${encodeURIComponent(`/jobs/create?provider=${profile.id}`)}`}
                     className="block rounded-xl bg-blue-700 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-800 hover:shadow-lg"
                   >
                     Logga in för att kontakta
@@ -193,6 +198,7 @@ export default async function ProfilePage(props: { params: Promise<{ id: string 
             <EditProfileForm
               profile={{
                 ...profile,
+                ...privateProfile,
                 phone: privateProfile?.phone ?? null,
               }}
             />
@@ -213,7 +219,7 @@ export default async function ProfilePage(props: { params: Promise<{ id: string 
 
               {services && services.length > 0 ? (
                 <div className="grid gap-3.5 sm:grid-cols-2">
-                  {services.map((service: any) => (
+                  {services.map((service) => (
                     <Link key={service.id} href={`/services/${service.id}`} className="group block">
                       <article className="surface surface-interactive flex h-full flex-col gap-2.5 p-5">
                         {service.category && (
@@ -268,7 +274,7 @@ export default async function ProfilePage(props: { params: Promise<{ id: string 
 
               {jobs && jobs.length > 0 ? (
                 <div className="space-y-3">
-                  {jobs.map((job: any) => (
+                  {jobs.map((job) => (
                     <Card key={job.id}>
                       <CardBody className="flex items-center justify-between gap-4">
                         <Link href={`/jobs/${job.id}`} className="group min-w-0 flex-1">
@@ -305,12 +311,12 @@ export default async function ProfilePage(props: { params: Promise<{ id: string 
 
           <section>
             <h2 className="page-heading mb-4 text-xl">
-              Omdömen{reviewCount > 0 ? ` (${reviewCount})` : ''}
+              Omdömen{(reviewCount ?? 0) > 0 ? ` (${reviewCount})` : ''}
             </h2>
             {reviews && reviews.length > 0 ? (
               <div className="surface divide-y divide-slate-100 px-6">
-                {reviews.map((review: any) => (
-                  <ReviewCard key={review.id} review={review} />
+                {reviews.map((review) => (
+                  <ReviewCard key={review.id} review={{ ...review, reviewer: Array.isArray(review.reviewer) ? review.reviewer[0] : review.reviewer }} />
                 ))}
               </div>
             ) : (
@@ -324,6 +330,7 @@ export default async function ProfilePage(props: { params: Promise<{ id: string 
         </div>
 
       </div>
+      <Pagination page={page} total={Math.max(jobCount ?? 0, reviewCount ?? 0, serviceCount ?? 0)} pageSize={PAGE_SIZE} pathname={`/profile/${params.id}`} params={searchParams} />
     </div>
   )
 }

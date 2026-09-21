@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getUser } from '@/lib/supabase/server'
 import { logout } from '@/lib/actions/auth'
 import MobileMenu from './MobileMenu'
 
@@ -11,7 +11,7 @@ const NAV_LINKS = [
 
 export default async function Navbar() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await getUser()
 
   let profile = null
 
@@ -19,6 +19,8 @@ export default async function Navbar() {
     const { data } = await supabase.from('users').select('name').eq('id', user.id).single()
     profile = data
   }
+
+  const links = user ? [...NAV_LINKS, { href: '/messages', label: 'Meddelanden' }] : NAV_LINKS
 
   return (
     <header className="w-full bg-white/95 backdrop-blur-sm border-b border-gray-100 nav-header">
@@ -30,7 +32,7 @@ export default async function Navbar() {
               Prolink
             </Link>
             <nav className="hidden md:flex items-center gap-8">
-              {NAV_LINKS.map(({ href, label }) => (
+              {links.map(({ href, label }) => (
                 <Link
                   key={href}
                   href={href}
@@ -84,7 +86,7 @@ export default async function Navbar() {
             </div>
 
             <MobileMenu
-              links={NAV_LINKS}
+              links={links}
               user={user && profile ? { id: user.id, name: profile.name ?? '' } : null}
             />
           </div>

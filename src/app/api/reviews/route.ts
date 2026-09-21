@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { rateLimitMessage, withinRateLimit } from '@/lib/rate-limit'
 import {
   InputValidationError,
   optionalText,
@@ -12,10 +11,6 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) return NextResponse.json({ error: 'Ej inloggad' }, { status: 401 })
-
-  if (!(await withinRateLimit(supabase, 'reviews:create'))) {
-    return NextResponse.json({ error: rateLimitMessage('reviews:create') }, { status: 429 })
-  }
 
   let input: { offerId: string; revieweeId: string; rating: number; comment: string | null }
   try {
@@ -47,7 +42,7 @@ export async function POST(request: NextRequest) {
   if (!offer) return NextResponse.json({ error: 'Offerten hittades inte' }, { status: 404 })
   if (offer.status !== 'completed') return NextResponse.json({ error: 'Uppdraget är inte slutfört' }, { status: 409 })
 
-  const job = Array.isArray(offer.job) ? offer.job[0] : offer.job as any
+  const job = Array.isArray(offer.job) ? offer.job[0] : offer.job
   const isCustomer = user.id === job?.customer_id
   const isProvider = user.id === offer.provider_id
 
@@ -72,6 +67,8 @@ export async function POST(request: NextRequest) {
     })
     .select()
     .single()
+
+  if (error?.code === '54000') return NextResponse.json({ error: 'För många försök. Vänta en stund och försök igen.' }, { status: 429, headers: { 'Retry-After': '3600' } })
 
   if (error) {
     if (error.code === '23505') {

@@ -3,20 +3,24 @@ import { login } from '@/lib/actions/auth'
 import AuthForm from '@/components/auth/AuthForm'
 
 export const metadata = {
+  robots: { index: false, follow: false },
   title: 'Logga in',
   description: 'Logga in på Prolink och hantera dina uppdrag, offerter och meddelanden.',
 }
 
 export default async function LoginPage(
   props: {
-    searchParams: Promise<{ redirect?: string }>
+    searchParams: Promise<{ redirect?: string; error?: string }>
   }
 ) {
   const searchParams = await props.searchParams
   const redirect = searchParams.redirect ?? ''
 
   // Meddelandet speglar vad användaren var på väg att göra.
-  const intent = redirect.startsWith('/jobs/create')
+  const targeted = redirect.startsWith('/jobs/create?') && (redirect.includes('service=') || redirect.includes('provider='))
+  const intent = targeted
+    ? { title: 'Logga in för att skicka din förfrågan', body: 'Vi behåller vald tjänst och mottagare. Förfrågan blir privat mellan dig och leverantören.' }
+    : redirect.startsWith('/jobs/create')
     ? {
         title: 'Kontot behövs för att publicera uppdraget',
         body: 'Vi kopplar uppdraget till dig så att du kan ta emot offerter och svara frilansare. Det är kostnadsfritt att publicera och du binder dig inte till något.',
@@ -42,7 +46,7 @@ export default async function LoginPage(
           <h1 className="page-heading text-3xl">{heading}</h1>
           <p className="muted mt-2.5 text-sm font-medium">
             Har du inget konto?{' '}
-            <Link href="/register" className="font-semibold text-blue-700 underline-offset-4 hover:underline">
+            <Link href={`/register?redirect=${encodeURIComponent(redirect)}`} className="font-semibold text-blue-700 underline-offset-4 hover:underline">
               Skapa ett gratis
             </Link>
           </p>
@@ -56,7 +60,10 @@ export default async function LoginPage(
             <p className="mt-1.5 text-xs leading-5 text-blue-800">{intent.body}</p>
           </div>
         )}
-        <AuthForm action={login} submitLabel="Logga in" redirect={searchParams.redirect} />
+        {searchParams.error && <p role="alert" className="mb-4 rounded-xl bg-red-50 p-4 text-sm text-red-700">Inloggningslänken kunde inte användas. Försök igen eller begär ett nytt mejl.</p>}
+        <AuthForm next={redirect} action={login} submitLabel="Logga in" redirect={searchParams.redirect} />
+        <Link href="/forgot-password" className="mt-4 block text-center text-sm text-blue-700 underline">Glömt lösenord?</Link>
+        <Link href={`/confirm-email?redirect=${encodeURIComponent(redirect)}`} className="mt-3 block text-center text-sm text-blue-700 underline">Skicka nytt bekräftelsemejl</Link>
         <p className="muted mt-6 text-center text-xs">
           Genom att logga in godkänner du våra{' '}
           <Link href="/terms" className="underline underline-offset-2 hover:text-slate-700">användarvillkor</Link>

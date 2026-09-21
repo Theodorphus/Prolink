@@ -1,14 +1,16 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/public'
+import { unstable_cache } from 'next/cache'
 import Hero from '@/components/home/Hero'
 import ProcessTimeline from '@/components/home/ProcessTimeline'
-import TwoPaths from '@/components/home/TwoPaths'
+import FeaturedServices from '@/components/home/FeaturedServices'
 import CompetenceGrid from '@/components/home/CompetenceGrid'
 import TrustSection from '@/components/home/TrustSection'
 import LatestJobs, { LatestJobsSkeleton } from '@/components/home/LatestJobs'
 
 export const metadata = {
+  alternates: { canonical: '/' },
   title: 'Hitta rätt frilansare för ditt företag',
   description:
     'Prolink kopplar ihop svenska företag med frilansare inom IT, design, ekonomi, juridik och marknadsföring. Kostnadsfritt att publicera uppdrag.',
@@ -18,22 +20,25 @@ export const metadata = {
 // databasanrop innan något alls kunde skickas till webbläsaren. Det gjorde
 // Suspense-gränsen runt LatestJobs verkningslös. Nu streamas skalet direkt och
 // bara det här avsnittet väntar på sina siffror.
-async function TrustSectionWithCounts() {
-  const supabase = await createClient()
-
-  // head + count hämtar bara antalet, inte raderna. Alla tre tabellerna är
-  // publikt läsbara.
-  const [providers, openJobs, services] = await Promise.all([
+const publicCounts = unstable_cache(async () => {
+  const supabase = createPublicClient()
+  const results = await Promise.all([
     supabase.from('users').select('id', { count: 'exact', head: true }).eq('role', 'provider'),
     supabase.from('jobs').select('id', { count: 'exact', head: true }).eq('status', 'open'),
     supabase.from('services').select('id', { count: 'exact', head: true }),
   ])
-
+  if (results.some(result => result.error)) throw new Error('Public counts unavailable')
+  return results.map(result => result.count ?? 0)
+}, ['public-home-counts'], { revalidate: 60 })
+async function TrustSectionWithCounts() {
+  let counts: number[]
+  try { counts = await publicCounts() }
+  catch { return <p className="py-8 text-center text-sm text-slate-500">Aktuella siffror kunde inte hämtas just nu.</p> }
   return (
     <TrustSection
-      providerCount={providers.count ?? 0}
-      openJobCount={openJobs.count ?? 0}
-      serviceCount={services.count ?? 0}
+      providerCount={counts[0]}
+      openJobCount={counts[1]}
+      serviceCount={counts[2]}
     />
   )
 }
@@ -42,8 +47,8 @@ export default function HomePage() {
   return (
     <>
       <Hero />
+      <Suspense fallback={<LatestJobsSkeleton />}><FeaturedServices /></Suspense>
       <ProcessTimeline />
-      <TwoPaths />
       <CompetenceGrid />
 
       <section className="border-b border-slate-200/70 bg-white px-4 py-20 sm:px-6 sm:py-24 lg:px-8">

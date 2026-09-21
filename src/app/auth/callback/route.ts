@@ -8,6 +8,8 @@ export async function GET(request: NextRequest) {
   const next = safeRelativePath(searchParams.get('next'))
   const role = searchParams.get('role')
 
+  if (!code) return NextResponse.redirect(`${origin}/login?error=auth`)
+
   if (code) {
     const supabase = await createClient()
     const { data: { user }, error: sessionError } = await supabase.auth.exchangeCodeForSession(code)

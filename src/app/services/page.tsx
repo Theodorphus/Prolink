@@ -1,25 +1,29 @@
+import Pagination from '@/components/ui/Pagination'
+import { pageNumber, PAGE_SIZE } from '@/lib/pagination'
 import Link from 'next/link'
 import { Suspense } from 'react'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getUser } from '@/lib/supabase/server'
 import ServiceFilters from '@/components/services/ServiceFilters'
 import ServiceCard from '@/components/services/ServiceCard'
 import { searchTerm } from '@/lib/validation'
 
 export const metadata = {
+  alternates: { canonical: '/services' },
   title: 'Tjänster – Hitta freelancers',
-  description: 'Hitta kvalificerade freelancers och byråer. Jämför priser, leveranstider och kompetenser – boka direkt.',
+  description: 'Hitta kvalificerade freelancers och byråer. Jämför priser, leveranstider och kompetenser och skicka en förfrågan.',
 }
 
 interface Props {
-  searchParams: Promise<{ q?: string; sort?: string; max_price?: string; category?: string }>
+  searchParams: Promise<{ page?: string; q?: string; sort?: string; max_price?: string; category?: string }>
 }
 
 export default async function ServicesPage(props: Props) {
   const searchParams = await props.searchParams;
+  const page = pageNumber(searchParams.page)
   const supabase = await createClient()
   const { q, sort = 'newest', max_price, category } = searchParams
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await getUser()
   const { data: profile } = user
     ? await supabase.from('users').select('role').eq('id', user.id).single()
     : { data: null }
@@ -27,7 +31,7 @@ export default async function ServicesPage(props: Props) {
 
   let query = supabase
     .from('services')
-    .select('*, provider:users(id, name, avatar_url)')
+    .select('*, provider:users(id, name, avatar_url)', { count: 'exact' })
 
   if (q) {
     const safeQuery = searchTerm(q)
@@ -37,7 +41,7 @@ export default async function ServicesPage(props: Props) {
   // Number('abc') ger NaN, och price=lte.NaN filtrerar inte alls utan
   // returnerar hela tabellen. Ett ogiltigt värde ska ignoreras i stället.
   const maxPrice = Number(max_price)
-  if (max_price && Number.isFinite(maxPrice) && maxPrice > 0) {
+  if (max_price && Number.isFinite(maxPrice) && maxPrice >= 0) {
     query = query.lte('price', maxPrice)
   }
 
@@ -59,7 +63,8 @@ export default async function ServicesPage(props: Props) {
       query = query.order('created_at', { ascending: false })
   }
 
-  const { data: services } = await query
+  const { data: services, count, error } = await query.order('id', { ascending: false }).range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1)
+  if (error) throw new Error('Listan kunde inte hämtas. Försök igen.')
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
@@ -68,7 +73,7 @@ export default async function ServicesPage(props: Props) {
           <p className="page-eyebrow">Tjänster</p>
           <h1 className="page-heading mt-2.5 text-3xl sm:text-4xl">Färdiga tjänster</h1>
           <p className="muted mt-2 text-sm font-medium">
-            {services?.length ?? 0} {services?.length === 1 ? 'tjänst' : 'tjänster'} med fast pris och leveranstid
+            {count ?? 0} {services?.length === 1 ? 'tjänst' : 'tjänster'} med frånpris och angiven leveranstid
           </p>
         </div>
         {isProvider && (
@@ -86,8 +91,8 @@ export default async function ServicesPage(props: Props) {
       </Suspense>
 
       <div className="mt-7 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {services?.map((service: any) => (
-          <ServiceCard key={service.id} service={service} />
+        {services?.map((service) => (
+          <ServiceCard key={service.id} service={{ ...service, provider: Array.isArray(service.provider) ? service.provider[0] : service.provider }} />
         ))}
 
         {(!services || services.length === 0) && (
@@ -110,6 +115,7 @@ export default async function ServicesPage(props: Props) {
           </div>
         )}
       </div>
+      <Pagination page={page} total={count ?? 0} pageSize={PAGE_SIZE} pathname="/services" params={searchParams} />
     </div>
   )
 }

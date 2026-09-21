@@ -8,8 +8,10 @@ import { StatusBadge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { formatCurrency } from '@/lib/utils'
 
+import type { Offer } from '@/types/database'
+
 interface OfferCardProps {
-  offer: any
+  offer: Offer & { provider?: { name: string } | null }
   isOwner: boolean
   currentUserId?: string
 }

@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
-import { sendNewOfferEmail } from '@/lib/email'
 import { canSubmitOffer } from '@/lib/marketplace-rules.mjs'
-import { rateLimitMessage, withinRateLimit } from '@/lib/rate-limit'
 import {
   InputValidationError,
   oneOf,
@@ -19,10 +16,6 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) return NextResponse.json({ error: 'Ej inloggad' }, { status: 401 })
-
-  if (!(await withinRateLimit(supabase, 'offers:create'))) {
-    return NextResponse.json({ error: rateLimitMessage('offers:create') }, { status: 429 })
-  }
 
   let input: {
     jobId: string
@@ -78,6 +71,8 @@ export async function POST(request: NextRequest) {
     .select('*, job:jobs(title, customer_id), provider:users(name)')
     .single()
 
+  if (error?.code === '54000') return NextResponse.json({ error: 'För många försök. Vänta en stund och försök igen.' }, { status: 429, headers: { 'Retry-After': '3600' } })
+
   if (error) {
     if (error.code === '23505') {
       return NextResponse.json({ error: 'Du har redan skickat en offert på uppdraget' }, { status: 409 })
@@ -86,23 +81,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Offerten kunde inte skickas eftersom uppdraget inte är tillgängligt' }, { status: 409 })
     }
     return NextResponse.json({ error: 'Offerten kunde inte sparas' }, { status: 500 })
-  }
-
-  // Email is best-effort and uses a dedicated server-only admin client.
-  try {
-    const admin = createAdminClient()
-    const { data: customerAuth, error: authError } = await admin.auth.admin.getUserById(job.customer_id)
-    if (authError) throw authError
-    if (customerAuth.user?.email) {
-      await sendNewOfferEmail({
-        to: customerAuth.user.email,
-        jobTitle: job.title,
-        providerName: profile?.name ?? 'En leverantör',
-        offerId: offer.id,
-      })
-    }
-  } catch (notificationError) {
-    console.error('new offer notification failed:', notificationError)
   }
 
   return NextResponse.json(offer, { status: 201 })

@@ -8,7 +8,7 @@ export async function GET(_: NextRequest, props: { params: Promise<{ id: string 
 
   const { data, error } = await supabase
     .from('jobs')
-    .select(`${PUBLIC_JOB_FIELDS}, customer:users(id, name, bio, avatar_url), offers(*, provider:users(id, name, avatar_url))`)
+    .select(`${PUBLIC_JOB_FIELDS}, customer:users!jobs_customer_id_fkey(id, name, bio, avatar_url), offers(*, provider:users(id, name, avatar_url))`)
     .eq('id', params.id)
     .single()
 
@@ -23,21 +23,8 @@ export async function DELETE(_: NextRequest, props: { params: Promise<{ id: stri
 
   if (!user) return NextResponse.json({ error: 'Ej inloggad' }, { status: 401 })
 
-  const { data, error } = await supabase
-    .from('jobs')
-    .delete()
-    .eq('id', params.id)
-    .eq('customer_id', user.id)
-    .select('id')
-
-  if (error) return NextResponse.json({ error: 'Uppdraget kunde inte tas bort' }, { status: 500 })
-
-  // Filtret på customer_id gör att ett försök att radera någon annans uppdrag
-  // returnerar noll rader utan fel. Utan den här kontrollen svarar API:t 200
-  // trots att ingenting togs bort.
-  if (!data || data.length === 0) {
-    return NextResponse.json({ error: 'Uppdraget hittades inte' }, { status: 404 })
-  }
+  const { error } = await supabase.rpc('archive_job', { p_job_id: params.id })
+  if (error) return NextResponse.json({ error: 'Uppdraget kunde inte arkiveras.' }, { status: error.code === '42501' ? 403 : 500 })
 
   return NextResponse.json({ success: true })
 }

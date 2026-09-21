@@ -184,3 +184,16 @@ export async function sendNewJobEmail({
     `,
   })
 }
+
+
+export async function sendQueuedNotification(item: { id: string; to: string; subject: string; body: string; path: string }) {
+  const problem = emailConfigurationProblem()
+  if (problem) throw new Error(problem)
+  if (!/^\/(jobs|offers|messages)\/[0-9a-f-]+$/i.test(item.path)) throw new Error('Invalid notification path')
+  const result = await resend.emails.send({
+    from: FROM, to: item.to, subject: safeSubjectValue(item.subject),
+    html: `<h2>${escapeHtml(item.subject)}</h2><p>${escapeHtml(item.body)}</p><p><a href="${escapeHtml(APP_URL + item.path)}">Öppna i Prolink</a></p><p>Ändra mejlnotiser i din profil.</p>`,
+    text: `${item.subject}\n${item.body}\n${APP_URL + item.path}\nÄndra mejlnotiser i din profil.`,
+  }, { idempotencyKey: `notification/${item.id}` })
+  if (result.error) throw new Error(result.error.message)
+}

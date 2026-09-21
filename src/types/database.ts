@@ -16,6 +16,9 @@ export interface User {
 }
 
 export interface UserPrivateProfile {
+  email_jobs: boolean
+  email_messages: boolean
+  notification_categories: string[]
   user_id: string
   phone: string | null
   cv_text: string | null
@@ -25,6 +28,9 @@ export interface UserPrivateProfile {
 }
 
 export interface Job {
+  archived_at: string | null
+  requested_provider_id: string | null
+  service_id: string | null
   id: string
   customer_id: string
   title: string
@@ -45,7 +51,7 @@ export interface Job {
 // src/lib/jobs.ts och utelämnar employer_email och contact_info, som aldrig får
 // lämna servern i ett publikt svar. Typa publika jobblistor som PublicJob så
 // fångar kompilatorn försök att läsa de privata fälten.
-export type PublicJob = Omit<Job, 'employer_email' | 'contact_info'>
+export type PublicJob = Pick<Job, 'id' | 'customer_id' | 'title' | 'description' | 'budget' | 'status' | 'created_at' | 'category' | 'location' | 'work_type'>
 
 export interface Application {
   id: string
@@ -60,6 +66,7 @@ export interface Application {
 }
 
 export interface Service {
+  vat_included: boolean | null
   id: string
   provider_id: string
   title: string

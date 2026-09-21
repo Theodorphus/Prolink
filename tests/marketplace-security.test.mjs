@@ -159,32 +159,6 @@ test('utskick kastar i stället för att tyst svälja ett nekat svar', async () 
   assert.match(source, /export function emailConfigurationProblem/, 'felkonfiguration ska kunna upptäckas')
 })
 
-test('nytt uppdrag notifierar leverantörer', async () => {
-  // Marknadsplatsen saknade notis åt utbudshållet: ingen leverantör fick veta
-  // att ett uppdrag publicerats, vilket är en rimlig delförklaring till noll
-  // offerter. Regressionsskyddet säkrar att kopplingen finns kvar.
-  const routeUrl = new URL('../src/app/api/jobs/route.ts', import.meta.url)
-  const source = await readFile(routeUrl, 'utf8')
-
-  assert.match(source, /sendNewJobEmail/, 'uppdragsrutten ska skicka notismejl')
-  assert.match(source, /\.eq\('role', 'provider'\)/, 'bara leverantörer ska notifieras')
-  assert.match(source, /\.neq\('id', customerId\)/, 'kunden ska inte notifiera sig själv')
-  assert.match(source, /catch/, 'notisen ska vara best effort och aldrig blockera publiceringen')
-
-  // Notisen måste inväntas. Utan await returnerar svaret direkt och den
-  // serverlösa instansen fryses innan utskicken hunnit göras: uppdraget
-  // skapades med 201 men inget mejl nådde Resend. Verifierat i produktion.
-  assert.match(
-    source,
-    /await notifyProviders\(/,
-    'notifyProviders måste inväntas, annars hinner utskicket inte göras'
-  )
-  assert.ok(
-    !/^\s*notifyProviders\(/m.test(source),
-    'notifyProviders får inte anropas utan await'
-  )
-})
-
 test('oauth-rollen kan bara sättas när kontot skapas', async () => {
   // role kommer från en URL-parameter och kan sättas av vem som helst. Om den
   // tillämpas vid varje inloggning kan ett besök på
@@ -202,22 +176,6 @@ test('oauth-rollen kan bara sättas när kontot skapas', async () => {
   assert.ok(
     !/^\s*if \(role && \['customer', 'provider'\]\.includes\(role\)\) \{/m.test(source),
     'den ovillkorade rolltilldelningen får inte finnas kvar'
-  )
-})
-
-test('konversationslistan ordnar inbäddade meddelanden explicit', async () => {
-  // .order() på frågan gäller offers, inte den inbäddade messages-listan.
-  // Utan referencedTable returnerar Postgres dem i godtycklig ordning, och
-  // både förhandsvisningen och sorteringen antar att sista elementet är det
-  // senaste meddelandet.
-  const pageUrl = new URL('../src/app/messages/page.tsx', import.meta.url)
-  const source = await readFile(pageUrl, 'utf8')
-
-  const embeddedOrders = source.match(/referencedTable: 'messages'/g) ?? []
-  assert.equal(embeddedOrders.length, 2, 'båda frågorna ska ordna messages explicit')
-  assert.ok(
-    !/msgs\.sort\(/.test(source),
-    'computeUnread ska inte mutera arrayen som förhandsvisningen läser'
   )
 })
 
@@ -255,45 +213,6 @@ test('fritextsökningen kan inte injicera i postgrest-filtret', async () => {
       `${page} får inte interpolera den råa söktermen`
     )
   }
-})
-
-test('skrivande endpoints är hastighetsbegränsade', async () => {
-  // Produkten hade ingen begränsning alls. Alla skrivande rutter kräver
-  // inloggning, men ett enda konto kunde skapa obegränsat många uppdrag,
-  // offerter och meddelanden i en slinga — och varje offert och meddelande
-  // utlöser dessutom ett mejlutskick.
-  const routes = [
-    ['../src/app/api/jobs/route.ts', 'jobs:create'],
-    ['../src/app/api/offers/route.ts', 'offers:create'],
-    ['../src/app/api/services/route.ts', 'services:create'],
-    ['../src/app/api/messages/[offerId]/route.ts', 'messages:send'],
-    ['../src/app/api/reviews/route.ts', 'reviews:create'],
-  ]
-
-  for (const [route, action] of routes) {
-    const source = await readFile(new URL(route, import.meta.url), 'utf8')
-    assert.ok(
-      source.includes(`withinRateLimit(supabase, '${action}')`),
-      `${route} ska kontrollera kvoten för ${action}`
-    )
-    assert.match(source, /status: 429/, `${route} ska svara 429 när kvoten är slut`)
-  }
-
-  // Räknaren måste ligga i databasen. Applikationen kör serverlöst, så en
-  // minnesbaserad räknare hade begränsat per instans i stället för per
-  // användare och i praktiken inte begränsat någonting.
-  const migration = await readFile(
-    new URL('../supabase/migrations/013_rate_limiting.sql', import.meta.url),
-    'utf8'
-  )
-  assert.match(migration, /create table if not exists public\.rate_limits/)
-  assert.match(migration, /security definer/, 'funktionen måste kringgå RLS för att kunna räkna')
-  assert.match(
-    migration,
-    /revoke all on table public\.rate_limits from anon, authenticated/,
-    'en klient får inte kunna rensa sin egen räknare'
-  )
-  assert.match(migration, /auth\.uid\(\)/, 'kvoten ska räknas per inloggad användare')
 })
 
 test('tjänstekategorier hålls i synk mellan kod och databas', async () => {

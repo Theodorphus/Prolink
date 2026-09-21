@@ -1,5 +1,6 @@
 import { CONTACT_EMAIL } from '@/lib/site'
 export const metadata = {
+  alternates: { canonical: '/privacy' },
   title: 'Integritetspolicy',
   description: 'Läs om hur Prolink hanterar och skyddar dina personuppgifter i enlighet med GDPR.',
 }
