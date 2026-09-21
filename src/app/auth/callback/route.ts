@@ -1,4 +1,5 @@
 import { createServerClient } from '@supabase/ssr'
+import type { EmailOtpType } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { safeRelativePath } from '@/lib/validation'
 
@@ -8,7 +9,14 @@ export async function GET(request: NextRequest) {
   const next = safeRelativePath(searchParams.get('next'))
   const role = searchParams.get('role')
 
-  if (!code) return NextResponse.redirect(`${origin}/login?error=auth`)
+  // Mejllänkar (återställning, bekräftelse, magisk länk) går via Supabases
+  // /auth/v1/verify och kommer tillbaka med token_hash + type, inte med den
+  // code som OAuth använder. Callbacken kände bara igen code, så varje sådan
+  // länk avvisades med "Inloggningslänken kunde inte användas".
+  const tokenHash = searchParams.get('token_hash')
+  const otpType = searchParams.get('type')
+
+  if (!code && !tokenHash) return NextResponse.redirect(`${origin}/login?error=auth`)
 
   // Svaret skapas före kodutbytet och sessionscookies skrivs direkt på det.
   //
@@ -36,7 +44,14 @@ export async function GET(request: NextRequest) {
     }
   )
 
-  const { data: { user }, error: sessionError } = await supabase.auth.exchangeCodeForSession(code)
+  const { data, error: sessionError } = tokenHash
+    ? await supabase.auth.verifyOtp({
+        type: (otpType ?? 'email') as EmailOtpType,
+        token_hash: tokenHash,
+      })
+    : await supabase.auth.exchangeCodeForSession(code!)
+
+  const user = data?.user
 
   if (sessionError || !user) {
     return NextResponse.redirect(`${origin}/login?error=auth`)
