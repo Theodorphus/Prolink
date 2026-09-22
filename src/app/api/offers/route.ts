@@ -45,6 +45,11 @@ export async function POST(request: NextRequest) {
   ])
 
   if (!job) return NextResponse.json({ error: 'Uppdraget hittades inte' }, { status: 404 })
+  // Recover an already committed offer after a lost HTTP response, even if the
+  // customer has since accepted it and closed the job.
+  const { data: existing, error: existingError } = await supabase.from('offers').select('id').eq('job_id', input.jobId).eq('provider_id', user.id).maybeSingle()
+  if (existingError) return NextResponse.json({ error: 'Offerten kunde inte kontrolleras' }, { status: 500 })
+  if (existing) return NextResponse.json(existing)
   if (!canSubmitOffer({
     actorId: user.id,
     actorRole: profile?.role,
@@ -75,6 +80,8 @@ export async function POST(request: NextRequest) {
 
   if (error) {
     if (error.code === '23505') {
+      const { data: saved } = await supabase.from('offers').select('id').eq('job_id', input.jobId).eq('provider_id', user.id).maybeSingle()
+      if (saved) return NextResponse.json(saved)
       return NextResponse.json({ error: 'Du har redan skickat en offert på uppdraget' }, { status: 409 })
     }
     if (error.code === '42501') {

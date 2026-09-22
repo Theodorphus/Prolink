@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { isOfferParticipant } from '@/lib/marketplace-rules.mjs'
+import { messageCursor } from '@/lib/message-cursor.mjs'
 import {
   attachmentPath,
   InputValidationError,
@@ -43,33 +44,19 @@ export async function GET(request: NextRequest, props: { params: Promise<{ offer
     return NextResponse.json({ error: 'Ej behörig' }, { status: 403 })
   }
 
-  const after = request.nextUrl.searchParams.get('after')
-  const afterId = request.nextUrl.searchParams.get('after_id')
-  const before = request.nextUrl.searchParams.get('before')
-  const beforeId = request.nextUrl.searchParams.get('before_id')
+  let cursor
+  try { cursor = messageCursor(request.nextUrl.searchParams) }
+  catch { return NextResponse.json({ error: 'Ogiltig sidmarkör' }, { status: 400 }) }
   let query = supabase
     .from('messages')
     .select('*, sender:users(id, name, avatar_url)')
     .eq('offer_id', offerId)
-    .order('created_at', { ascending: !!after }).order('id', { ascending: !!after }).limit(50)
-  if (before && beforeId) {
-    try {
-      const id = uuidValue(beforeId, 'Meddelande')
-      const time = new Date(before).toISOString()
-      query = query.or(`created_at.lt.${time},and(created_at.eq.${time},id.lt.${id})`)
-    } catch { return NextResponse.json({ error: 'Ogiltig sidmarkör' }, { status: 400 }) }
-  }
-  if (after && afterId) {
-    try {
-      const id = uuidValue(afterId, 'Meddelande')
-      const time = new Date(after).toISOString()
-      query = query.or(`created_at.gt.${time},and(created_at.eq.${time},id.gt.${id})`)
-    } catch { return NextResponse.json({ error: 'Ogiltig sidmarkör' }, { status: 400 }) }
-  }
+    .order('created_at', { ascending: !!cursor?.forward }).order('id', { ascending: !!cursor?.forward }).limit(50)
+  if (cursor) query = query.or(cursor.filter)
   const { data, error } = await query
 
   if (error) return NextResponse.json({ error: 'Meddelandena kunde inte hämtas' }, { status: 500 })
-  return NextResponse.json(after ? data : data.reverse())
+  return NextResponse.json(cursor?.forward ? data : data.reverse())
 }
 
 export async function POST(request: NextRequest, props: { params: Promise<{ offerId: string }> }) {

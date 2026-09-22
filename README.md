@@ -146,6 +146,20 @@ and investigate before reverting migrations or deleting data.
 
 ## Marketplace fixes: migrations 015–017
 
+### Follow-up: migration 018
+
+Apply `018_conversation_read_receipts.sql` before deploying the latest chat changes.
+It adds a participant-only function that acknowledges the latest fetched message
+when the chat is visible and focused. New arrivals after that message remain unread;
+out-of-order acknowledgements cannot move the read marker backwards. Do not rerun
+015–017 on projects where they have already been applied.
+
+The follow-up also preserves PostgreSQL microseconds in chat pagination, validates
+both cursor fields, keeps the scroll position when loading older history, preserves
+the category when creating a job from a category page, and recovers existing offers
+and reviews after a lost response. Avatar and attachment network failures now leave
+the controls usable. Invalid public detail IDs display a not-found page.
+
 Apply the new migrations in order **before** deploying this application version:
 
 1. `015_marketplace_integrity.sql`: authorized offer retries, archive instead of delete,

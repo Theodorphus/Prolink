@@ -64,11 +64,12 @@ export function categoryValue(value: unknown): string {
   return oneOf(value, CATEGORIES.map(category => category.value), 'Kategori')
 }
 
+export function isUuid(value: unknown): value is string {
+  return typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
+}
+
 export function uuidValue(value: unknown, label: string): string {
-  if (
-    typeof value !== 'string'
-    || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
-  ) {
+  if (!isUuid(value)) {
     throw new InputValidationError(`${label} är ogiltigt.`)
   }
   return value
@@ -104,18 +105,7 @@ export function attachmentPath(value: unknown, offerId: string): string | null {
   return path
 }
 
-export function safeRelativePath(value: unknown, fallback = '/'): string {
-  if (
-    typeof value !== 'string'
-    || !value.startsWith('/')
-    || value.startsWith('//')
-    || value.includes('\\')
-    || value.includes('\0')
-  ) {
-    return fallback
-  }
-  return value
-}
+export { safeRelativePath } from '@/lib/safe-relative-path.mjs'
 
 // Fritextsökningen interpolerades tidigare rakt in i en PostgREST-or-sträng:
 //   .or(`title.ilike.%${q}%,description.ilike.%${q}%`)

@@ -19,7 +19,7 @@ export default async function MessagesOverviewPage({ searchParams }: { searchPar
     {conversations.length === 0 && <p>Inga konversationer på den här sidan.</p>}
     <div className="space-y-3">{conversations.map(c => <Link key={c.id} href={`/messages/${c.id}`} className={`surface block p-5 ${c.unread ? 'border-blue-400' : ''}`}>
       <div className="flex justify-between gap-3"><h2 className="font-semibold">{c.other_name}{c.unread && <span className="ml-2 text-xs text-blue-700">Oläst</span>}</h2><time className="text-xs text-slate-500">{formatDateTime(c.last_at)}</time></div>
-      <p className="text-sm text-slate-500">{c.title}</p><p className="mt-2 truncate text-sm">{c.last_sender === user.id ? 'Du: ' : ''}{c.last_content ?? 'Öppna konversationen'}</p>
+      <p className="text-sm text-slate-500">{c.title}</p><p className="mt-2 truncate text-sm">{c.last_sender === user.id ? 'Du: ' : ''}{c.last_content || (c.last_sender ? 'Bilaga' : 'Öppna konversationen')}</p>
     </Link>)}</div>
     <Pagination page={page} total={conversations[0]?.total ?? 0} pageSize={PAGE_SIZE} pathname="/messages" params={params} />
   </div>

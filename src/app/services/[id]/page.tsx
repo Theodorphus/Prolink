@@ -1,3 +1,4 @@
+import { isUuid } from '@/lib/validation'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -10,6 +11,7 @@ import StarRating from '@/components/reviews/StarRating'
 
 export async function generateMetadata(props: { params: Promise<{ id: string }> }) {
   const params = await props.params
+  if (!isUuid(params.id)) notFound()
   const supabase = await createClient()
   const { data } = await supabase.from('services').select('title, description').eq('id', params.id).single()
   return {
@@ -22,6 +24,7 @@ export async function generateMetadata(props: { params: Promise<{ id: string }> 
 
 export default async function ServicePage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params
+  if (!isUuid(params.id)) notFound()
   const supabase = await createClient()
   const { data: { user } } = await getUser()
 

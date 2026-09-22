@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { PUBLIC_JOB_FIELDS } from '@/lib/jobs'
+import { isUuid } from '@/lib/validation'
 
 export async function GET(_: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
+  if (!isUuid(params.id)) return NextResponse.json({ error: 'Ogiltigt uppdrag' }, { status: 400 })
   const supabase = await createClient()
 
   const { data, error } = await supabase
@@ -18,6 +20,7 @@ export async function GET(_: NextRequest, props: { params: Promise<{ id: string 
 
 export async function DELETE(_: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
+  if (!isUuid(params.id)) return NextResponse.json({ error: 'Ogiltigt uppdrag' }, { status: 400 })
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -31,12 +34,14 @@ export async function DELETE(_: NextRequest, props: { params: Promise<{ id: stri
 
 export async function PATCH(request: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
+  if (!isUuid(params.id)) return NextResponse.json({ error: 'Ogiltigt uppdrag' }, { status: 400 })
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) return NextResponse.json({ error: 'Ej inloggad' }, { status: 401 })
 
-  const body = await request.json()
+  const body = await request.json().catch(() => null)
+  if (!body || typeof body !== 'object') return NextResponse.json({ error: 'Ogiltig förfrågan' }, { status: 400 })
 
   // Whitelist: only allow status changes, nothing else
   const allowed: Record<string, unknown> = {}
@@ -55,7 +60,7 @@ export async function PATCH(request: NextRequest, props: { params: Promise<{ id:
     .select()
     .maybeSingle()
 
-  if (error) return NextResponse.json({ error: 'Uppdraget kunde inte uppdateras' }, { status: 500 })
+  if (error) return NextResponse.json({ error: 'Uppdraget kunde inte uppdateras' }, { status: error.code === '23514' ? 409 : 500 })
   if (!data) return NextResponse.json({ error: 'Uppdraget hittades inte' }, { status: 404 })
 
   return NextResponse.json(data)

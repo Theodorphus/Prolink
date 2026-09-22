@@ -105,6 +105,18 @@ test('real PostgreSQL migration replay and marketplace authorization', async t =
     await as(customer,'select mark_offer_read($1)',[offer])
     assert.equal((await as(customer,'select * from conversation_list(1)')).rows.find(row=>row.id===offer).unread,false)
   })
+  await t.test('read receipts acknowledge fetched messages only and never move backwards', async () => {
+    await db.query('update offers set customer_read_at=null where id=$1', [offer])
+    const first = (await as(provider, `insert into messages(offer_id,sender_id,content,created_at) values ($1,$2,'First','2026-09-22T10:00:00.123456Z') returning id`, [offer,provider])).rows[0].id
+    const second = (await as(provider, `insert into messages(offer_id,sender_id,content,created_at) values ($1,$2,'Second','2026-09-22T10:00:00.123457Z') returning id`, [offer,provider])).rows[0].id
+    await assert.rejects(as(outsider, 'select mark_conversation_read($1,$2)', [offer, first]), {code:'42501'})
+    await assert.rejects(as(customer, 'select mark_conversation_read($1,$2)', [offer, outsider]), {code:'P0002'})
+    await as(customer, 'select mark_conversation_read($1,$2)', [offer, first])
+    assert.equal((await db.query('select messages.created_at > customer_read_at as unread from messages join offers on offers.id=messages.offer_id where messages.id=$1', [second])).rows[0].unread, true)
+    await as(customer, 'select mark_conversation_read($1,$2)', [offer, second])
+    await as(customer, 'select mark_conversation_read($1,$2)', [offer, first])
+    assert.equal((await db.query('select messages.created_at = customer_read_at as acknowledged from messages join offers on offers.id=messages.offer_id where messages.id=$1', [second])).rows[0].acknowledged, true)
+  })
   await t.test('notification settings exclude non-matching categories',async()=>{
     await as(outsider, `update user_private_profiles set notification_categories=array['juridik'] where user_id=$1`,[outsider])
     const j=(await as(customer, `insert into jobs(customer_id,title,description,category) values ($1,'Category job','A sufficiently long description','webbutveckling') returning id`,[customer])).rows[0].id

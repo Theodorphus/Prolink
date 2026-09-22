@@ -3,7 +3,7 @@ import { createClient, getUser } from '@/lib/supabase/server'
 import ChatWindow from '@/components/chat/ChatWindow'
 import type { MessageWithSender } from '@/types/database'
 
-export const metadata = { title: 'Chatt' }
+export const metadata = { title: 'Chatt', robots: { index: false, follow: false } }
 
 export default async function MessagesPage(props: { params: Promise<{ offerId: string }> }) {
   const params = await props.params;
@@ -29,20 +29,18 @@ export default async function MessagesPage(props: { params: Promise<{ offerId: s
 
   if (!isCustomer && !isProvider) redirect('/')
 
-  // The database function updates only the current participant's read marker.
-  await supabase.rpc('mark_offer_read', { p_offer_id: params.offerId })
-
   // Hela konversationen hämtades tidigare vid varje sidvisning. En långkörd
   // chatt växer obegränsat, så de senaste meddelandena hämtas fallande och
   // vänds sedan till stigande för visningen.
   const MESSAGE_PAGE_SIZE = 50
-  const { data: latestMessages } = await supabase
+  const { data: latestMessages, error: messagesError } = await supabase
     .from('messages')
     .select('*, sender:users(id, name, avatar_url)')
     .eq('offer_id', params.offerId)
     .order('created_at', { ascending: false }).order('id', { ascending: false })
     .limit(MESSAGE_PAGE_SIZE)
 
+  if (messagesError) throw new Error('Meddelandena kunde inte hämtas. Försök igen.')
   const messages = (latestMessages ?? []).slice().reverse()
 
   const otherParty = isCustomer ? provider?.name : customer?.name

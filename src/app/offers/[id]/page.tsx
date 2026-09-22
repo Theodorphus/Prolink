@@ -129,7 +129,7 @@ export default async function OfferPage(
             <WriteReviewForm
               offerId={offer.id}
               revieweeId={isCustomer ? provider.id : job.customer_id}
-              revieweeName={isCustomer ? provider.name : job.customer?.name ?? 'kunden'}
+              revieweeName={isCustomer ? provider.name : customerName ?? 'kunden'}
             />
           )}
           {offer.status === 'completed' && hasReviewed && (

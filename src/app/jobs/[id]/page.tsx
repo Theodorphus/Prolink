@@ -1,3 +1,4 @@
+import { isUuid } from '@/lib/validation'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -10,6 +11,7 @@ import DeleteJobButton from '@/components/jobs/DeleteJobButton'
 
 export async function generateMetadata(props: { params: Promise<{ id: string }> }) {
   const { id } = await props.params
+  if (!isUuid(id)) notFound()
   const supabase = await createClient()
   const { data } = await supabase.from('jobs').select('title, description').eq('id', id).single()
   return {
@@ -22,6 +24,7 @@ export async function generateMetadata(props: { params: Promise<{ id: string }> 
 
 export default async function JobPage(props: { params: Promise<{ id: string }> }) {
   const { id } = await props.params
+  if (!isUuid(id)) notFound()
   const supabase = await createClient()
   const { data: { user } } = await getUser()
 

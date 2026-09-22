@@ -34,8 +34,7 @@ export default function AvatarUpload({ userId, name, currentAvatarUrl }: AvatarU
 
     setError('')
     setLoading(true)
-    setPreview(URL.createObjectURL(file))
-
+    try {
     const supabase = createClient()
     const extMap: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }
     const ext = extMap[file.type]
@@ -53,18 +52,26 @@ export default function AvatarUpload({ userId, name, currentAvatarUrl }: AvatarU
 
     const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
 
+    // A changed URL prevents browsers and image optimizers reusing the old avatar.
+    const avatarUrl = `${publicUrl}?v=${Date.now()}`
     const { error: updateError } = await supabase
       .from('users')
-      .update({ avatar_url: publicUrl })
+      .update({ avatar_url: avatarUrl })
       .eq('id', userId)
 
     if (updateError) {
       setError('Kunde inte spara avataren. Försök igen.')
     } else {
+      setPreview(avatarUrl)
       router.refresh()
     }
 
-    setLoading(false)
+    } catch {
+      setError('Uppladdningen misslyckades. Kontrollera anslutningen och försök igen.')
+    } finally {
+      setLoading(false)
+      if (inputRef.current) inputRef.current.value = ''
+    }
   }
 
   const initials = name?.[0]?.toUpperCase() ?? '?'

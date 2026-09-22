@@ -1,3 +1,4 @@
+import { isUuid } from '@/lib/validation'
 import Pagination from '@/components/ui/Pagination'
 import { pageNumber, PAGE_SIZE } from '@/lib/pagination'
 import { notFound } from 'next/navigation'
@@ -15,6 +16,7 @@ import StarRating from '@/components/reviews/StarRating'
 
 export async function generateMetadata(props: { params: Promise<{ id: string }> }) {
   const params = await props.params
+  if (!isUuid(params.id)) notFound()
   const supabase = await createClient()
   const { data } = await supabase.from('users').select('name, bio, role').eq('id', params.id).single()
   if (!data?.name) return { title: 'Profil' }
@@ -32,6 +34,7 @@ export default async function ProfilePage(props: { params: Promise<{ id: string 
   const searchParams = await props.searchParams
   const page = pageNumber(searchParams.page)
   const params = await props.params
+  if (!isUuid(params.id)) notFound()
   const supabase = await createClient()
   const { data: { user } } = await getUser()
 

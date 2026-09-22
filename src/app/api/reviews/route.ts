@@ -72,6 +72,8 @@ export async function POST(request: NextRequest) {
 
   if (error) {
     if (error.code === '23505') {
+      const { data: saved } = await supabase.from('reviews').select('id').eq('offer_id', input.offerId).eq('reviewer_id', user.id).maybeSingle()
+      if (saved) return NextResponse.json(saved)
       return NextResponse.json({ error: 'Du har redan lämnat ett omdöme' }, { status: 409 })
     }
     return NextResponse.json({ error: 'Omdömet kunde inte sparas' }, { status: 500 })
