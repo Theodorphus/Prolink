@@ -273,3 +273,22 @@ test('varje kategorilandningssida har eget innehåll', async () => {
   const sitemaps = await readFile(new URL('../src/lib/sitemaps.ts', import.meta.url), 'utf8')
   assert.match(sitemaps, /\/hitta\//, 'landningssidorna måste ingå i sitemapen')
 })
+
+test('inbäddade omdömen namnger relationen explicit', async () => {
+  // reviews har två främmande nycklar till users, reviewer_id och
+  // reviewee_id. En inbäddning som bara säger users är därför tvetydig och
+  // avvisas av PostgREST med 300 (PGRST201). Det tog ner varje profilsida
+  // med 500, och på tjänstesidan svaldes felet så att omdömen tyst försvann.
+  for (const page of ['../src/app/profile/[id]/page.tsx', '../src/app/services/[id]/page.tsx']) {
+    const source = await readFile(new URL(page, import.meta.url), 'utf8')
+    const embeds = source.match(/reviewer:users[^(]*/g) ?? []
+    assert.ok(embeds.length > 0, `${page} förväntas bädda in reviewer`)
+    for (const embed of embeds) {
+      assert.match(
+        embed,
+        /reviewer:users!reviews_reviewer_id_fkey/,
+        `${page} måste namnge relationen, annars blir inbäddningen tvetydig`
+      )
+    }
+  }
+})

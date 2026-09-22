@@ -66,9 +66,12 @@ export default async function ProfilePage(props: { params: Promise<{ id: string 
       .eq('customer_id', params.id)
       .order('created_at', { ascending: false })
       .order('id').range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1),
+    // reviews har två främmande nycklar till users, reviewer_id och
+    // reviewee_id, så en inbäddning som bara säger users är tvetydig och
+    // avvisas av PostgREST med 300, vilket tog ner hela profilsidan.
     supabase
       .from('reviews')
-      .select('*, reviewer:users(id, name, avatar_url)', { count: 'exact' })
+      .select('*, reviewer:users!reviews_reviewer_id_fkey(id, name, avatar_url)', { count: 'exact' })
       .eq('reviewee_id', params.id)
       .order('created_at', { ascending: false }).order('id').range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1),
     supabase

@@ -39,9 +39,12 @@ export default async function ServicePage(props: { params: Promise<{ id: string 
 
   // Omdömen gäller personen, inte den enskilda tjänsten. Datamodellen kopplar
   // omdömen till offerter, så det finns ingen tjänstespecifik betygsättning.
+    // reviews har två främmande nycklar till users, reviewer_id och
+    // reviewee_id, så en inbäddning som bara säger users är tvetydig och
+    // avvisas av PostgREST med 300. Relationen namnges därför explicit.
   const { data: reviews } = await supabase
     .from('reviews')
-    .select('*, reviewer:users(id, name, avatar_url)')
+    .select('*, reviewer:users!reviews_reviewer_id_fkey(id, name, avatar_url)')
     .eq('reviewee_id', provider.id)
     .order('created_at', { ascending: false })
     .limit(3)
