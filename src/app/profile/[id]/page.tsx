@@ -10,6 +10,7 @@ import { Card, CardBody } from '@/components/ui/Card'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { getCategoryLabel } from '@/lib/categories'
 import EditProfileForm from '@/components/profile/EditProfileForm'
+import SwitchRoleButton from '@/components/profile/SwitchRoleButton'
 import DeleteJobButton from '@/components/jobs/DeleteJobButton'
 import ReviewCard from '@/components/reviews/ReviewCard'
 import StarRating from '@/components/reviews/StarRating'
@@ -208,6 +209,26 @@ export default async function ProfilePage(props: { params: Promise<{ id: string 
                 phone: privateProfile?.phone ?? null,
               }}
             />
+          )}
+
+          {/* Kontot har en roll i taget, eftersom user_role är ett enum med
+              två värden och fjorton ställen i koden grindar på det. Den som
+              vill både köpa och sälja byter i stället roll här; befintliga
+              uppdrag, tjänster och omdömen påverkas inte av bytet. */}
+          {isOwn && (
+            <section className="rounded-panel border border-line-soft bg-surface-card p-6">
+              <h2 className="font-bold text-slate-900">
+                {isProvider ? 'Vill du också köpa tjänster?' : 'Vill du också erbjuda tjänster?'}
+              </h2>
+              <p className="muted mt-1.5 text-sm font-medium">
+                {isProvider
+                  ? 'Byt till uppdragsgivare för att publicera uppdrag och ta emot offerter. Dina tjänster och omdömen finns kvar.'
+                  : 'Byt till leverantör för att lägga upp tjänster och lämna offerter på uppdrag. Dina uppdrag och omdömen finns kvar.'}
+              </p>
+              <div className="mt-4">
+                <SwitchRoleButton currentRole={profile.role} userId={profile.id} />
+              </div>
+            </section>
           )}
 
           {(isProvider || (services && services.length > 0)) && (

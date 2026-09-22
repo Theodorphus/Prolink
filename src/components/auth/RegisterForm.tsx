@@ -45,7 +45,10 @@ export default function RegisterForm({ action, redirect }: RegisterFormProps) {
       {/* Role selector — shared between Google and email signup */}
       <div className="space-y-2">
         <span id="roll-label" className="block text-sm font-medium text-gray-700">Jag är</span>
-        <div role="radiogroup" aria-labelledby="roll-label" className="grid grid-cols-2 gap-3">
+        <p id="roll-hjalp" className="text-xs text-gray-500">
+          Du kan byta när som helst från din profil, och göra både och.
+        </p>
+        <div role="radiogroup" aria-labelledby="roll-label" aria-describedby="roll-hjalp" className="grid grid-cols-2 gap-3">
           {roles.map(({ value, label, desc }) => (
             <label
               key={value}

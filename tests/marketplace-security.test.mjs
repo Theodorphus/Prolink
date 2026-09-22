@@ -292,3 +292,26 @@ test('inbäddade omdömen namnger relationen explicit', async () => {
     }
   }
 })
+
+test('rollbytet visas bara för kontots ägare', async () => {
+  // user_role är ett enum med två värden och fjorton ställen i koden grindar
+  // på det, så ett konto har en roll i taget. Den som vill både köpa och
+  // sälja byter i stället roll från sin profil. Knappen får bara renderas för
+  // ägaren: RLS hindrar visserligen att någon ändrar en annans roll, men en
+  // synlig knapp som alltid misslyckas är ett gränssnittsfel.
+  const source = await readFile(new URL('../src/app/profile/[id]/page.tsx', import.meta.url), 'utf8')
+
+  assert.match(source, /SwitchRoleButton/, 'profilsidan ska erbjuda rollbyte')
+
+  const index = source.indexOf('<SwitchRoleButton')
+  assert.ok(index > 0, 'SwitchRoleButton ska renderas')
+  const before = source.slice(0, index)
+  const lastOpen = before.lastIndexOf('{isOwn &&')
+  const lastClose = before.lastIndexOf(')}')
+  assert.ok(lastOpen > lastClose, 'SwitchRoleButton måste ligga innanför ett isOwn-villkor')
+
+  // Registreringen ska säga att valet inte är permanent, annars ser det ut
+  // som att man måste välja sida en gång för alla.
+  const form = await readFile(new URL('../src/components/auth/RegisterForm.tsx', import.meta.url), 'utf8')
+  assert.match(form, /byta när som helst/, 'registreringen ska förklara att rollen går att byta')
+})
