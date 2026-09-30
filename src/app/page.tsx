@@ -8,12 +8,43 @@ import FeaturedServices from '@/components/home/FeaturedServices'
 import CompetenceGrid from '@/components/home/CompetenceGrid'
 import TrustSection from '@/components/home/TrustSection'
 import LatestJobs, { LatestJobsSkeleton } from '@/components/home/LatestJobs'
+import JsonLd from '@/components/seo/JsonLd'
+import { pageMetadata } from '@/lib/seo'
+import { CONTACT_EMAIL, SITE_URL } from '@/lib/site'
 
-export const metadata = {
-  alternates: { canonical: '/' },
-  title: 'Hitta rätt frilansare för ditt företag',
+// Startsidan förrenderas och byggs om högst en gång i minuten, i takt med
+// cachen för siffror, tjänster och uppdrag nedan.
+export const revalidate = 60
+
+// Titelmallen "%s | Prolink" gäller bara undersidor, inte rotsidan, så
+// varumärket fanns inte med i startsidans titel. Det anges därför här.
+export const metadata = pageMetadata({
+  absoluteTitle: 'Prolink – hitta rätt frilansare för ditt företag',
   description:
     'Prolink kopplar ihop svenska företag med frilansare inom IT, design, ekonomi, juridik och marknadsföring. Kostnadsfritt att publicera uppdrag.',
+  path: '/',
+})
+
+const organization = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': `${SITE_URL}/#organization`,
+      name: 'Prolink',
+      url: SITE_URL,
+      logo: `${SITE_URL}/apple-touch-icon.png`,
+      email: CONTACT_EMAIL,
+    },
+    {
+      '@type': 'WebSite',
+      '@id': `${SITE_URL}/#website`,
+      name: 'Prolink',
+      url: SITE_URL,
+      inLanguage: 'sv-SE',
+      publisher: { '@id': `${SITE_URL}/#organization` },
+    },
+  ],
 }
 
 // Siffrorna låg tidigare i sidkomponenten, så hela startsidan väntade på tre
@@ -25,7 +56,8 @@ const publicCounts = unstable_cache(async () => {
   const results = await Promise.all([
     supabase.from('users').select('id', { count: 'exact', head: true }).eq('role', 'provider'),
     supabase.from('jobs').select('id', { count: 'exact', head: true }).eq('status', 'open'),
-    supabase.from('services').select('id', { count: 'exact', head: true }),
+    // Samma urval som tjänstelistorna: bara tjänster från aktiva leverantörer.
+    supabase.from('services').select('id, provider:users!inner(role)', { count: 'exact', head: true }).eq('provider.role', 'provider'),
   ])
   if (results.some(result => result.error)) throw new Error('Public counts unavailable')
   return results.map(result => result.count ?? 0)
@@ -46,12 +78,13 @@ async function TrustSectionWithCounts() {
 export default function HomePage() {
   return (
     <>
+      <JsonLd data={organization} />
       <Hero />
       <Suspense fallback={<LatestJobsSkeleton />}><FeaturedServices /></Suspense>
       <ProcessTimeline />
       <CompetenceGrid />
 
-      <section className="border-b border-slate-200/70 bg-white px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
+      <section className="border-b border-slate-200/70 bg-white px-4 py-14 sm:px-6 sm:py-24 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="flex items-end justify-between gap-5">
             <div className="max-w-2xl">
@@ -77,7 +110,7 @@ export default function HomePage() {
       </Suspense>
 
       {/* Avslutande CTA: en yta per målgrupp. */}
-      <section className="px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
+      <section className="px-4 py-14 sm:px-6 sm:py-24 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-5 lg:grid-cols-2">
           <div
             className="relative overflow-hidden rounded-3xl p-9 text-white sm:p-12"

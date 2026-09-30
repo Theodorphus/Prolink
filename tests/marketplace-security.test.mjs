@@ -154,7 +154,7 @@ test('utskick kastar i stället för att tyst svälja ett nekat svar', async () 
   assert.match(source, /throw new Error\(`Resend nekade utskicket/, 'ett nekat utskick ska kasta')
   assert.ok(
     !/return resend\.emails\.send\(/.test(source),
-    'inget utskick får gå förbi send()-omslaget'
+    'svaret från Resend får inte returneras okontrollerat'
   )
   assert.match(source, /export function emailConfigurationProblem/, 'felkonfiguration ska kunna upptäckas')
 })
@@ -205,7 +205,7 @@ test('fritextsökningen kan inte injicera i postgrest-filtret', async () => {
   assert.equal(searchTerm('   '), null, 'tom sökning ska ge null')
 
   // Båda sidorna måste faktiskt använda saneringen.
-  for (const page of ['../src/app/jobs/page.tsx', '../src/app/services/page.tsx']) {
+  for (const page of ['../src/app/jobs/(list)/page.tsx', '../src/app/services/(list)/page.tsx']) {
     const pageSource = await readFile(new URL(page, import.meta.url), 'utf8')
     assert.match(pageSource, /searchTerm\(q\)/, `${page} ska sanera söktermen`)
     assert.ok(
@@ -272,6 +272,28 @@ test('varje kategorilandningssida har eget innehåll', async () => {
   // Sidorna ska finnas i sitemapen, annars hittar sökmotorerna dem inte.
   const sitemaps = await readFile(new URL('../src/lib/sitemaps.ts', import.meta.url), 'utf8')
   assert.match(sitemaps, /\/hitta\//, 'landningssidorna måste ingå i sitemapen')
+
+  // CONTENT är ett vanligt objekt. Ett uppslag med CONTENT[value] träffade
+  // prototypen, så /hitta/constructor gav 500 i produktion i stället för 404.
+  const lookup = source.match(/export function getCategoryContent[\s\S]*?\n\}/)?.[0] ?? ''
+  assert.match(lookup, /Object\.hasOwn\(CONTENT, value\)/, 'uppslaget måste bara godta egna nycklar')
+})
+
+test('publika tjänstelistor visar bara tjänster från aktiva leverantörer', async () => {
+  // Efter ett rollbyte till uppdragsgivare låg tjänsterna kvar i listorna,
+  // men förfrågningsknappen ledde till 404 eftersom databasen kräver
+  // leverantörsrollen hos mottagaren.
+  for (const file of [
+    '../src/app/services/(list)/page.tsx',
+    '../src/app/hitta/[kategori]/page.tsx',
+    '../src/components/home/FeaturedServices.tsx',
+    '../src/app/api/services/route.ts',
+    '../src/lib/sitemaps.ts',
+  ]) {
+    const source = await readFile(new URL(file, import.meta.url), 'utf8')
+    assert.match(source, /provider:users!inner\(/, `${file} måste filtrera med en inner join`)
+    assert.match(source, /\.eq\('provider\.role', 'provider'\)/, `${file} måste filtrera på leverantörsrollen`)
+  }
 })
 
 test('inbäddade omdömen namnger relationen explicit', async () => {
@@ -314,4 +336,83 @@ test('rollbytet visas bara för kontots ägare', async () => {
   // som att man måste välja sida en gång för alla.
   const form = await readFile(new URL('../src/components/auth/RegisterForm.tsx', import.meta.url), 'utf8')
   assert.match(form, /byta när som helst/, 'registreringen ska förklara att rollen går att byta')
+})
+
+test('publika sidor kan förrenderas: rotlayout och navigering läser inga cookies', async () => {
+  // Navigeringen ligger i rotlayouten. När den läste cookies på servern blev
+  // varje sida dynamisk med no-store, även FAQ och villkoren, och varje
+  // sidvisning gick hela vägen till databasen.
+  const read = path => readFile(new URL(path, import.meta.url), 'utf8')
+  for (const file of ['../src/app/layout.tsx', '../src/components/layout/Navbar.tsx', '../src/components/layout/NavbarWrapper.tsx']) {
+    const source = await read(file)
+    assert.ok(!/supabase\/server|cookies\(|headers\(/.test(source), `${file} får inte läsa cookies eller headers`)
+  }
+  for (const page of ['../src/app/page.tsx', '../src/app/faq/page.tsx', '../src/app/terms/page.tsx', '../src/app/privacy/page.tsx', '../src/app/hitta/[kategori]/page.tsx']) {
+    const source = await read(page)
+    assert.ok(!/supabase\/server|cookies\(|headers\(/.test(source), `${page} ska kunna förrenderas`)
+  }
+  // Proxyn får inte heller göra ett nätverksanrop före varje cachad sida.
+  assert.match(await read('../src/proxy.ts'), /if \(isStaticPublic\(request\.nextUrl\.pathname\)\) return NextResponse\.next\(\)/)
+})
+
+test('strukturerad data kan inte bryta sig ur skripttaggen', async () => {
+  // Tjänstetitlar och namn kommer från användare. JSON.stringify escapar inte
+  // <, så </script> i en titel skulle avsluta taggen och resten bli HTML.
+  const source = await readFile(new URL('../src/components/seo/JsonLd.tsx', import.meta.url), 'utf8')
+  assert.match(source, /JSON\.stringify\(data\)\.replace\(\/<\/g, '\\\\u003c'\)/)
+  const hostile = { name: '</script><script>alert(1)</script>' }
+  const escaped = JSON.stringify(hostile).replace(/</g, '\\u003c')
+  assert.ok(!escaped.includes('</script'), 'utdata får inte innehålla en avslutande skripttagg')
+  assert.deepEqual(JSON.parse(escaped), hostile, 'escapningen ska inte ändra datan')
+
+  // All strukturerad data ska gå genom komponenten.
+  const { readdir } = await import('node:fs/promises')
+  const files = await readdir(new URL('../src/app/', import.meta.url), { recursive: true })
+  for (const file of files.filter(name => name.endsWith('.tsx'))) {
+    const page = await readFile(new URL('../src/app/' + file.replace(/\\/g, '/'), import.meta.url), 'utf8')
+    assert.ok(!page.includes('application/ld+json'), `${file} ska använda JsonLd i stället för egen skripttagg`)
+  }
+})
+
+test('sidor sätter delningstaggar via pageMetadata så att og:url och bild följer med', async () => {
+  // Next.js ersätter openGraph i sin helhet när en sida anger egna värden.
+  // Sidor som satte openGraph för hand tappade delningsbilden, och sidor som
+  // inte gjorde det ärvde layoutens og:url, så delade länkar pekade på startsidan.
+  const { readdir } = await import('node:fs/promises')
+  const files = await readdir(new URL('../src/app/', import.meta.url), { recursive: true })
+  for (const file of files.filter(name => /page\.tsx$/.test(name))) {
+    const source = await readFile(new URL('../src/app/' + file.replace(/\\/g, '/'), import.meta.url), 'utf8')
+    assert.ok(!/openGraph:\s*\{/.test(source), `${file} ska använda pageMetadata i stället för egen openGraph`)
+  }
+  const layout = await readFile(new URL('../src/app/layout.tsx', import.meta.url), 'utf8')
+  assert.ok(!/url:\s*SITE_URL/.test(layout), 'layouten får inte sätta en og:url som alla sidor ärver')
+})
+
+test('mobilmenyn renderas utanför headern', async () => {
+  // Inne i headern ärvde länkarna startsidans vita navigeringsfärg (vit text
+  // på vit panel), och headerns backdrop-filter gjorde headern till
+  // referensram för position: fixed, så bakgrunden täckte bara 64 pixlar.
+  const source = await readFile(new URL('../src/components/layout/MobileMenu.tsx', import.meta.url), 'utf8')
+  assert.match(source, /createPortal\(layerContent, document\.body\)/)
+  assert.match(source, /aria-label="Stäng meny"/, 'panelen behöver en egen stängknapp ovanför bakgrunden')
+})
+
+test('länkar till inloggningssidorna förhämtas inte där inloggade ser dem', async () => {
+  // Proxyn omdirigerar inloggade från /login och /register till startsidan.
+  // Förhämtningen av sidfotens kontolänkar följde omdirigeringen och gjordes
+  // om i en loop: startsidan hämtades tretton gånger på åtta sekunder.
+  const footer = await readFile(new URL('../src/components/layout/Footer.tsx', import.meta.url), 'utf8')
+  assert.match(footer, /prefetch=\{group === 'Konto' \? false : undefined\}/)
+  const hero = await readFile(new URL('../src/components/home/Hero.tsx', import.meta.url), 'utf8')
+  assert.match(hero, /href="\/register" prefetch=\{false\}/)
+})
+
+test('kategorisidorna överlever omvalidering', async () => {
+  // Med dynamicParams = false kastade Next 16 NoFallbackError när de
+  // förrenderade sidorna byggdes om, och varje kategorisida blev 404 efter
+  // fem minuter. Okända kategorier ska i stället stoppas av notFound().
+  const source = await readFile(new URL('../src/app/hitta/[kategori]/page.tsx', import.meta.url), 'utf8')
+  assert.ok(!/export const dynamicParams\s*=\s*false/.test(source), 'dynamicParams = false får inte kombineras med revalidate')
+  assert.match(source, /export const revalidate = \d+/)
+  assert.match(source, /if \(!content\) notFound\(\)/)
 })

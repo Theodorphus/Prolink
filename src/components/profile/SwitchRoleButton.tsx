@@ -16,10 +16,10 @@ export default function SwitchRoleButton({ currentRole, userId }: SwitchRoleButt
   const [error, setError] = useState('')
 
   const newRole = currentRole === 'customer' ? 'provider' : 'customer'
-  const newRoleLabel = newRole === 'provider' ? 'Leverantör' : 'Uppdragsgivare'
+  const newRoleLabel = newRole === 'provider' ? 'frilansare' : 'uppdragsgivare'
   const newRoleDesc = newRole === 'provider'
-    ? 'Du kan lägga upp tjänster och ta emot uppdrag.'
-    : 'Du kan lägga ut uppdrag och ta emot offerter.'
+    ? 'Du kan lägga upp tjänster och lämna offerter på uppdrag.'
+    : 'Du kan lägga ut uppdrag och ta emot offerter. Dina tjänster döljs för andra tills du byter tillbaka.'
 
   async function handleSwitch() {
     setLoading(true)

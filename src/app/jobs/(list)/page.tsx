@@ -7,12 +7,13 @@ import { PUBLIC_JOB_FIELDS } from '@/lib/jobs'
 import JobFilters from '@/components/jobs/JobFilters'
 import JobCard from '@/components/jobs/JobCard'
 import { searchTerm } from '@/lib/validation'
+import { pageMetadata } from '@/lib/seo'
 
-export const metadata = {
-  alternates: { canonical: '/jobs' },
+export const metadata = pageMetadata({
   title: 'Hitta frilansuppdrag',
-  description: 'Bläddra bland öppna uppdrag inom webb, design, marknadsföring, redovisning och IT.',
-}
+  description: 'Bläddra bland öppna uppdrag inom webb, design, marknadsföring, redovisning och IT, och lämna offert direkt.',
+  path: '/jobs',
+})
 
 interface Props {
   searchParams: Promise<{ page?: string; q?: string; sort?: string; category?: string; worktype?: string }>
@@ -48,7 +49,7 @@ export default async function JobsPage(props: Props) {
           <p className="page-eyebrow">Uppdrag</p>
           <h1 className="page-heading mt-2.5 text-3xl sm:text-4xl">Hitta uppdrag</h1>
           <p className="muted mt-2 text-sm font-medium">
-            {count ?? 0} {jobs?.length === 1 ? 'öppet uppdrag' : 'öppna uppdrag'} just nu
+            {count ?? 0} {count === 1 ? 'öppet uppdrag' : 'öppna uppdrag'} just nu
           </p>
         </div>
         <Link
@@ -73,7 +74,7 @@ export default async function JobsPage(props: Props) {
             {q ? (
               <>
                 <p className="text-lg font-bold text-slate-900">
-                  Inga uppdrag matchade &ldquo;{q}&rdquo;
+                  Inga uppdrag matchade &rdquo;{q}&rdquo;
                 </p>
                 <p className="muted mx-auto mt-2 max-w-sm text-sm">
                   Prova ett bredare sökord eller rensa filtren.

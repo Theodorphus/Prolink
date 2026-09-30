@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { isUuid } from '@/lib/validation'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -6,19 +7,40 @@ import { createClient, getUser } from '@/lib/supabase/server'
 import { Card, CardBody } from '@/components/ui/Card'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { getCategoryEmoji, getCategoryLabel } from '@/lib/categories'
+import { getCategoryContent } from '@/lib/category-content'
 import ReviewCard from '@/components/reviews/ReviewCard'
 import StarRating from '@/components/reviews/StarRating'
+import JsonLd from '@/components/seo/JsonLd'
+import { breadcrumbList, metaDescription, pageMetadata } from '@/lib/seo'
+import { absoluteUrl } from '@/lib/site'
 
-export async function generateMetadata(props: { params: Promise<{ id: string }> }) {
+export async function generateMetadata(props: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const params = await props.params
   if (!isUuid(params.id)) notFound()
   const supabase = await createClient()
-  const { data } = await supabase.from('services').select('title, description').eq('id', params.id).single()
+  const { data } = await supabase
+    .from('services')
+    .select('title, description, price, delivery_time, category, provider:users(name, role)')
+    .eq('id', params.id)
+    .maybeSingle()
+  if (!data) return { title: 'Tjänst', robots: { index: false, follow: false } }
+  const provider = Array.isArray(data.provider) ? data.provider[0] : data.provider
+
+  // Beskrivningen skrivs av leverantören och kan vara några få ord, så den
+  // kompletteras med det en sökande faktiskt jämför: pris och leveranstid.
   return {
-    alternates: { canonical: `/services/${params.id}` },
-    openGraph: { title: data?.title ?? 'Prolink', url: `/services/${params.id}` },
-    title: data?.title ?? 'Tjänst',
-    description: data?.description?.slice(0, 155) ?? 'Se tjänstedetaljer och kontakta leverantören på Prolink.',
+    ...pageMetadata({
+      title: `${data.title} – ${getCategoryLabel(data.category)}`,
+      description: metaDescription(
+        `${data.title}${provider?.name ? ` av ${provider.name}` : ''}.`,
+        `Från ${formatCurrency(data.price)}, leveranstid ${data.delivery_time}.`,
+        data.description,
+      ),
+      path: `/services/${params.id}`,
+      routeImage: true,
+    }),
+    // En dold tjänst ska inte indexeras; den finns bara kvar för gamla länkar.
+    ...(provider && provider.role !== 'provider' ? { robots: { index: false, follow: false } } : {}),
   }
 }
 
@@ -30,7 +52,7 @@ export default async function ServicePage(props: { params: Promise<{ id: string 
 
   const { data: service, error: detailError } = await supabase
     .from('services')
-    .select('*, provider:users(id, name, bio, avatar_url, skills, hourly_rate, linkedin_url, created_at)')
+    .select('*, provider:users(id, role, name, bio, avatar_url, skills, hourly_rate, linkedin_url, created_at)')
     .eq('id', params.id)
     .single()
 
@@ -58,9 +80,38 @@ export default async function ServicePage(props: { params: Promise<{ id: string 
   const avgRating = (summary as { total: number; average: number | null }).average
 
   const isOwn = user?.id === provider.id
+  // Efter ett rollbyte till uppdragsgivare kan ägaren inte ta emot
+  // förfrågningar, så knappen skulle bara leda till 404.
+  const isActiveProvider = provider.role === 'provider'
+
+  const categoryLabel = getCategoryLabel(service.category)
+  // Brödsmulan leder till kategorins landningssida när en sådan finns.
+  const categoryPath = service.category && getCategoryContent(service.category)
+    ? `/hitta/${service.category}`
+    : `/services?category=${service.category ?? ''}`
+  const structuredData = [
+    breadcrumbList([
+      { name: 'Start', path: '/' },
+      { name: 'Tjänster', path: '/services' },
+      { name: categoryLabel, path: categoryPath },
+      { name: service.title, path: `/services/${service.id}` },
+    ]),
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Service',
+      name: service.title,
+      description: service.description?.slice(0, 500),
+      serviceType: categoryLabel,
+      url: absoluteUrl(`/services/${service.id}`),
+      areaServed: { '@type': 'Country', name: 'Sverige' },
+      provider: { '@type': 'Person', name: provider.name, url: absoluteUrl(`/profile/${provider.id}`) },
+      offers: { '@type': 'Offer', price: service.price, priceCurrency: 'SEK', url: absoluteUrl(`/services/${service.id}`) },
+    },
+  ]
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6">
+      {isActiveProvider && <JsonLd data={structuredData} />}
       <Link href="/services" className="text-sm font-bold text-slate-500 transition hover:text-blue-700">
         ← Alla tjänster
       </Link>
@@ -120,7 +171,7 @@ export default async function ServicePage(props: { params: Promise<{ id: string 
                 {/* Databasen har ett enda prisfält utan omfattning, så priset
                     märks som frånpris i stället för fast pris. */}
                 <p className="muted mt-1 text-xs font-medium">
-                  frånpris · {service.vat_included === true ? 'inklusive moms' : service.vat_included === false ? 'exklusive moms' : 'be leverantören ange moms'}
+                  frånpris · {service.vat_included === true ? 'inklusive moms' : service.vat_included === false ? 'exklusive moms' : 'moms avtalas med leverantören'}
                   <br />Slutligt pris och omfattning avtalas med leverantören
                 </p>
               </div>
@@ -132,7 +183,11 @@ export default async function ServicePage(props: { params: Promise<{ id: string 
 
               {isOwn ? (
                 <p className="rounded-xl bg-blue-50 p-3 text-center text-sm font-bold text-blue-800">
-                  Det här är din tjänst
+                  {isActiveProvider ? 'Det här är din tjänst' : 'Din tjänst är dold medan du är uppdragsgivare'}
+                </p>
+              ) : !isActiveProvider ? (
+                <p className="rounded-xl bg-slate-50 p-3 text-center text-sm font-semibold text-slate-600">
+                  Leverantören tar inte emot förfrågningar just nu.
                 </p>
               ) : user ? (
                 <Link

@@ -45,8 +45,11 @@ export default async function MessagesPage(props: { params: Promise<{ offerId: s
 
   const otherParty = isCustomer ? provider?.name : customer?.name
 
+  // 100vh räknar med Safaris största läge, utan verktygsfält, så skrivfältet
+  // kunde hamna bakom det på mobil. dvh följer den synliga ytan; vh behålls
+  // som reserv för webbläsare utan stöd.
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8 h-[calc(100vh-4rem)] flex flex-col">
+    <div className="max-w-3xl mx-auto px-4 py-8 h-[calc(100vh-4rem)] supports-[height:100dvh]:h-[calc(100dvh-4rem)] flex flex-col">
       <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200">
         <div>
           <h1 className="text-lg font-bold text-gray-900">{job?.title}</h1>

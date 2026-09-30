@@ -221,7 +221,7 @@ const CONTENT: Record<string, CategoryContent> = {
     faq: [
       {
         q: 'Vad kostar en webbtext?',
-        a: 'Ofta mellan 1 500 och 6 000 kronor per sida beroende på hur mycket research som krävs och om texten ska sökoptimeras. Många skribenter tar ett fast pris per uppdrag hellre än per ord.',
+        a: 'Ofta mellan 1 500 och 6 000 kronor per sida beroende på hur mycket research som krävs och om texten ska sökoptimeras. Många skribenter tar hellre ett fast pris per uppdrag än betalt per ord.',
       },
       {
         q: 'Vad är skillnaden mellan copywriting och översättning?',
@@ -255,7 +255,7 @@ const CONTENT: Record<string, CategoryContent> = {
     faq: [
       {
         q: 'Vad kostar en fotograf per dag?',
-        a: 'En heldag ligger ofta mellan 10 000 och 25 000 kronor inklusive efterbehandling. Kontrollera hur många färdiga bilder som ingår, för det varierar mycket mellan olika fotografer.',
+        a: 'En heldag ligger ofta mellan 10 000 och 25 000 kronor inklusive efterbearbetning. Kontrollera hur många färdiga bilder som ingår, för det varierar mycket mellan olika fotografer.',
       },
       {
         q: 'Får vi använda bilderna hur vi vill?',
@@ -327,7 +327,7 @@ const CONTENT: Record<string, CategoryContent> = {
       },
       {
         q: 'Lönar det sig jämfört med att anställa?',
-        a: 'Vid ett behov som varierar eller understiger en halvtid är en konsult oftast både billigare och enklare. Är behovet stabilt och heltid är anställning normalt mer ekonomiskt.',
+        a: 'Vid ett behov som varierar eller understiger en halvtid är en konsult oftast både billigare och enklare. Är behovet stabilt och motsvarar en heltid är anställning normalt mer ekonomiskt.',
       },
       {
         q: 'Hur kommer vi igång?',
@@ -337,8 +337,11 @@ const CONTENT: Record<string, CategoryContent> = {
   },
 }
 
+// CONTENT är ett vanligt objekt, så CONTENT['constructor'] och liknande
+// träffar prototypens egenskaper. /hitta/constructor gav därför en funktion i
+// stället för null och kraschade sidan med 500 i stället för att ge 404.
 export function getCategoryContent(value: string): CategoryContent | null {
-  return CONTENT[value] ?? null
+  return Object.hasOwn(CONTENT, value) ? CONTENT[value] : null
 }
 
 /** Kategorier som har redaktionellt innehåll och därmed en egen landningssida. */

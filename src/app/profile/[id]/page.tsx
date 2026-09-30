@@ -1,5 +1,9 @@
+import type { Metadata } from 'next'
 import { isUuid } from '@/lib/validation'
 import Pagination from '@/components/ui/Pagination'
+import JsonLd from '@/components/seo/JsonLd'
+import { metaDescription, pageMetadata } from '@/lib/seo'
+import { absoluteUrl } from '@/lib/site'
 import { pageNumber, PAGE_SIZE } from '@/lib/pagination'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -15,19 +19,29 @@ import DeleteJobButton from '@/components/jobs/DeleteJobButton'
 import ReviewCard from '@/components/reviews/ReviewCard'
 import StarRating from '@/components/reviews/StarRating'
 
-export async function generateMetadata(props: { params: Promise<{ id: string }> }) {
+export async function generateMetadata(props: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const params = await props.params
   if (!isUuid(params.id)) notFound()
   const supabase = await createClient()
-  const { data } = await supabase.from('users').select('name, bio, role').eq('id', params.id).single()
-  if (!data?.name) return { title: 'Profil' }
+  const { data } = await supabase.from('users').select('name, bio, role, skills').eq('id', params.id).maybeSingle()
+  if (!data?.name) return { title: 'Profil', robots: { index: false, follow: false } }
 
-  const role = data.role === 'provider' ? 'Frilansare' : 'Kund'
+  const isProvider = data.role === 'provider'
+  const skills = (data.skills ?? []).slice(0, 3).join(', ')
   return {
-    alternates: { canonical: `/profile/${params.id}` },
-    openGraph: { title: data?.name ?? 'Prolink', url: `/profile/${params.id}` },
-    title: data.name,
-    description: data.bio?.slice(0, 155) ?? `${data.name} på Prolink. ${role} i det svenska nätverket för specialisttjänster.`,
+    ...pageMetadata({
+      title: `${data.name} – ${isProvider ? 'Frilansare' : 'Uppdragsgivare'}`,
+      description: metaDescription(
+        isProvider
+          ? `${data.name} är frilansare på Prolink${skills ? ` med kompetens inom ${skills}` : ''}.`
+          : `${data.name} är uppdragsgivare på Prolink.`,
+        data.bio,
+      ),
+      path: `/profile/${params.id}`,
+    }),
+    // Uppdragsgivares profiler är tunna och ingår inte i sitemapen; bara
+    // frilansares profiler är avsedda att hittas i sök.
+    ...(!isProvider ? { robots: { index: false, follow: true } } : {}),
   }
 }
 
@@ -68,6 +82,9 @@ export default async function ProfilePage(props: { params: Promise<{ id: string 
       .from('jobs')
       .select(PUBLIC_JOB_FIELDS, { count: 'exact' })
       .eq('customer_id', params.id)
+      // Arkiverade uppdrag låg kvar med samma papperskorgsikon, så det såg ut
+      // som att arkiveringen inte hade fungerat.
+      .is('archived_at', null)
       .order('created_at', { ascending: false })
       .order('id').range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1),
     // reviews har två främmande nycklar till users, reviewer_id och
@@ -90,8 +107,25 @@ export default async function ProfilePage(props: { params: Promise<{ id: string 
   if (summaryError) throw new Error('Omdömen kunde inte hämtas.')
   const avgRating = (summary as { average: number | null }).average
 
+  // Strukturerad data bara för frilansare, samma urval som sitemapen.
+  const profileData = isProvider ? {
+    '@context': 'https://schema.org',
+    '@type': 'ProfilePage',
+    dateCreated: profile.created_at,
+    mainEntity: {
+      '@type': 'Person',
+      name: profile.name,
+      url: absoluteUrl(`/profile/${profile.id}`),
+      ...(profile.bio ? { description: profile.bio.slice(0, 500) } : {}),
+      ...(profile.avatar_url ? { image: profile.avatar_url } : {}),
+      ...(profile.skills?.length ? { knowsAbout: profile.skills } : {}),
+      ...(profile.linkedin_url ? { sameAs: [profile.linkedin_url] } : {}),
+    },
+  } : null
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-14 sm:px-6">
+      {profileData && <JsonLd data={profileData} />}
       <div className="grid gap-8 lg:grid-cols-3">
 
         <div className="space-y-4">
@@ -222,8 +256,8 @@ export default async function ProfilePage(props: { params: Promise<{ id: string 
               </h2>
               <p className="muted mt-1.5 text-sm font-medium">
                 {isProvider
-                  ? 'Byt till uppdragsgivare för att publicera uppdrag och ta emot offerter. Dina tjänster och omdömen finns kvar.'
-                  : 'Byt till leverantör för att lägga upp tjänster och lämna offerter på uppdrag. Dina uppdrag och omdömen finns kvar.'}
+                  ? 'Byt till uppdragsgivare för att publicera uppdrag och ta emot offerter. Dina tjänster döljs för andra tills du byter tillbaka, och dina omdömen finns kvar.'
+                  : 'Byt till frilansare för att lägga upp tjänster och lämna offerter på uppdrag. Dina uppdrag och omdömen finns kvar.'}
               </p>
               <div className="mt-4">
                 <SwitchRoleButton currentRole={profile.role} userId={profile.id} />
@@ -231,18 +265,27 @@ export default async function ProfilePage(props: { params: Promise<{ id: string 
             </section>
           )}
 
-          {(isProvider || (services && services.length > 0)) && (
+          {/* En tidigare leverantör kan inte ta emot förfrågningar, eftersom
+              databasen kräver leverantörsrollen hos mottagaren. Tjänsterna
+              visas därför bara för ägaren tills hen byter tillbaka. */}
+          {(isProvider || (isOwn && services && services.length > 0)) && (
             <section>
               <div className="mb-4 flex items-end justify-between gap-4">
                 <h2 className="page-heading text-xl">
                   {isOwn ? 'Dina tjänster' : 'Tjänster'}
                 </h2>
-                {isOwn && (
+                {isOwn && isProvider && (
                   <Link href="/services/create" className="text-sm font-semibold text-blue-700 hover:underline">
                     Ny tjänst
                   </Link>
                 )}
               </div>
+
+              {!isProvider && (
+                <p className="muted mb-4 text-sm font-medium">
+                  Dina tjänster är dolda för andra medan du är uppdragsgivare. Byt tillbaka till frilansare för att visa dem igen.
+                </p>
+              )}
 
               {services && services.length > 0 ? (
                 <div className="grid gap-3.5 sm:grid-cols-2">
@@ -357,7 +400,7 @@ export default async function ProfilePage(props: { params: Promise<{ id: string 
         </div>
 
       </div>
-      <Pagination page={page} total={Math.max(jobCount ?? 0, reviewCount ?? 0, serviceCount ?? 0)} pageSize={PAGE_SIZE} pathname={`/profile/${params.id}`} params={searchParams} />
+      <Pagination page={page} total={Math.max(jobCount ?? 0, reviewCount ?? 0, isProvider || isOwn ? serviceCount ?? 0 : 0)} pageSize={PAGE_SIZE} pathname={`/profile/${params.id}`} params={searchParams} />
     </div>
   )
 }

@@ -6,6 +6,7 @@ import NavbarWrapper from '@/components/layout/NavbarWrapper'
 import Footer from '@/components/layout/Footer'
 import { Analytics } from "@vercel/analytics/react"
 import { SITE_URL } from '@/lib/site'
+import { DEFAULT_OG_IMAGE } from '@/lib/seo'
 
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-body', display: 'swap' })
@@ -19,27 +20,20 @@ export const metadata: Metadata = {
     icon: [{ url: '/favicon-32.png', sizes: '32x32', type: 'image/png' }],
     apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
   },
+  // Bara standardvärden för sidor utan egen metadata (inloggning, 404).
+  // og:url sätts inte här: den ärvdes av varje sida som saknade egen
+  // openGraph, så delade länkar till t.ex. /services pekade på startsidan.
+  // Indexerbara sidor använder pageMetadata i src/lib/seo.ts.
   openGraph: {
     title: 'Prolink – där företag och frilansare möts',
     description: 'Hitta rätt specialist för nästa uppdrag eller låt nästa kund hitta dig.',
-    url: SITE_URL,
     siteName: 'Prolink',
-    images: [
-      {
-        url: '/og-image.jpg',
-        width: 1200,
-        height: 630,
-        alt: 'Prolink – där företag och frilansare möts',
-      },
-    ],
+    images: [DEFAULT_OG_IMAGE],
     locale: 'sv_SE',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Prolink – där företag och frilansare möts',
-    description: 'Hitta rätt specialist för nästa uppdrag eller låt nästa kund hitta dig.',
-    images: ['/og-image.jpg'],
   },
 }
 

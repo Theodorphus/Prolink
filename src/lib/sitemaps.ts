@@ -5,9 +5,13 @@ import { LANDING_CATEGORIES } from '@/lib/category-content'
 const SHARD = 9000
 const tables = ['jobs', 'services', 'users'] as const
 function rows(table: typeof tables[number], head = false) {
-  let query = createPublicClient().from(table).select('id, created_at', { count: 'exact', head })
+  // Tjänster från den som bytt till uppdragsgivare går inte att kontakta och
+  // ska inte indexeras. Inbäddningen finns bara för att kunna filtrera.
+  const columns: string = table === 'services' ? 'id, created_at, provider:users!inner(role)' : 'id, created_at'
+  let query = createPublicClient().from(table).select(columns, { count: 'exact', head })
   if (table === 'jobs') query = query.eq('status', 'open').is('archived_at', null).is('requested_provider_id', null)
   if (table === 'users') query = query.eq('role', 'provider')
+  if (table === 'services') query = query.eq('provider.role', 'provider')
   return query.order('id')
 }
 export async function generateSitemaps() {
@@ -30,7 +34,8 @@ export async function sitemapEntries(id: string): Promise<MetadataRoute.Sitemap>
     for (let offset = shard * SHARD; offset < (shard + 1) * SHARD; offset += 500) {
       const { data, error } = await rows(table).range(offset, offset + 499)
       if (error) throw new Error('Sitemap unavailable')
-      for (const row of data ?? []) entries.push({ url: `${SITE_URL}/${table === 'users' ? 'profile' : table}/${row.id}`, lastModified: row.created_at ? new Date(row.created_at) : undefined })
+      // Urvalet är en dynamisk sträng, så Supabase kan inte härleda radtypen.
+      for (const row of (data ?? []) as unknown as { id: string; created_at: string | null }[]) entries.push({ url: `${SITE_URL}/${table === 'users' ? 'profile' : table}/${row.id}`, lastModified: row.created_at ? new Date(row.created_at) : undefined })
       if ((data?.length ?? 0) < 500) break
     }
   }

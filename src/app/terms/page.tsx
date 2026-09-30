@@ -1,9 +1,10 @@
 import { COMPANY, CONTACT_EMAIL } from '@/lib/site'
-export const metadata = {
-  alternates: { canonical: '/terms' },
+import { pageMetadata } from '@/lib/seo'
+export const metadata = pageMetadata({
   title: 'Användarvillkor',
   description: 'Läs Prolinks användarvillkor och förstå dina rättigheter och skyldigheter som användare av plattformen.',
-}
+  path: '/terms',
+})
 
 export default function TermsPage() {
   return (
@@ -22,7 +23,7 @@ export default function TermsPage() {
 
         <section>
           <h2 className="text-xl font-bold text-gray-900 mb-3">2. Tjänstens syfte</h2>
-          <p>Prolink är en marknadsplats som förmedlar kontakt mellan uppdragsgivare (kunder) och leverantörer (freelancers/företag). Prolink är inte part i några avtal som ingås mellan användarna och ansvarar inte för utförandet av uppdrag eller betalning.</p>
+          <p>Prolink är en marknadsplats som förmedlar kontakt mellan uppdragsgivare (kunder) och leverantörer (frilansare och företag). Prolink är inte part i några avtal som ingås mellan användarna och ansvarar inte för utförandet av uppdrag eller betalning.</p>
         </section>
 
         <section>
@@ -58,7 +59,7 @@ export default function TermsPage() {
 
         <section>
           <h2 className="text-xl font-bold text-gray-900 mb-3">7. Ansvarsbegränsning</h2>
-          <p>Prolink tillhandahåller tjänsten &ldquo;i befintligt skick&rdquo; utan garantier. I den utsträckning lagen tillåter ansvarar vi inte för indirekta skador, utebliven vinst eller dataförlust till följd av användning av tjänsten.</p>
+          <p>Prolink tillhandahåller tjänsten &rdquo;i befintligt skick&rdquo; utan garantier. I den utsträckning lagen tillåter ansvarar vi inte för indirekta skador, utebliven vinst eller dataförlust till följd av användning av tjänsten.</p>
         </section>
 
         <section>
@@ -71,7 +72,7 @@ export default function TermsPage() {
           <p>Dessa villkor regleras av svensk lag. Tvister ska i första hand lösas genom förhandling. Om parterna inte kan komma överens ska tvisten avgöras av svensk allmän domstol med Göteborgs tingsrätt som första instans.</p>
         </section>
 
-        <section>
+        <section id="foretagsuppgifter" className="scroll-mt-24">
           <h2 className="text-xl font-bold text-gray-900 mb-3">10. Kontakt</h2>
           <p>Prolink drivs av {COMPANY.name}, org.nr {COMPANY.orgNumber}, momsreg.nr {COMPANY.vatNumber}, {COMPANY.address}.</p>
           <p className="mt-3">Frågor om dessa villkor skickas till <a href={`mailto:${CONTACT_EMAIL}`} className="text-blue-600 hover:underline">{CONTACT_EMAIL}</a>.</p>

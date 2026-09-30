@@ -3,7 +3,7 @@ import Link from 'next/link'
 import ServiceCard from '@/components/services/ServiceCard'
 import { createPublicClient } from '@/lib/supabase/public'
 const featuredServices = unstable_cache(async () => {
-  const { data, error } = await createPublicClient().from('services').select('*, provider:users(id, name, avatar_url)').order('created_at', { ascending: false }).order('id').limit(3)
+  const { data, error } = await createPublicClient().from('services').select('*, provider:users!inner(id, name, avatar_url)').eq('provider.role', 'provider').order('created_at', { ascending: false }).order('id').limit(3)
   if (error) throw new Error('Tjänsterna kunde inte hämtas.')
   return data
 }, ['public-featured-services'], { revalidate: 60 })

@@ -9,7 +9,18 @@ import { NextResponse, type NextRequest } from 'next/server'
 const protectedRoutes = ['/jobs/create', '/services/create', '/messages', '/offers']
 const authRoutes = ['/login', '/register']
 
+// Sidor som förrenderas och cachas. De läser aldrig sessionen på servern
+// (navigeringen hämtar inloggningsläget i webbläsaren, och webbläsarklienten
+// förnyar själv sina tokens), så ett anrop till Supabase Auth här skulle bara
+// fördröja varje cachad sida med en nätverksrunda.
+const staticPublicRoutes = new Set(['/', '/faq', '/terms', '/privacy'])
+function isStaticPublic(pathname: string) {
+  return staticPublicRoutes.has(pathname) || pathname.startsWith('/hitta/')
+}
+
 export async function proxy(request: NextRequest) {
+  if (isStaticPublic(request.nextUrl.pathname)) return NextResponse.next()
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(

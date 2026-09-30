@@ -57,7 +57,7 @@ export default function TrustSection({
     },
     {
       title: 'Privata uppgifter stannar privata',
-      body: 'Ditt telefonnummer och ditt CV visas inte på din publika profil.',
+      body: 'Ditt telefonnummer och din e-postadress visas aldrig på din publika profil.',
       icon: (
         <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
       ),
@@ -65,10 +65,10 @@ export default function TrustSection({
   ]
 
   return (
-    <section className="border-b border-slate-200/70 px-4 py-20 sm:px-6 sm:py-24 lg:px-8" style={{ background: 'var(--surface-page)' }}>
+    <section className="border-b border-slate-200/70 px-4 py-14 sm:px-6 sm:py-24 lg:px-8" style={{ background: 'var(--surface-page)' }}>
       <div className="mx-auto max-w-7xl">
         <div className="max-w-2xl">
-          <p className="page-eyebrow">Öppet läge</p>
+          <p className="page-eyebrow">Läget just nu</p>
           <h2 className="page-heading mt-3 text-[2rem] sm:text-4xl">
             Ny plattform, tydliga spelregler
           </h2>
@@ -78,17 +78,18 @@ export default function TrustSection({
           </p>
         </div>
 
-        {/* Verkliga siffror, hämtade live. Inga påhittade volymer. */}
-        <div className="mt-12 grid gap-4 sm:grid-cols-3">
+        {/* Verkliga siffror, hämtade live. Inga påhittade volymer. På mobil
+            ligger de på en rad; tre fullbreda kort tog nära en skärmhöjd. */}
+        <div className="mt-10 grid grid-cols-3 gap-2.5 sm:mt-12 sm:gap-4">
           {stats.map((stat, index) => (
-            <div key={stat.label} className={`reveal reveal-${index + 1} surface p-8 text-center`}>
+            <div key={stat.label} className={`reveal reveal-${index + 1} surface px-2 py-5 text-center sm:p-8`}>
               <p
-                className="text-5xl font-extrabold tracking-[-0.04em]"
+                className="text-3xl font-extrabold tracking-[-0.04em] sm:text-5xl"
                 style={{ color: 'var(--accent-deep)' }}
               >
                 {pending ? <span className="opacity-30">–</span> : stat.value}
               </p>
-              <p className="muted mt-2 text-sm font-semibold">{stat.label}</p>
+              <p className="muted mt-1.5 text-xs font-semibold sm:mt-2 sm:text-sm">{stat.label}</p>
             </div>
           ))}
         </div>

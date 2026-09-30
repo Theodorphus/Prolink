@@ -1,9 +1,10 @@
 import { COMPANY, CONTACT_EMAIL } from '@/lib/site'
-export const metadata = {
-  alternates: { canonical: '/privacy' },
+import { pageMetadata } from '@/lib/seo'
+export const metadata = pageMetadata({
   title: 'Integritetspolicy',
   description: 'Läs om hur Prolink hanterar och skyddar dina personuppgifter i enlighet med GDPR.',
-}
+  path: '/privacy',
+})
 
 export default function PrivacyPage() {
   return (
@@ -17,7 +18,7 @@ export default function PrivacyPage() {
 
         <section>
           <h2 className="text-xl font-bold text-gray-900 mb-3">1. Personuppgiftsansvarig</h2>
-          <p>Prolink drivs av {COMPANY.name} (&ldquo;vi&rdquo;, &ldquo;oss&rdquo;), som är personuppgiftsansvarig för behandlingen av dina personuppgifter.</p>
+          <p>Prolink drivs av {COMPANY.name} (&rdquo;vi&rdquo;, &rdquo;oss&rdquo;), som är personuppgiftsansvarig för behandlingen av dina personuppgifter.</p>
           <p className="mt-3 text-sm">
             {COMPANY.name}<br />
             Org.nr {COMPANY.orgNumber}<br />
@@ -32,7 +33,7 @@ export default function PrivacyPage() {
             <li><strong>Kontouppgifter:</strong> namn, e-postadress och lösenord (krypterat) när du registrerar dig.</li>
             <li><strong>Profiluppgifter:</strong> biografi, kompetenser, timpris, profilbild och LinkedIn-URL som du väljer att lägga till.</li>
             <li><strong>Innehåll:</strong> uppdrag, tjänstebeskrivningar, offerter och chattmeddelanden du skapar på plattformen.</li>
-            <li><strong>Tekniska uppgifter:</strong> IP-adress, webbläsartyp och loggar via Supabase.</li>
+            <li><strong>Tekniska uppgifter:</strong> IP-adress, webbläsartyp och loggar via Supabase och Vercel.</li>
           </ul>
         </section>
 
@@ -40,7 +41,7 @@ export default function PrivacyPage() {
           <h2 className="text-xl font-bold text-gray-900 mb-3">3. Varför vi behandlar dina uppgifter</h2>
           <ul className="list-disc pl-5 space-y-1 text-sm">
             <li>För att tillhandahålla och förbättra plattformens funktioner (avtalsfullgörelse).</li>
-            <li>För att skicka e-postnotiser om offerter och meddelanden (berättigat intresse).</li>
+            <li>För att skicka e-postnotiser om uppdrag, offerter och meddelanden (berättigat intresse). Du väljer själv vilka notiser du får i din profil.</li>
             <li>För att uppfylla rättsliga förpliktelser enligt GDPR och annan tillämplig lagstiftning.</li>
           </ul>
         </section>
@@ -49,8 +50,10 @@ export default function PrivacyPage() {
           <h2 className="text-xl font-bold text-gray-900 mb-3">4. Delning med tredje part</h2>
           <p className="text-sm">Vi delar dina uppgifter med följande underleverantörer:</p>
           <ul className="list-disc pl-5 space-y-1 text-sm mt-2">
-            <li><strong>Supabase Inc.</strong> — databas och autentisering (USA, Standard Contractual Clauses).</li>
-            <li><strong>Resend Inc.</strong> — e-postutskick (USA, Standard Contractual Clauses).</li>
+            <li><strong>Supabase Inc.</strong> — databas och autentisering. Uppgifterna lagras inom EU (Irland); vid eventuell överföring till USA gäller EU-kommissionens standardavtalsklausuler.</li>
+            <li><strong>Vercel Inc.</strong> — drift av webbplatsen och besöksstatistik utan cookies (USA, standardavtalsklausuler).</li>
+            <li><strong>Resend Inc.</strong> — e-postutskick (USA, standardavtalsklausuler).</li>
+            <li><strong>Google LLC</strong> — inloggning med Google-konto, bara om du väljer det (USA, standardavtalsklausuler).</li>
           </ul>
           <p className="text-sm mt-3">Vi säljer aldrig dina personuppgifter till tredje part.</p>
         </section>

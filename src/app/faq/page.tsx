@@ -1,9 +1,10 @@
 import { CONTACT_EMAIL } from '@/lib/site'
-export const metadata = {
-  alternates: { canonical: '/faq' },
+import { pageMetadata } from '@/lib/seo'
+export const metadata = pageMetadata({
   title: 'Vanliga frågor',
   description: 'Svar på de vanligaste frågorna om Prolink – hur uppdrag fungerar, hur du skickar offerter och hur betalning hanteras.',
-}
+  path: '/faq',
+})
 
 const faqs = [
   {
@@ -11,7 +12,7 @@ const faqs = [
     items: [
       {
         q: 'Vad är Prolink?',
-        a: 'Prolink är en svensk marknadsplats som kopplar ihop företag och privatpersoner med kvalificerade freelancers. Du kan lägga ut uppdrag och ta emot offerter, eller erbjuda dina tjänster och nå nya kunder.',
+        a: 'Prolink är en svensk marknadsplats som kopplar ihop företag och privatpersoner med kvalificerade frilansare. Du kan lägga ut uppdrag och ta emot offerter, eller erbjuda dina tjänster och nå nya kunder.',
       },
       {
         q: 'Kostar det något att använda Prolink?',
@@ -19,7 +20,7 @@ const faqs = [
       },
       {
         q: 'Behöver jag ett företag för att registrera mig?',
-        a: 'Nej. Både privatpersoner och företag kan använda Prolink, oavsett om du är kund eller leverantör.',
+        a: 'Nej. Både privatpersoner och företag kan använda Prolink, oavsett om du är uppdragsgivare eller frilansare.',
       },
     ],
   },
@@ -28,7 +29,7 @@ const faqs = [
     items: [
       {
         q: 'Hur lägger jag ut ett uppdrag?',
-        a: 'Skapa ett konto som kund, klicka på "Lägg ut uppdrag" och beskriv vad du behöver hjälp med. Du kan ange en budget eller lämna det öppet. Leverantörer ser ditt uppdrag och kan skicka offerter.',
+        a: 'Skapa ett konto som uppdragsgivare, klicka på ”Publicera uppdrag” och beskriv vad du behöver hjälp med. Du kan ange en budget eller lämna den öppen. Frilansare inom kategorin får en notis och kan skicka offerter.',
       },
       {
         q: 'Hur fungerar offertsystemet?',
@@ -61,8 +62,8 @@ const faqs = [
     category: 'Konto och roller',
     items: [
       {
-        q: 'Kan jag vara både kund och leverantör?',
-        a: 'Ja. Du kan byta roll när som helst under "Min profil" — all din befintliga data behålls.',
+        q: 'Kan jag vara både uppdragsgivare och frilansare?',
+        a: 'Ja. Du kan byta roll när som helst från din profil. Dina uppdrag och omdömen finns kvar, och dina tjänster döljs medan du är uppdragsgivare och syns igen när du byter tillbaka.',
       },
       {
         q: 'Hur ändrar jag min profilbild?',
@@ -81,7 +82,7 @@ export default function FaqPage() {
     <div className="max-w-3xl mx-auto px-4 py-16">
       <div className="mb-12">
         <h1 className="text-4xl font-bold text-gray-900 tracking-tight mb-3">Vanliga frågor</h1>
-        <p className="text-gray-500 text-lg">Hittar du inte svaret? Maila oss på <a href={`mailto:${CONTACT_EMAIL}`} className="text-blue-600 hover:underline">{CONTACT_EMAIL}</a></p>
+        <p className="text-gray-500 text-lg">Hittar du inte svaret? Mejla oss på <a href={`mailto:${CONTACT_EMAIL}`} className="text-blue-600 hover:underline">{CONTACT_EMAIL}</a></p>
       </div>
 
       <div className="space-y-12">

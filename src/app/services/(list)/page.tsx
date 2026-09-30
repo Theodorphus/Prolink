@@ -6,12 +6,13 @@ import { createClient, getUser } from '@/lib/supabase/server'
 import ServiceFilters from '@/components/services/ServiceFilters'
 import ServiceCard from '@/components/services/ServiceCard'
 import { searchTerm } from '@/lib/validation'
+import { pageMetadata } from '@/lib/seo'
 
-export const metadata = {
-  alternates: { canonical: '/services' },
-  title: 'Tjänster – Hitta freelancers',
-  description: 'Hitta kvalificerade freelancers och byråer. Jämför priser, leveranstider och kompetenser och skicka en förfrågan.',
-}
+export const metadata = pageMetadata({
+  title: 'Tjänster – hitta frilansare',
+  description: 'Hitta kvalificerade frilansare och byråer. Jämför priser, leveranstider och kompetenser och skicka en förfrågan.',
+  path: '/services',
+})
 
 interface Props {
   searchParams: Promise<{ page?: string; q?: string; sort?: string; max_price?: string; category?: string }>
@@ -29,9 +30,13 @@ export default async function ServicesPage(props: Props) {
     : { data: null }
   const isProvider = profile?.role === 'provider'
 
+  // Bara tjänster vars ägare fortfarande är leverantör. Efter ett rollbyte
+  // till uppdragsgivare låg tjänsterna kvar, men förfrågningsknappen ledde
+  // till 404 eftersom databasen kräver leverantörsrollen hos mottagaren.
   let query = supabase
     .from('services')
-    .select('*, provider:users(id, name, avatar_url)', { count: 'exact' })
+    .select('*, provider:users!inner(id, name, avatar_url)', { count: 'exact' })
+    .eq('provider.role', 'provider')
 
   if (q) {
     const safeQuery = searchTerm(q)
@@ -73,7 +78,7 @@ export default async function ServicesPage(props: Props) {
           <p className="page-eyebrow">Tjänster</p>
           <h1 className="page-heading mt-2.5 text-3xl sm:text-4xl">Färdiga tjänster</h1>
           <p className="muted mt-2 text-sm font-medium">
-            {count ?? 0} {services?.length === 1 ? 'tjänst' : 'tjänster'} med frånpris och angiven leveranstid
+            {count ?? 0} {count === 1 ? 'tjänst' : 'tjänster'} med frånpris och angiven leveranstid
           </p>
         </div>
         {isProvider && (
@@ -98,7 +103,7 @@ export default async function ServicesPage(props: Props) {
         {(!services || services.length === 0) && (
           <div className="col-span-full text-center py-16 text-gray-500">
             {q ? (
-              <p className="text-lg">Inga tjänster matchade &ldquo;{q}&rdquo;.</p>
+              <p className="text-lg">Inga tjänster matchade &rdquo;{q}&rdquo;.</p>
             ) : (
               <>
                 <p className="text-lg">Inga tjänster ännu.</p>

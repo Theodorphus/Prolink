@@ -1,7 +1,6 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 import { SITE_URL } from '@/lib/site'
 import type { ActionState } from '@/types/auth'
 import { createClient } from '@/lib/supabase/server'
@@ -98,13 +97,6 @@ export async function register(_: ActionState, formData: FormData): Promise<Acti
   revalidatePath('/', 'layout')
   if (!data.session) return { message: 'Kontot är skapat. Bekräfta din e-post via länken i mejlet innan du loggar in.' }
   return { success: true, redirectTo }
-}
-
-export async function logout() {
-  const supabase = await createClient()
-  await supabase.auth.signOut()
-  revalidatePath('/', 'layout')
-  redirect('/login')
 }
 
 function passwordValue(value: FormDataEntryValue | null, min: number): string {

@@ -123,5 +123,21 @@ test('real PostgreSQL migration replay and marketplace authorization', async t =
     assert.equal((await db.query(`select count(*)::int as n from notification_outbox where recipient_id=$1 and path=$2`,[outsider,'/jobs/'+j])).rows[0].n,0)
     await assert.rejects(as(customer,`update user_private_profiles set email_jobs=false where user_id=$1 returning user_id`,[outsider]).then(result=> { assert.equal(result.rows.length,1) }))
   })
+  await t.test('every offer outcome notifies the party who acts next', async () => {
+    const j = (await as(customer, `insert into jobs(customer_id,title,description,category) values ($1,'Outcome job','A sufficiently long description','webbutveckling') returning id`, [customer])).rows[0].id
+    const winner = (await as(provider, `insert into offers(job_id,provider_id,price,timeline,description) values ($1,$2,100,'Two days','A sufficiently long offer') returning id`, [j, provider])).rows[0].id
+    const loser = (await as(outsider, `insert into offers(job_id,provider_id,price,timeline,description) values ($1,$2,90,'One day','Another sufficiently long offer') returning id`, [j, outsider])).rows[0].id
+    const notices = async id => (await db.query('select kind, recipient_id from notification_outbox where path=$1', ['/offers/' + id])).rows.map(n => `${n.kind}:${n.recipient_id}`).sort()
+    // Accepting one offer rejects the others automatically; their providers must hear about it.
+    await as(customer, `select transition_offer($1,'accepted')`, [winner])
+    assert.deepEqual(await notices(loser), [`offer:${customer}`, `rejected:${outsider}`])
+    await as(provider, `select transition_offer($1,'delivered')`, [winner])
+    await as(customer, `select transition_offer($1,'completed')`, [winner])
+    const expected = [`accepted:${provider}`, `completed:${provider}`, `delivered:${customer}`, `offer:${customer}`]
+    assert.deepEqual(await notices(winner), expected)
+    // Read receipts update the offer without changing status and must not queue anything.
+    await db.query('update offers set provider_read_at = now(), customer_read_at = now() where id=$1', [winner])
+    assert.deepEqual(await notices(winner), expected)
+  })
 
 })

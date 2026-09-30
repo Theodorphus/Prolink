@@ -58,7 +58,11 @@ export default function Footer() {
               <ul className="space-y-3">
                 {items.map(({ href, label }) => (
                   <li key={href}>
-                    <Link href={href} className="text-sm text-gray-600 hover:text-gray-900 transition-colors font-medium">
+                    {/* Kontolänkarna förhämtas inte. För en inloggad besökare
+                        svarar proxyn på /login och /register med en
+                        omdirigering till startsidan, och förhämtningen
+                        upprepades då i en loop som aldrig lät nätet vila. */}
+                    <Link href={href} prefetch={group === 'Konto' ? false : undefined} className="text-sm text-gray-600 hover:text-gray-900 transition-colors font-medium">
                       {label}
                     </Link>
                   </li>
@@ -74,20 +78,16 @@ export default function Footer() {
             <p className="text-xs text-gray-600 font-medium">
               © {new Date().getFullYear()} Prolink. Alla rättigheter förbehållna.
             </p>
-            {/* Varje uppgift hålls ihop, så att raden bryts mellan dem på mobil
-                och inte mitt i ett nummer eller en adress. */}
-            <p className="mt-1.5 flex flex-wrap justify-center sm:justify-start gap-x-2 gap-y-0.5 text-xs text-gray-500">
-              {[
-                `Drivs av ${COMPANY.name}`,
-                `Org.nr ${COMPANY.orgNumber}`,
-                `Momsreg.nr ${COMPANY.vatNumber}`,
-                COMPANY.address,
-              ].map((item, index) => (
-                <span key={item} className="whitespace-nowrap">
-                  {index > 0 && <span className="mr-2 text-gray-300" aria-hidden>·</span>}
-                  {item}
-                </span>
-              ))}
+            {/* För en enskild firma är organisationsnumret innehavarens
+                personnummer. E-handelslagen kräver att uppgifterna är lätta att
+                nå, inte att de står på varje sida, så sidfoten länkar till
+                villkoren där org.nr, momsreg.nr och adress finns samlade. */}
+            <p className="mt-1.5 text-xs text-gray-500">
+              Drivs av {COMPANY.name}
+              <span className="mx-2 text-gray-300" aria-hidden>·</span>
+              <Link href="/terms#foretagsuppgifter" className="underline decoration-gray-300 underline-offset-4 transition-colors hover:text-gray-900 hover:decoration-gray-900">
+                Företagsuppgifter
+              </Link>
             </p>
           </div>
           <p className="text-xs text-gray-600 font-medium">

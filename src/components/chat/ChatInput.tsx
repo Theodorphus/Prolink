@@ -78,7 +78,10 @@ export default function ChatInput({ onSend, offerId }: ChatInputProps) {
     }
   }
 
+  // På pekskärmar finns ingen Shift+Enter, så Enter måste ge en ny rad där.
+  // Meddelandet skickas då med knappen, som på andra mobila chattar.
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (window.matchMedia('(pointer: coarse)').matches) return
     if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault()
       e.currentTarget.form?.requestSubmit()
@@ -98,7 +101,8 @@ export default function ChatInput({ onSend, offerId }: ChatInputProps) {
             onChange={e => { setText(e.target.value); requestId.current = null }}
             onKeyDown={handleKeyDown}
             rows={2}
-            placeholder="Skriv ett meddelande... (Enter för att skicka, Shift+Enter för ny rad)"
+            aria-describedby="chatt-tips"
+            placeholder="Skriv ett meddelande…"
             className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
@@ -123,7 +127,8 @@ export default function ChatInput({ onSend, offerId }: ChatInputProps) {
       </div>
       {file && <p className="text-sm">{file.name} <button type="button" disabled={sending} onClick={() => { setFile(null); uploaded.current = undefined; requestId.current = null; if (fileRef.current) fileRef.current.value = '' }}>Ta bort bilaga</button></p>}
       <input disabled={sending} onChange={e => { setFile(e.target.files?.[0] ?? null); uploaded.current = undefined; requestId.current = null }} ref={fileRef} type="file" className="hidden" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
-      {uploading && <p className="text-xs text-blue-500">Laddar upp fil...</p>}
+      <p id="chatt-tips" className="hidden text-xs text-gray-400 [@media(pointer:fine)]:block">Enter skickar, Shift+Enter ger ny rad.</p>
+      {uploading && <p className="text-xs text-blue-500">Laddar upp fil…</p>}
     </form>
   )
 }

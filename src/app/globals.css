@@ -324,6 +324,21 @@
 }
 
 /* ============================================================================
+   FORMULÄR PÅ MOBIL
+   Safari på iPhone zoomar in hela sidan när ett fält med mindre än 16 px
+   text får fokus, och zoomar inte ut igen. Fälten har text-sm (14 px) för
+   datorns skull, så storleken lyfts här för små skärmar. !important behövs
+   eftersom Tailwinds klasser har högre specificitet än elementväljare.
+   ========================================================================= */
+@media (max-width: 639.98px) {
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* ============================================================================
    HJÄLPKLASSER
    ========================================================================= */
 @layer utilities {

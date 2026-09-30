@@ -60,7 +60,7 @@ export default function AvatarUpload({ userId, name, currentAvatarUrl }: AvatarU
       .eq('id', userId)
 
     if (updateError) {
-      setError('Kunde inte spara avataren. Försök igen.')
+      setError('Kunde inte spara profilbilden. Försök igen.')
     } else {
       setPreview(avatarUrl)
       router.refresh()

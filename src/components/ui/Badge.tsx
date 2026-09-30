@@ -49,8 +49,8 @@ export function StatusBadge({ status }: { status: string }) {
     pending: { label: 'Inväntar svar', variant: 'warning' },
     accepted: { label: 'Accepterad', variant: 'success' },
     rejected: { label: 'Avslagen', variant: 'danger' },
-    delivered: { label: 'Levererat', variant: 'info' },
-    completed: { label: 'Slutfört', variant: 'success' },
+    delivered: { label: 'Levererad', variant: 'info' },
+    completed: { label: 'Slutförd', variant: 'success' },
   }
   const config = map[status] ?? { label: status, variant: 'default' as BadgeVariant }
 

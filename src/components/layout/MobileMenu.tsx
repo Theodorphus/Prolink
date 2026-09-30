@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { logout } from '@/lib/actions/auth'
 
 interface NavLink {
   href: string
@@ -15,76 +15,63 @@ interface MobileUser {
   name: string
 }
 
+const noSubscription = () => () => {}
+
 function Menu({
   links,
   user,
+  onSignOut,
 }: {
   links: NavLink[]
-  user: MobileUser | null
+  /** undefined medan inloggningsläget ännu inte är känt. */
+  user: MobileUser | null | undefined
+  onSignOut: () => void
 }) {
   const [open, setOpen] = useState(false)
-  const root = useRef<HTMLDivElement>(null)
+  const layer = useRef<HTMLDivElement>(null)
   const toggle = useRef<HTMLButtonElement>(null)
   const pathname = usePathname()
+  // Portalen behöver document, som inte finns vid serverrenderingen.
+  const mounted = useSyncExternalStore(noSubscription, () => true, () => false)
 
   const close = () => setOpen(false)
 
-
-
   useEffect(() => {
     if (!open) return
-    const previous = document.activeElement as HTMLElement | null
-    const background = [...document.querySelectorAll<HTMLElement>('main, footer')]
+    const previous = (document.activeElement as HTMLElement | null) ?? toggle.current
+    // Allt utom menylagret görs inert, även headern med menyknappen som
+    // ligger under den nedtonade bakgrunden.
+    const background = [...document.body.children].filter(
+      (element): element is HTMLElement => element instanceof HTMLElement && element !== layer.current
+    )
     const inertBefore = background.map(element => element.inert)
     background.forEach(element => { element.inert = true })
-    root.current?.querySelector<HTMLElement>('nav a, nav button')?.focus()
+    layer.current?.querySelector<HTMLElement>('nav a, nav button')?.focus()
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') { event.preventDefault(); setOpen(false) }
       if (event.key === 'Tab') {
-        const items = [...(root.current?.querySelectorAll<HTMLElement>('button:not(:disabled), a[href]') ?? [])]
+        const items = [...(layer.current?.querySelectorAll<HTMLElement>('nav button:not(:disabled), nav a[href]') ?? [])]
         const first = items[0], last = items.at(-1)
         if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus() }
         else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus() }
       }
     }
     document.addEventListener('keydown', onKeyDown)
+    document.body.style.overflow = 'hidden'
     return () => {
       background.forEach((element, index) => { element.inert = inertBefore[index] })
       document.removeEventListener('keydown', onKeyDown)
+      document.body.style.overflow = ''
       previous?.focus()
     }
   }, [open])
 
-  // Lock body scroll while open
-  useEffect(() => {
-    if (open) {
-      document.body.style.overflow = 'hidden'
-      return () => {
-        document.body.style.overflow = ''
-      }
-    }
-  }, [open])
-
-  return (
-    <div ref={root} className="md:hidden">
-      <button ref={toggle}
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-label={open ? 'Stäng meny' : 'Öppna meny'}
-        aria-expanded={open}
-        aria-controls="mobil-meny"
-        className="relative z-[70] flex h-11 w-11 items-center justify-center rounded-lg text-gray-700 active:bg-gray-100"
-      >
-        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-          {open ? (
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-          ) : (
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-          )}
-        </svg>
-      </button>
-
-      {/* Backdrop */}
+  // Panelen och bakgrunden renderas direkt i body. Inne i headern ärvde
+  // länkarna startsidans vita navigeringsfärg (vit text på vit panel), och
+  // headerns backdrop-filter gjorde headern till referensram för
+  // position: fixed, så bakgrunden täckte bara headerns 64 pixlar.
+  const layerContent = (
+    <div ref={layer} className="md:hidden">
       <div
         onClick={close}
         aria-hidden="true"
@@ -93,7 +80,6 @@ function Menu({
         }`}
       />
 
-      {/* Slide-down panel */}
       {/* Panelen tas inte ur DOM när den stängs, utan skjuts utanför bild.
           Utan inert och aria-hidden går det därför att tabba in i en osynlig
           meny, och skärmläsare läser upp länkar som inte syns. */}
@@ -102,12 +88,22 @@ function Menu({
         aria-label="Huvudmeny"
         aria-hidden={!open}
         inert={!open}
-        className={`fixed inset-x-0 top-0 z-[65] origin-top bg-white shadow-2xl transition-transform duration-300 ease-out ${
+        className={`fixed inset-x-0 top-0 z-[65] max-h-[100dvh] overflow-y-auto bg-white shadow-2xl transition-transform duration-300 ease-out ${
           open ? 'translate-y-0' : '-translate-y-full'
         }`}
       >
         <div className="flex h-16 items-center justify-between border-b border-gray-100 px-4">
           <span className="text-lg font-bold tracking-tight text-gray-900">Meny</span>
+          <button
+            type="button"
+            onClick={close}
+            aria-label="Stäng meny"
+            className="flex h-11 w-11 items-center justify-center rounded-lg text-gray-700 active:bg-gray-100"
+          >
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
 
         <div className="px-4 py-4">
@@ -126,7 +122,12 @@ function Menu({
 
           <div className="my-3 h-px bg-gray-100" />
 
-          {user ? (
+          {/* Kontodelen väntar tills inloggningsläget är känt. Panelen ligger
+              precis ovanför skärmen, inom Next.js förhämtningsmarginal, så
+              utloggade länkar som renderades i väntan på läget förhämtades
+              även för inloggade. Proxyn omdirigerar dem från /login och
+              /register till startsidan, och förhämtningen hamnade i en loop. */}
+          {user === undefined ? null : user ? (
             <>
               <Link
                 href={`/profile/${user.id}`}
@@ -138,19 +139,19 @@ function Menu({
                 </span>
                 {user.name?.split(' ')[0] || 'Profil'}
               </Link>
-              <form action={logout}>
-                <button
-                  type="submit"
-                  className="w-full rounded-xl px-4 py-3.5 text-left text-base font-semibold text-gray-500 active:bg-gray-100"
-                >
-                  Logga ut
-                </button>
-              </form>
+              <button
+                type="button"
+                onClick={() => { close(); onSignOut() }}
+                className="w-full rounded-xl px-4 py-3.5 text-left text-base font-semibold text-gray-500 active:bg-gray-100"
+              >
+                Logga ut
+              </button>
             </>
           ) : (
             <>
               <Link
                 href="/login"
+                prefetch={false}
                 onClick={close}
                 className="block rounded-xl px-4 py-3.5 text-base font-semibold text-gray-800 active:bg-gray-100"
               >
@@ -158,6 +159,7 @@ function Menu({
               </Link>
               <Link
                 href="/register"
+                prefetch={false}
                 onClick={close}
                 className="mt-2 block rounded-xl bg-gray-900 px-4 py-3.5 text-center text-base font-semibold text-white active:bg-gray-700"
               >
@@ -169,9 +171,29 @@ function Menu({
       </nav>
     </div>
   )
+
+  return (
+    <div className="md:hidden">
+      <button
+        ref={toggle}
+        type="button"
+        onClick={() => setOpen(true)}
+        aria-label="Öppna meny"
+        aria-expanded={open}
+        aria-controls="mobil-meny"
+        className="flex h-11 w-11 items-center justify-center rounded-lg text-gray-700 active:bg-gray-100"
+      >
+        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} aria-hidden>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+
+      {mounted && createPortal(layerContent, document.body)}
+    </div>
+  )
 }
 
-export default function MobileMenu(props: { links: NavLink[]; user: MobileUser | null }) {
+export default function MobileMenu(props: { links: NavLink[]; user: MobileUser | null | undefined; onSignOut: () => void }) {
   const pathname = usePathname()
   return <Menu key={pathname} {...props} />
 }

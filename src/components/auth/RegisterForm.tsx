@@ -24,8 +24,8 @@ function SubmitButton() {
 }
 
 const roles = [
-  { value: 'customer', label: 'Kund', desc: 'Jag vill köpa tjänster' },
-  { value: 'provider', label: 'Leverantör', desc: 'Jag erbjuder tjänster' },
+  { value: 'customer', label: 'Uppdragsgivare', desc: 'Jag vill köpa tjänster' },
+  { value: 'provider', label: 'Frilansare', desc: 'Jag erbjuder tjänster' },
 ]
 
 export default function RegisterForm({ action, redirect }: RegisterFormProps) {

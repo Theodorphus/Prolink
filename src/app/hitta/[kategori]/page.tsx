@@ -7,7 +7,8 @@ import { getCategoryContent, LANDING_CATEGORIES } from '@/lib/category-content'
 import { PUBLIC_JOB_FIELDS } from '@/lib/jobs'
 import JobCard, { type JobCardJob } from '@/components/jobs/JobCard'
 import ServiceCard, { type ServiceCardService } from '@/components/services/ServiceCard'
-import { SITE_URL } from '@/lib/site'
+import JsonLd from '@/components/seo/JsonLd'
+import { breadcrumbList, pageMetadata } from '@/lib/seo'
 
 /**
  * Kategorilandningssida.
@@ -17,12 +18,15 @@ import { SITE_URL } from '@/lib/site'
  * och /services är en filtrerad lista utan sammanhang. De här sidorna finns
  * för att fånga den sökningen och leda vidare till att publicera ett uppdrag.
  *
- * Datan läses med den publika klienten, utan cookies, så sidan inte behöver
- * någon inloggad session. Rutten renderas ändå per besökare, eftersom Navbar
- * i rotlayouten läser cookies för att visa inloggningsstatus — det gäller
- * hela appen och är inget den här sidan kan påverka. generateStaticParams
- * behålls för att förrendera kategorierna vid bygget.
+ * Datan läses med den publika klienten, utan cookies, och navigeringen
+ * hämtar inloggningsläget i webbläsaren. Sidorna förrenderas därför vid
+ * bygget och byggs om högst var femte minut, så listorna håller sig aktuella.
  */
+export const revalidate = 300
+
+// dynamicParams = false används inte: i Next 16 gav omvalideringen av de
+// förrenderade sidorna då NoFallbackError, och varje kategorisida blev 404
+// efter fem minuter. Okända kategorier ger i stället 404 via notFound().
 export function generateStaticParams() {
   return LANDING_CATEGORIES.map(kategori => ({ kategori }))
 }
@@ -34,17 +38,12 @@ export async function generateMetadata(props: {
   const content = getCategoryContent(kategori)
   if (!content) return { title: 'Kategorin hittades inte' }
 
-  return {
+  return pageMetadata({
     title: content.heading,
     description: content.description,
-    alternates: { canonical: `/hitta/${kategori}` },
-    openGraph: {
-      title: content.heading,
-      description: content.description,
-      url: `${SITE_URL}/hitta/${kategori}`,
-      type: 'website',
-    },
-  }
+    path: `/hitta/${kategori}`,
+    routeImage: true,
+  })
 }
 
 export default async function CategoryLandingPage(props: {
@@ -60,20 +59,25 @@ export default async function CategoryLandingPage(props: {
   const [{ data: jobs }, { data: services }] = await Promise.all([
     supabase
       .from('jobs')
-      .select(PUBLIC_JOB_FIELDS)
+      .select(`${PUBLIC_JOB_FIELDS}, customer:users!jobs_customer_id_fkey(name)`)
       .eq('status', 'open')
       .eq('category', kategori)
       .order('created_at', { ascending: false })
       .limit(4),
     supabase
       .from('services')
-      .select('id, title, description, price, delivery_time, category, provider:users(id, name, avatar_url)')
+      .select('id, title, description, price, delivery_time, category, provider:users!inner(id, name, avatar_url)')
+      .eq('provider.role', 'provider')
       .eq('category', kategori)
       .order('created_at', { ascending: false })
       .limit(4),
   ])
 
-  const openJobs = (jobs ?? []) as JobCardJob[]
+  // Utan inbäddad kund visade korten "Prolink-kund" i stället för namnet.
+  const openJobs = (jobs ?? []).map(job => ({
+    ...job,
+    customer: Array.isArray(job.customer) ? job.customer[0] ?? null : job.customer,
+  })) as JobCardJob[]
   const openServices = (services ?? []).map(service => ({
     ...service,
     provider: Array.isArray(service.provider) ? service.provider[0] : service.provider,
@@ -97,10 +101,14 @@ export default async function CategoryLandingPage(props: {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
-      />
+      <JsonLd data={[
+        faqSchema,
+        breadcrumbList([
+          { name: 'Start', path: '/' },
+          { name: 'Tjänster', path: '/services' },
+          { name: label, path: `/hitta/${kategori}` },
+        ]),
+      ]} />
 
       <div className="mx-auto max-w-5xl px-4 py-14 sm:px-6">
         <nav aria-label="Brödsmulor" className="mb-6 text-sm font-medium text-slate-500">

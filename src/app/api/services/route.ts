@@ -16,7 +16,8 @@ export async function GET(request: NextRequest) {
 
   const { data, error } = await supabase
     .from('services')
-    .select('*, provider:users(id, name, avatar_url, hourly_rate)')
+    .select('*, provider:users!inner(id, name, avatar_url, hourly_rate)')
+    .eq('provider.role', 'provider')
     .order('created_at', { ascending: false }).order('id', { ascending: false })
     .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1)
 

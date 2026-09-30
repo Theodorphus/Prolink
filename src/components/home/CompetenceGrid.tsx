@@ -20,7 +20,7 @@ export default function CompetenceGrid() {
   const priority = new Set<string>(PRIORITY_CATEGORIES as readonly string[])
 
   return (
-    <section className="border-b border-slate-200/70 bg-white px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
+    <section className="border-b border-slate-200/70 bg-white px-4 py-14 sm:px-6 sm:py-24 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
           <div className="max-w-2xl">

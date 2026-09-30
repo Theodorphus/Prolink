@@ -26,11 +26,14 @@ export default async function CreateServicePage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h1 className="text-xl font-bold text-gray-900 mb-2">Endast för leverantörer</h1>
-          <p className="text-gray-600 mb-6">Ditt konto är registrerat som kund. Tjänster publiceras av leverantörer.</p>
+          <h1 className="text-xl font-bold text-gray-900 mb-2">Tjänster publiceras av frilansare</h1>
+          <p className="text-gray-600 mb-6">Ditt konto är just nu uppdragsgivare. Byt till frilansare från din profil för att publicera tjänster. Dina uppdrag finns kvar.</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link href="/jobs/create" className="inline-flex items-center justify-center bg-gray-900 text-white text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-gray-700 transition-colors">
-              Lägg ut ett uppdrag
+            <Link href={`/profile/${user.id}`} className="inline-flex items-center justify-center bg-gray-900 text-white text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-gray-700 transition-colors">
+              Byt roll i din profil
+            </Link>
+            <Link href="/jobs/create" className="inline-flex items-center justify-center bg-gray-100 text-gray-900 text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-gray-200 transition-colors">
+              Publicera ett uppdrag
             </Link>
             <Link href="/services" className="inline-flex items-center justify-center bg-gray-100 text-gray-900 text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-gray-200 transition-colors">
               Bläddra tjänster

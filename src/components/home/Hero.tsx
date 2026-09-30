@@ -76,7 +76,9 @@ export default function Hero() {
 
           <p className="reveal reveal-5 mt-8 border-t border-white/10 pt-6 text-sm text-slate-400">
             Frilansare?{' '}
-            <Link href="/register" className="font-semibold text-indigo-300 underline-offset-4 transition hover:text-indigo-200 hover:underline">
+            {/* Förhämtas inte: proxyn omdirigerar inloggade från /register,
+                vilket annars gav en förhämtningsloop (se Footer). */}
+            <Link href="/register" prefetch={false} className="font-semibold text-indigo-300 underline-offset-4 transition hover:text-indigo-200 hover:underline">
               Skapa en profil och hitta nya kunder
             </Link>
           </p>
