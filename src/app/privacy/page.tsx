@@ -1,4 +1,4 @@
-import { CONTACT_EMAIL } from '@/lib/site'
+import { COMPANY, CONTACT_EMAIL } from '@/lib/site'
 export const metadata = {
   alternates: { canonical: '/privacy' },
   title: 'Integritetspolicy',
@@ -10,14 +10,20 @@ export default function PrivacyPage() {
     <div className="max-w-3xl mx-auto px-4 py-16">
       <div className="mb-10">
         <h1 className="text-4xl font-bold text-gray-900 tracking-tight mb-3">Integritetspolicy</h1>
-        <p className="text-gray-400 text-sm">Senast uppdaterad: april 2026</p>
+        <p className="text-gray-400 text-sm">Senast uppdaterad: september 2026</p>
       </div>
 
       <div className="prose prose-gray max-w-none space-y-8 text-gray-700 leading-relaxed">
 
         <section>
           <h2 className="text-xl font-bold text-gray-900 mb-3">1. Personuppgiftsansvarig</h2>
-          <p>Prolink (&ldquo;vi&rdquo;, &ldquo;oss&rdquo;) är personuppgiftsansvarig för behandlingen av dina personuppgifter. Kontakt: <a href={`mailto:${CONTACT_EMAIL}`} className="text-blue-600 hover:underline">{CONTACT_EMAIL}</a></p>
+          <p>Prolink drivs av {COMPANY.name} (&ldquo;vi&rdquo;, &ldquo;oss&rdquo;), som är personuppgiftsansvarig för behandlingen av dina personuppgifter.</p>
+          <p className="mt-3 text-sm">
+            {COMPANY.name}<br />
+            Org.nr {COMPANY.orgNumber}<br />
+            {COMPANY.address}<br />
+            E-post: <a href={`mailto:${CONTACT_EMAIL}`} className="text-blue-600 hover:underline">{CONTACT_EMAIL}</a>
+          </p>
         </section>
 
         <section>

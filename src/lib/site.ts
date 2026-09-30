@@ -44,10 +44,22 @@ export function absoluteUrl(path = '/'): string {
 // användarvillkoren, i FAQ och i sidfoten. Den låg tidigare hårdkodad på sju
 // ställen, vilket gjorde den lätt att glömma vid ett byte.
 //
-// VIKTIGT: prolink.se saknar MX-post, så domänen kan i skrivande stund inte ta
-// emot e-post. En kontaktväg som inte fungerar är en efterlevnadsbrist i
-// GDPR-texten, inte bara en trasig länk. Sätt CONTACT_EMAIL till en adress som
-// faktiskt tar emot post, via NEXT_PUBLIC_CONTACT_EMAIL eller genom att ändra
-// reservvärdet här.
+// Reservvärdet var tidigare hej@prolink.se, men prolink.se saknar MX-post och
+// kan inte ta emot e-post. En kontaktväg som inte fungerar är en
+// efterlevnadsbrist i GDPR-texten och mot e-handelslagen, inte bara en trasig
+// länk. Byt inte tillbaka förrän domänen faktiskt tar emot post.
 export const CONTACT_EMAIL =
-  process.env.NEXT_PUBLIC_CONTACT_EMAIL?.trim() || 'hej@prolink.se'
+  process.env.NEXT_PUBLIC_CONTACT_EMAIL?.trim() || 'webbdevstudio@gmail.com'
+
+// Uppgifterna om den som driver tjänsten. E-handelslagen (2002:562) 8 § kräver
+// namn, geografisk adress, e-post, registreringsnummer och momsnummer, och
+// GDPR kräver att den personuppgiftsansvarige går att identifiera. För en
+// enskild firma är organisationsnumret samma som innehavarens personnummer,
+// och momsnumret är SE + organisationsnumret + 01.
+export const COMPANY = {
+  name: 'Webbdev Studio',
+  orgNumber: '950721-6498',
+  vatNumber: 'SE950721649801',
+  address: 'Västra Gunnesgärde 41, 417 47 Göteborg',
+  url: 'https://www.webbdev.se/',
+}

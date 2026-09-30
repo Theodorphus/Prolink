@@ -1,4 +1,4 @@
-import { CONTACT_EMAIL } from '@/lib/site'
+import { COMPANY, CONTACT_EMAIL } from '@/lib/site'
 export const metadata = {
   alternates: { canonical: '/terms' },
   title: 'Användarvillkor',
@@ -10,7 +10,7 @@ export default function TermsPage() {
     <div className="max-w-3xl mx-auto px-4 py-16">
       <div className="mb-10">
         <h1 className="text-4xl font-bold text-gray-900 tracking-tight mb-3">Användarvillkor</h1>
-        <p className="text-gray-400 text-sm">Senast uppdaterad: april 2026</p>
+        <p className="text-gray-400 text-sm">Senast uppdaterad: september 2026</p>
       </div>
 
       <div className="space-y-8 text-gray-700 leading-relaxed text-sm">
@@ -68,12 +68,13 @@ export default function TermsPage() {
 
         <section>
           <h2 className="text-xl font-bold text-gray-900 mb-3">9. Tillämplig lag</h2>
-          <p>Dessa villkor regleras av svensk lag. Tvister ska i första hand lösas genom förhandling. Om parterna inte kan komma överens ska tvisten avgöras av svensk allmän domstol med Stockholms tingsrätt som första instans.</p>
+          <p>Dessa villkor regleras av svensk lag. Tvister ska i första hand lösas genom förhandling. Om parterna inte kan komma överens ska tvisten avgöras av svensk allmän domstol med Göteborgs tingsrätt som första instans.</p>
         </section>
 
         <section>
           <h2 className="text-xl font-bold text-gray-900 mb-3">10. Kontakt</h2>
-          <p>Frågor om dessa villkor skickas till <a href={`mailto:${CONTACT_EMAIL}`} className="text-blue-600 hover:underline">{CONTACT_EMAIL}</a>.</p>
+          <p>Prolink drivs av {COMPANY.name}, org.nr {COMPANY.orgNumber}, momsreg.nr {COMPANY.vatNumber}, {COMPANY.address}.</p>
+          <p className="mt-3">Frågor om dessa villkor skickas till <a href={`mailto:${CONTACT_EMAIL}`} className="text-blue-600 hover:underline">{CONTACT_EMAIL}</a>.</p>
         </section>
 
       </div>

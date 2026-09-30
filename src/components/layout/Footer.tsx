@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { CONTACT_EMAIL } from '@/lib/site'
+import { COMPANY, CONTACT_EMAIL } from '@/lib/site'
 
 const links = {
   Plattform: [
@@ -69,12 +69,37 @@ export default function Footer() {
 
         </div>
 
-        <div className="pt-8 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="pt-8 border-t border-gray-200 flex flex-col sm:flex-row items-center sm:items-start justify-between gap-3">
+          <div className="text-center sm:text-left">
+            <p className="text-xs text-gray-600 font-medium">
+              © {new Date().getFullYear()} Prolink. Alla rättigheter förbehållna.
+            </p>
+            {/* Varje uppgift hålls ihop, så att raden bryts mellan dem på mobil
+                och inte mitt i ett nummer eller en adress. */}
+            <p className="mt-1.5 flex flex-wrap justify-center sm:justify-start gap-x-2 gap-y-0.5 text-xs text-gray-500">
+              {[
+                `Drivs av ${COMPANY.name}`,
+                `Org.nr ${COMPANY.orgNumber}`,
+                `Momsreg.nr ${COMPANY.vatNumber}`,
+                COMPANY.address,
+              ].map((item, index) => (
+                <span key={item} className="whitespace-nowrap">
+                  {index > 0 && <span className="mr-2 text-gray-300" aria-hidden>·</span>}
+                  {item}
+                </span>
+              ))}
+            </p>
+          </div>
           <p className="text-xs text-gray-600 font-medium">
-            © {new Date().getFullYear()} Prolink. Alla rättigheter förbehållna.
-          </p>
-          <p className="text-xs text-gray-600 font-medium">
-            Byggt med ❤️ i Sverige
+            Skapad av{' '}
+            <a
+              href={COMPANY.url}
+              target="_blank"
+              rel="noopener"
+              className="font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 transition-colors hover:decoration-slate-900"
+            >
+              {COMPANY.name}
+            </a>
           </p>
         </div>
       </div>
