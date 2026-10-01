@@ -2,10 +2,10 @@ import type { Metadata } from 'next'
 import { absoluteUrl } from '@/lib/site'
 
 export const DEFAULT_OG_IMAGE = {
-  url: '/og-image.jpg',
+  url: '/og-prolink.jpg',
   width: 1200,
   height: 630,
-  alt: 'Prolink – där företag och frilansare möts',
+  alt: 'Prolink – hitta rätt frilansare för ditt företag',
 }
 
 /**
