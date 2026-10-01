@@ -30,6 +30,8 @@ Copy `.env.example` to `.env.local` and configure:
 | `NEXT_PUBLIC_APP_URL` | Canonical application origin |
 | `NEXT_PUBLIC_CONTACT_EMAIL` | Monitored public support address |
 | `CRON_SECRET` | Server-only secret protecting notification delivery |
+| `ADMIN_EMAILS` | Comma-separated confirmed emails allowed to open `/admin` |
+| `INTERNAL_EMAILS` | Operator test/demo accounts excluded from admin statistics (no admin access) |
 
 Install and run:
 
@@ -116,6 +118,17 @@ environment. The command loads Next.js production environment files (including
 printing secret values. A localhost URL is expected during local development;
 configure the real HTTPS origin in the hosting environment. Passing this command
 does not verify remote configuration, credentials or email delivery.
+
+### Admin overview
+
+`/admin` shows activity across the marketplace: real versus internal demand, offers
+on each assignment, how many providers were emailed about it, funnels, users with
+profile gaps, supply and demand per category, weekly activity, and notification queue
+health. Access requires a signed-in account with a confirmed email listed in
+`ADMIN_EMAILS`; everyone else gets a 404. Data is read server-side with the service-role
+client and never includes message text, offer descriptions, phone numbers or CVs.
+Accounts in `ADMIN_EMAILS` or `INTERNAL_EMAILS`, and accounts Supabase Auth cannot load
+(rows inserted directly with SQL), count as internal. No migration is required.
 
 ### Launch and operations
 

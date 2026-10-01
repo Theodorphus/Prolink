@@ -15,9 +15,11 @@ for small businesses and independent specialists, built around:
 `assignment -> offer -> chat -> delivery -> review`
 
 The implementation intentionally keeps the existing customer/provider model for
-the MVP. Do not add businesses/business members, payments, an admin dashboard,
-moderation, normalized conversations, or destructive employment cleanup until a
-later phase is explicitly approved.
+the MVP. Do not add businesses/business members, payments, moderation,
+normalized conversations, or destructive employment cleanup until a later phase
+is explicitly approved.
+A read-only admin overview at `/admin` was approved and added on 2026-10-01; see
+`README.md`. It has no write actions.
 
 ## What Phase 1 contains
 
