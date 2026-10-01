@@ -269,7 +269,7 @@ export default async function ProfilePage(props: { params: Promise<{ id: string 
               databasen kräver leverantörsrollen hos mottagaren. Tjänsterna
               visas därför bara för ägaren tills hen byter tillbaka. */}
           {(isProvider || (isOwn && services && services.length > 0)) && (
-            <section>
+            <section id="tjanster" className="scroll-mt-24">
               <div className="mb-4 flex items-end justify-between gap-4">
                 <h2 className="page-heading text-xl">
                   {isOwn ? 'Dina tjänster' : 'Tjänster'}
