@@ -14,12 +14,18 @@ export async function GET(request: NextRequest) {
   // Small bounded batch; a lease recovers work if this invocation is terminated.
   for (const item of items ?? []) {
     try {
-      const { data, error: userError } = await admin.auth.admin.getUserById(item.recipient_id)
-      if (userError || !data.user?.email) throw new Error('Recipient unavailable')
-      const { data: preferences, error: preferencesError } = await admin.from('user_private_profiles').select('email_jobs, email_messages').eq('user_id', item.recipient_id).maybeSingle()
-      if (preferencesError) throw preferencesError
-      const disabled = (item.kind === 'job' && preferences?.email_jobs === false) || (item.kind === 'message' && preferences?.email_messages === false)
-      if (!disabled) await sendQueuedNotification({ ...item, to: data.user.email })
+      // Referensförfrågningar går till tidigare kunder utan konto och har
+      // därför en adress i stället för en användare, och inga inställningar.
+      if (item.recipient_email) {
+        await sendQueuedNotification({ ...item, to: item.recipient_email })
+      } else {
+        const { data, error: userError } = await admin.auth.admin.getUserById(item.recipient_id)
+        if (userError || !data.user?.email) throw new Error('Recipient unavailable')
+        const { data: preferences, error: preferencesError } = await admin.from('user_private_profiles').select('email_jobs, email_messages').eq('user_id', item.recipient_id).maybeSingle()
+        if (preferencesError) throw preferencesError
+        const disabled = (item.kind === 'job' && preferences?.email_jobs === false) || (item.kind === 'message' && preferences?.email_messages === false)
+        if (!disabled) await sendQueuedNotification({ ...item, to: data.user.email })
+      }
       const { error: ackError } = await admin.from('notification_outbox').update({ sent_at: new Date().toISOString(), last_error: null }).eq('id', item.id).eq('lease_token', item.lease_token)
       if (ackError) throw ackError
       sent++

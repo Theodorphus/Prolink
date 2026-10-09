@@ -78,6 +78,12 @@ export default async function ServicePage(props: { params: Promise<{ id: string 
   if (summaryError) throw new Error('Omdömen kunde inte hämtas.')
   const reviewCount = (summary as { total: number; average: number | null }).total
   const avgRating = (summary as { total: number; average: number | null }).average
+  const [{ data: badgeRows }, { data: referenceRows }] = await Promise.all([
+    supabase.rpc('company_badge', { p_user_id: provider.id }),
+    supabase.rpc('external_reference_list', { p_user_id: provider.id }),
+  ])
+  const verified = Boolean((badgeRows as unknown[] | null)?.length)
+  const referenceCount = (referenceRows as unknown[] | null)?.length ?? 0
 
   const isOwn = user?.id === provider.id
   // Efter ett rollbyte till uppdragsgivare kan ägaren inte ta emot
@@ -228,6 +234,11 @@ export default async function ServicePage(props: { params: Promise<{ id: string 
                   </p>
                   {provider.hourly_rate && (
                     <p className="text-sm text-slate-500">{formatCurrency(provider.hourly_rate)}/tim</p>
+                  )}
+                  {(verified || referenceCount > 0) && (
+                    <p className="mt-0.5 text-xs font-semibold text-emerald-700">
+                      {[verified && '✓ Verifierat företag', referenceCount > 0 && `${referenceCount} ${referenceCount === 1 ? 'referens' : 'referenser'}`].filter(Boolean).join(' · ')}
+                    </p>
                   )}
                 </div>
               </Link>

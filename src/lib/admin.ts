@@ -71,3 +71,19 @@ export async function loadAdminInsights() {
     internalEmails: internalEmails(),
   })
 }
+
+// Företagsverifieringar att granska och hur referensförfrågningarna går.
+// Organisationsnumret visas bara här, för kontrollen mot Bolagsverket.
+export async function loadTrustReview() {
+  const admin = createAdminClient()
+  const [verifications, references] = await Promise.all([
+    selectAll((from, to) => admin.from('company_verifications').select('user_id, org_number, company_name, f_skatt, status, submitted_at, reviewed_at, review_note, user:users(name)').order('submitted_at', { ascending: false }).range(from, to)),
+    selectAll((from, to) => admin.from('external_references').select('provider_id, created_at, submitted_at').order('created_at').range(from, to)),
+  ])
+  return {
+    verifications: verifications.map(row => ({ ...row, name: (Array.isArray(row.user) ? row.user[0] : row.user)?.name ?? 'Namnlös' })),
+    referencesSent: references.length,
+    referencesAnswered: references.filter(row => row.submitted_at).length,
+    providersAsking: new Set(references.map(row => row.provider_id)).size,
+  }
+}

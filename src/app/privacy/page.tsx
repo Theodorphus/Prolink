@@ -31,7 +31,9 @@ export default function PrivacyPage() {
           <h2 className="text-xl font-bold text-gray-900 mb-3">2. Vilka uppgifter vi samlar in</h2>
           <ul className="list-disc pl-5 space-y-1 text-sm">
             <li><strong>Kontouppgifter:</strong> namn, e-postadress och lösenord (krypterat) när du registrerar dig.</li>
-            <li><strong>Profiluppgifter:</strong> biografi, kompetenser, timpris, profilbild och LinkedIn-URL som du väljer att lägga till.</li>
+            <li><strong>Profiluppgifter:</strong> biografi, kompetenser, timpris, profilbild, LinkedIn-URL och hemsida som du väljer att lägga till.</li>
+            <li><strong>Företagsverifiering:</strong> organisationsnummer, företagsnamn och uppgift om F-skatt om du ber om att få ditt företag verifierat. För enskild firma är organisationsnumret ditt personnummer. Det visas aldrig för andra användare och används bara för att kontrollera företaget mot Bolagsverket och Skatteverket; profilen visar endast företagsnamnet.</li>
+            <li><strong>Referenser:</strong> om en frilansare ber dig om en referens behandlar vi din e-postadress för att skicka förfrågan. Lämnar du ett omdöme visas ditt namn, eventuellt företag, betyg och kommentar på frilansarens profil. E-postadressen visas aldrig.</li>
             <li><strong>Innehåll:</strong> uppdrag, tjänstebeskrivningar, offerter och chattmeddelanden du skapar på plattformen.</li>
             <li><strong>Tekniska uppgifter:</strong> IP-adress, webbläsartyp och loggar via Supabase och Vercel.</li>
           </ul>

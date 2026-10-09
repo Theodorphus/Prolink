@@ -14,6 +14,7 @@ import {
   optionalText,
   requiredText,
 } from '@/lib/validation'
+import { normalizeWebsite, WORK_MODES } from '@/lib/trust.mjs'
 
 type EditableProfile = User & Pick<UserPrivateProfile, 'phone'> & { email_jobs?: boolean; email_messages?: boolean; notification_categories?: string[] }
 
@@ -23,6 +24,7 @@ export default function EditProfileForm({ profile }: { profile: EditableProfile 
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
   const [skillsInput, setSkillsInput] = useState(profile.skills?.join(', ') ?? '')
+  const [bioLength, setBioLength] = useState(profile.bio?.trim().length ?? 0)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -49,6 +51,9 @@ export default function EditProfileForm({ profile }: { profile: EditableProfile 
         throw new InputValidationError('Timpriset är ogiltigt.')
       }
 
+      const website = normalizeWebsite(form.get('website_url'))
+      if (website === undefined) throw new InputValidationError('Hemsidan måste vara en webbadress, till exempel dittforetag.se.')
+
       const { error: publicError } = await supabase
         .from('users')
         .update({
@@ -57,6 +62,9 @@ export default function EditProfileForm({ profile }: { profile: EditableProfile 
           hourly_rate: hourlyRate,
           skills: skills.length > 0 ? skills : null,
           linkedin_url: optionalHttpUrl(form.get('linkedin_url'), 'LinkedIn'),
+          website_url: website,
+          location: optionalText(form.get('location'), 'Ort', 80),
+          ...(profile.role === 'provider' ? { work_mode: (['remote', 'onsite', 'hybrid'] as const).find(mode => mode === form.get('work_mode')) ?? null } : {}),
         })
         .eq('id', profile.id)
 
@@ -131,14 +139,61 @@ export default function EditProfileForm({ profile }: { profile: EditableProfile 
 
           <div className="space-y-1.5">
             <label htmlFor="profile-bio" className="block text-sm font-medium text-gray-700">Om mig</label>
+            {/* Ett tomt fält gav enradiga beskrivningar. Stödfrågorna visar vad
+                köpare letar efter. */}
+            {profile.role === 'provider' && (
+              <ul id="profile-bio-hjalp" className="list-disc space-y-0.5 pl-5 text-xs text-gray-500">
+                <li>Vem hjälper du, och med vad?</li>
+                <li>Vad levererar du konkret, och vad har du gjort tidigare?</li>
+                <li>Hur jobbar du: tidsplan, kontakt och vad kunden behöver bidra med?</li>
+              </ul>
+            )}
             <textarea
               id="profile-bio"
               name="bio"
               defaultValue={profile.bio ?? ''}
-              rows={3}
-              placeholder="Berätta kort om dig själv..."
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              rows={profile.role === 'provider' ? 7 : 3}
+              maxLength={3000}
+              onChange={event => setBioLength(event.target.value.trim().length)}
+              aria-describedby={profile.role === 'provider' ? 'profile-bio-hjalp profile-bio-antal' : undefined}
+              placeholder={profile.role === 'provider'
+                ? 'T.ex. Jag bygger snabba webbplatser åt små företag i Göteborg. Senast gjorde jag ... Du får en färdig sida inom två veckor och ...'
+                : 'Berätta kort om dig själv...'}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
             />
+            {profile.role === 'provider' && (
+              <p id="profile-bio-antal" className={`text-xs ${bioLength >= 150 ? 'text-emerald-700' : 'text-gray-500'}`}>
+                {bioLength} tecken{bioLength < 150 ? ` · minst 150 rekommenderas` : ''}
+              </p>
+            )}
+          </div>
+
+          <div className={profile.role === 'provider' ? 'grid gap-4 sm:grid-cols-2' : ''}>
+            <div className="space-y-1.5">
+              <label htmlFor="profile-location" className="block text-sm font-medium text-gray-700">Ort</label>
+              <input
+                id="profile-location" autoComplete="address-level2"
+                name="location"
+                maxLength={80}
+                defaultValue={profile.location ?? ''}
+                placeholder="T.ex. Göteborg"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            {profile.role === 'provider' && (
+              <div className="space-y-1.5">
+                <label htmlFor="profile-work-mode" className="block text-sm font-medium text-gray-700">Arbetssätt</label>
+                <select
+                  id="profile-work-mode"
+                  name="work_mode"
+                  defaultValue={profile.work_mode ?? ''}
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Välj</option>
+                  {Object.entries(WORK_MODES).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                </select>
+              </div>
+            )}
           </div>
 
           {profile.role === 'provider' && (
@@ -177,6 +232,18 @@ export default function EditProfileForm({ profile }: { profile: EditableProfile 
               type="url"
               defaultValue={profile.linkedin_url ?? ''}
               placeholder="https://linkedin.com/in/ditt-namn"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label htmlFor="profile-website" className="block text-sm font-medium text-gray-700">Hemsida eller portfolio (valfritt)</label>
+            <input
+              id="profile-website" autoComplete="url"
+              name="website_url"
+              inputMode="url"
+              defaultValue={profile.website_url ?? ''}
+              placeholder="dittforetag.se"
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>

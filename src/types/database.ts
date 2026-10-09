@@ -12,6 +12,9 @@ export interface User {
   hourly_rate: number | null
   avatar_url: string | null
   linkedin_url: string | null
+  website_url: string | null
+  location: string | null
+  work_mode: 'remote' | 'onsite' | 'hybrid' | null
   created_at: string
 }
 

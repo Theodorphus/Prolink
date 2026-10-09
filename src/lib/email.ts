@@ -42,14 +42,21 @@ function safeSubjectValue(value: string): string {
 // cron-rutten. Resend kastar inte vid HTTP-fel utan returnerar { data, error },
 // så svaret måste kontrolleras: annars ser ett nekat utskick (t.ex. 403 för
 // overifierad domän) ut som ett lyckat, och kön markerar det som skickat.
-export async function sendQueuedNotification(item: { id: string; to: string; subject: string; body: string; path: string }) {
+export async function sendQueuedNotification(item: { id: string; kind: string; to: string; subject: string; body: string; path: string }) {
   const problem = emailConfigurationProblem()
   if (problem) throw new Error(problem)
-  if (!/^\/(jobs|offers|messages)\/[0-9a-f-]+$/i.test(item.path)) throw new Error('Invalid notification path')
+  const reference = item.kind === 'reference'
+  const validPath = reference ? /^\/referens\/[A-Za-z0-9_-]{32,}$/ : /^\/(jobs|offers|messages)\/[0-9a-f-]+$/i
+  if (!validPath.test(item.path)) throw new Error('Invalid notification path')
+  // Mottagaren av en referensförfrågan har inget konto och inga inställningar.
+  const action = reference ? 'Lämna ditt omdöme' : 'Öppna i Prolink'
+  const footer = reference
+    ? 'Du får det här mejlet för att en frilansare angett dig som tidigare kund. Känner du inte igen det kan du ignorera mejlet.'
+    : 'Ändra mejlnotiser i din profil.'
   const result = await resend.emails.send({
     from: FROM, to: item.to, subject: safeSubjectValue(item.subject),
-    html: `<h2>${escapeHtml(item.subject)}</h2><p>${escapeHtml(item.body)}</p><p><a href="${escapeHtml(APP_URL + item.path)}">Öppna i Prolink</a></p><p>Ändra mejlnotiser i din profil.</p>`,
-    text: `${item.subject}\n${item.body}\n${APP_URL + item.path}\nÄndra mejlnotiser i din profil.`,
+    html: `<h2>${escapeHtml(item.subject)}</h2><p>${escapeHtml(item.body)}</p><p><a href="${escapeHtml(APP_URL + item.path)}">${action}</a></p><p>${footer}</p>`,
+    text: `${item.subject}\n${item.body}\n${APP_URL + item.path}\n${footer}`,
   }, { idempotencyKey: `notification/${item.id}` })
   if (result.error) throw new Error(`Resend nekade utskicket: ${result.error.message ?? 'okänt fel'}`)
 }

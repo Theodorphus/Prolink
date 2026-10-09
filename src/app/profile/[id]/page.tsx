@@ -18,6 +18,10 @@ import SwitchRoleButton from '@/components/profile/SwitchRoleButton'
 import DeleteJobButton from '@/components/jobs/DeleteJobButton'
 import ReviewCard from '@/components/reviews/ReviewCard'
 import StarRating from '@/components/reviews/StarRating'
+import TrustPanel, { type CompanyVerification, type ReferenceRequest } from '@/components/profile/TrustPanel'
+import { profileCompleteness, responseTimeLabel, websiteLabel, WORK_MODES } from '@/lib/trust.mjs'
+import Portfolio, { type PortfolioItem } from '@/components/profile/Portfolio'
+import ProfileCompleteness from '@/components/profile/ProfileCompleteness'
 
 export async function generateMetadata(props: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const params = await props.params
@@ -57,7 +61,7 @@ export default async function ProfilePage(props: { params: Promise<{ id: string 
   // RLS och hämtas bara för den inloggade ägaren nedan.
   const { data: profile, error: detailError } = await supabase
     .from('users')
-    .select('id, role, name, bio, skills, hourly_rate, avatar_url, linkedin_url, created_at')
+    .select('id, role, name, bio, skills, hourly_rate, avatar_url, linkedin_url, website_url, location, work_mode, created_at')
     .eq('id', params.id)
     .single()
 
@@ -107,6 +111,35 @@ export default async function ProfilePage(props: { params: Promise<{ id: string 
   if (summaryError) throw new Error('Omdömen kunde inte hämtas.')
   const avgRating = (summary as { average: number | null }).average
 
+  // Förtroendesignaler utanför Prolink: verifierat företag och referenser från
+  // tidigare kunder. Ägaren ser dessutom sina egna uppgifter och inbjudningar.
+  const [{ data: badgeRows, error: badgeError }, { data: externalReferences, error: externalError }, own, { data: portfolioRows, error: portfolioError }, { data: responseRows }] = await Promise.all([
+    supabase.rpc('company_badge', { p_user_id: params.id }),
+    supabase.rpc('external_reference_list', { p_user_id: params.id }),
+    isOwn && isProvider
+      ? Promise.all([supabase.rpc('my_company_verification'), supabase.rpc('my_reference_requests')])
+      : Promise.resolve(null),
+    supabase.from('portfolio_items').select('id, title, description, url, image_url').eq('user_id', params.id).order('created_at').limit(6),
+    isProvider ? supabase.rpc('provider_response_time', { p_user_id: params.id }) : Promise.resolve({ data: null }),
+  ])
+  if (badgeError || externalError || portfolioError || own?.some(result => result.error)) throw new Error('Profilens referenser kunde inte hämtas.')
+  const portfolio = (portfolioRows ?? []) as PortfolioItem[]
+  const response = (responseRows as { median_hours: number | null; samples: number }[] | null)?.[0]
+  const responseTime = response ? responseTimeLabel(response.median_hours === null ? null : Number(response.median_hours), response.samples) : null
+  const place = [profile.location, isProvider && profile.work_mode ? WORK_MODES[profile.work_mode as keyof typeof WORK_MODES] : null].filter(Boolean).join(' · ')
+  const ownCompany = own ? ((own[0].data ?? []) as CompanyVerification[])[0] ?? null : null
+  const ownReferences = own ? (own[1].data ?? []) as ReferenceRequest[] : []
+  const completeness = own ? profileCompleteness({
+    ...profile,
+    services: serviceCount ?? 0,
+    portfolio: portfolio.length,
+    companySubmitted: Boolean(ownCompany && ownCompany.status !== 'rejected'),
+    referencesRequested: ownReferences.length,
+  }) : null
+  const badge = (badgeRows as { company_name: string; f_skatt: boolean }[] | null)?.[0] ?? null
+  const references = (externalReferences ?? []) as { id: string; client_name: string; client_company: string | null; rating: number; comment: string | null; submitted_at: string }[]
+  const referenceAverage = references.length ? references.reduce((sum, reference) => sum + reference.rating, 0) / references.length : null
+
   // Strukturerad data bara för frilansare, samma urval som sitemapen.
   const profileData = isProvider ? {
     '@context': 'https://schema.org',
@@ -119,7 +152,7 @@ export default async function ProfilePage(props: { params: Promise<{ id: string 
       ...(profile.bio ? { description: profile.bio.slice(0, 500) } : {}),
       ...(profile.avatar_url ? { image: profile.avatar_url } : {}),
       ...(profile.skills?.length ? { knowsAbout: profile.skills } : {}),
-      ...(profile.linkedin_url ? { sameAs: [profile.linkedin_url] } : {}),
+      ...(profile.linkedin_url || profile.website_url ? { sameAs: [profile.linkedin_url, profile.website_url].filter(Boolean) } : {}),
     },
   } : null
 
@@ -150,6 +183,15 @@ export default async function ProfilePage(props: { params: Promise<{ id: string 
                 <p className="muted mt-1 text-xs font-semibold uppercase tracking-wider">
                   {isProvider ? 'Frilansare' : 'Uppdragsgivare'}
                 </p>
+                {badge && (
+                  <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800 ring-1 ring-inset ring-emerald-200" title="Kontrollerat av Prolink mot Bolagsverket och Skatteverket">
+                    <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                    Verifierat företag{badge.f_skatt ? ' · F-skatt' : ''}
+                  </p>
+                )}
+                {badge && <p className="muted mt-1 text-xs">{badge.company_name}</p>}
+                {place && <p className="mt-2 text-sm font-medium text-slate-600">{place}</p>}
+                {responseTime && <p className="mt-1 text-xs font-semibold text-emerald-700">{responseTime}</p>}
               </div>
 
               {avgRating !== null ? (
@@ -159,10 +201,19 @@ export default async function ProfilePage(props: { params: Promise<{ id: string 
                     {avgRating.toFixed(1)} av 5 · {reviewCount} {reviewCount === 1 ? 'omdöme' : 'omdömen'}
                   </p>
                 </div>
-              ) : (
+              ) : referenceAverage === null ? (
                 <p className="muted border-y border-slate-100 py-4 text-xs">
                   Inga omdömen ännu
                 </p>
+              ) : null}
+
+              {referenceAverage !== null && (
+                <a href="#referenser" className={`flex flex-col items-center gap-1.5 border-b border-slate-100 pb-4 ${avgRating === null ? 'border-t pt-4' : ''}`}>
+                  <StarRating value={Math.round(referenceAverage)} readonly size="sm" />
+                  <span className="text-xs font-medium text-slate-600">
+                    {referenceAverage.toFixed(1)} av 5 · {references.length} {references.length === 1 ? 'referens' : 'referenser'} från tidigare kunder
+                  </span>
+                </a>
               )}
 
               {profile.bio && (
@@ -208,6 +259,20 @@ export default async function ProfilePage(props: { params: Promise<{ id: string 
                 </a>
               )}
 
+              {profile.website_url && (
+                <a
+                  href={profile.website_url}
+                  target="_blank"
+                  rel="noopener noreferrer nofollow ugc"
+                  className="flex items-center justify-center gap-1.5 text-xs font-semibold text-blue-700 hover:underline"
+                >
+                  <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9 9 0 100-18 9 9 0 000 18zm0 0c2.5-2.4 3.75-5.4 3.75-9S14.5 5.4 12 3m0 18c-2.5-2.4-3.75-5.4-3.75-9S9.5 5.4 12 3M3.6 9h16.8M3.6 15h16.8" />
+                  </svg>
+                  {websiteLabel(profile.website_url)}
+                </a>
+              )}
+
               <p className="muted text-xs">Medlem sedan {formatDate(profile.created_at)}</p>
 
               {/* Kontakt kräver inloggning först när förfrågan skickas,
@@ -226,7 +291,10 @@ export default async function ProfilePage(props: { params: Promise<{ id: string 
 
         <div className="space-y-8 lg:col-span-2">
 
+          {completeness && <ProfileCompleteness percent={completeness.percent} missing={completeness.missing} />}
+
           {isOwn && (
+            <div id="redigera" className="scroll-mt-24">
             <EditProfileForm
               profile={{
                 ...profile,
@@ -234,7 +302,16 @@ export default async function ProfilePage(props: { params: Promise<{ id: string 
                 phone: privateProfile?.phone ?? null,
               }}
             />
+            </div>
           )}
+
+          {own && (
+            <div id="fortroende" className="scroll-mt-24">
+              <TrustPanel company={ownCompany} references={ownReferences} />
+            </div>
+          )}
+
+          {isProvider && <Portfolio userId={profile.id} items={portfolio} editable={isOwn} name={profile.name} />}
 
           {/* Kontot har en roll i taget, eftersom user_role är ett enum med
               två värden och fjorton ställen i koden grindar på det. Den som
@@ -367,6 +444,31 @@ export default async function ProfilePage(props: { params: Promise<{ id: string 
                   </p>
                 </div>
               )}
+            </section>
+          )}
+
+          {references.length > 0 && (
+            <section id="referenser" className="scroll-mt-24">
+              <h2 className="page-heading text-xl">Referenser från tidigare kunder ({references.length})</h2>
+              {/* Lagen kräver att det framgår hur omdömen kontrolleras. */}
+              <p className="muted mb-4 mt-1 text-sm">
+                Lämnade av kunder som {profile.name} bjudit in via e-post. Prolink har kontrollerat att omdömet kom från kundens e-postadress, men inte att uppdraget utfördes via Prolink.
+              </p>
+              <div className="surface divide-y divide-slate-100 px-6">
+                {references.map(reference => (
+                  <div key={reference.id} className="py-4">
+                    <div className="mb-1 flex items-center justify-between gap-2">
+                      <p className="text-sm font-semibold text-gray-900">
+                        {reference.client_name}{reference.client_company ? `, ${reference.client_company}` : ''}
+                      </p>
+                      <span className="shrink-0 text-xs text-gray-400">{formatDate(reference.submitted_at)}</span>
+                    </div>
+                    <StarRating value={reference.rating} readonly size="sm" />
+                    <p className="mt-1 text-xs font-medium text-slate-500">Extern kund · verifierad via e-post</p>
+                    {reference.comment && <p className="mt-2 text-sm leading-relaxed text-gray-600">{reference.comment}</p>}
+                  </div>
+                ))}
+              </div>
             </section>
           )}
 

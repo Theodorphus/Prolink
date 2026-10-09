@@ -162,4 +162,57 @@ test('real PostgreSQL migration replay and marketplace authorization', async t =
     assert.deepEqual(await notices(winner), expected)
   })
 
+  await t.test('company verification is private until an admin verifies it', async () => {
+    await assert.rejects(as(customer, `select submit_company_verification('5560360793','Kundens AB',true)`), { code: '42501' })
+    await as(provider, `select submit_company_verification('5560360793','Leverantören AB',true)`)
+    await assert.rejects(as(provider, 'select * from company_verifications'))
+    await assert.rejects(as(provider, `update company_verifications set status='verified'`))
+    assert.equal((await as(outsider, 'select * from company_badge($1)', [provider])).rows.length, 0)
+    assert.equal((await as(provider, 'select status from my_company_verification()')).rows[0].status, 'pending')
+    await db.query(`update company_verifications set status='verified', reviewed_at=now() where user_id=$1`, [provider])
+    const badge = (await as(outsider, 'select * from company_badge($1)', [provider])).rows[0]
+    assert.deepEqual({ name: badge.company_name, fSkatt: badge.f_skatt, org: badge.org_number }, { name: 'Leverantören AB', fSkatt: true, org: undefined })
+    // Ändrade uppgifter granskas på nytt.
+    await as(provider, `select submit_company_verification('5560360793','Annat AB',false)`)
+    assert.equal((await as(outsider, 'select * from company_badge($1)', [provider])).rows.length, 0)
+  })
+
+  await t.test('external references expose only submitted reviews and never the email', async () => {
+    await assert.rejects(as(provider, `insert into external_references(provider_id,client_email,token_hash) values ($1,'kund@example.com','x')`, [provider]))
+    await db.query(`insert into external_references(provider_id,client_email,token_hash) values ($1,'kund@example.com','a'), ($1,'annan@example.com','b')`, [provider])
+    await db.query(`update external_references set client_name='Kund', rating=5, comment='Bra', submitted_at=now() where token_hash='a'`)
+    await assert.rejects(as(outsider, 'select * from external_references'))
+    const listed = (await as(outsider, 'select * from external_reference_list($1)', [provider])).rows
+    assert.equal(listed.length, 1)
+    assert.equal(listed[0].client_email, undefined)
+    assert.equal((await as(provider, 'select * from my_reference_requests()')).rows.length, 2)
+    assert.equal((await as(outsider, 'select * from my_reference_requests()')).rows.length, 0)
+    await db.query(`insert into notification_outbox(recipient_email,kind,subject,body,path,dedupe_key) values ('kund@example.com','reference','s','b','/referens/x','reference:test')`)
+    await assert.rejects(db.query(`insert into notification_outbox(kind,subject,body,path,dedupe_key) values ('reference','s','b','/referens/y','reference:none')`))
+  })
+
+  await t.test('portfolio items belong to their owner, use their own images and are capped at six', async () => {
+    const own = `https://x.supabase.co/storage/v1/object/public/avatars/${provider}/portfolio/a.png`
+    const foreign = `https://x.supabase.co/storage/v1/object/public/avatars/${outsider}/portfolio/a.png`
+    await assert.rejects(as(outsider, `insert into portfolio_items(user_id,title) values ($1,'Fake')`, [provider]))
+    await assert.rejects(as(provider, `insert into portfolio_items(user_id,title,image_url) values ($1,'Stolen',$2)`, [provider, foreign]))
+    await as(provider, `insert into portfolio_items(user_id,title,image_url) values ($1,'Work 1',$2)`, [provider, own])
+    for (let n = 2; n <= 6; n++) await as(provider, `insert into portfolio_items(user_id,title,url) values ($1,$2,'https://example.com')`, [provider, `Work ${n}`])
+    await assert.rejects(as(provider, `insert into portfolio_items(user_id,title) values ($1,'Work 7')`, [provider]), { code: '54000' })
+    await as(outsider, 'delete from portfolio_items where user_id=$1', [provider])
+    assert.equal((await as(outsider, 'select count(*)::int as n from portfolio_items where user_id=$1', [provider])).rows[0].n, 6)
+  })
+
+  await t.test('response time is a median over answered inquiries and needs no message access', async () => {
+    const before = (await as(outsider, 'select * from provider_response_time($1)', [provider])).rows[0]
+    assert.equal(typeof before.samples, 'number')
+    await assert.rejects(as(outsider, 'select * from messages where offer_id=$1', [offer]).then(result => { assert.equal(result.rows.length, 1) }))
+  })
+
+  await t.test('users can set their own website but not another user’s', async () => {
+    await as(provider, `update users set website_url='https://example.com/' where id=$1`, [provider])
+    await as(outsider, `update users set website_url='https://evil.example/' where id=$1`, [provider])
+    assert.equal((await db.query('select website_url from users where id=$1', [provider])).rows[0].website_url, 'https://example.com/')
+  })
+
 })

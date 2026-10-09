@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { loadAdminInsights, requireAdmin } from '@/lib/admin'
+import { loadAdminInsights, loadTrustReview, requireAdmin } from '@/lib/admin'
+import { reviewCompanyVerification } from './actions'
+import { formatOrgNumber } from '@/lib/trust.mjs'
 import { getCategoryLabel } from '@/lib/categories'
 import { formatCurrency } from '@/lib/utils'
 import { Badge, StatusBadge } from '@/components/ui/Badge'
@@ -13,14 +15,15 @@ const EVENT_LABEL = {
 } as const
 
 const NAV = [
-  ['senaste', 'Senaste aktivitet'], ['att-gora', 'Att uppmärksamma'], ['dina-uppdrag', 'Dina uppdrag'], ['kunders-uppdrag', 'Kunders uppdrag'],
+  ['senaste', 'Senaste aktivitet'], ['att-gora', 'Att uppmärksamma'], ['verifiering', 'Verifiering'], ['dina-uppdrag', 'Dina uppdrag'], ['kunders-uppdrag', 'Kunders uppdrag'],
   ['tratt', 'Tratt'], ['anvandare', 'Användare'], ['kategorier', 'Kategorier'], ['veckor', 'Veckor'],
   ['tjanster', 'Tjänster'], ['handelser', 'Händelser'], ['mejl', 'Mejlnotiser'],
 ] as const
 
 export default async function AdminPage() {
   await requireAdmin()
-  const data = await loadAdminInsights()
+  const [data, trust] = await Promise.all([loadAdminInsights(), loadTrustReview()])
+  const pendingVerifications = trust.verifications.filter(row => row.status === 'pending')
   const { kpis, recent } = data
   const providers = data.people.filter(person => person.role === 'provider')
 
@@ -90,7 +93,49 @@ export default async function AdminPage() {
         </Section>
 
         <Section id="att-gora" title="Att uppmärksamma">
-          <Alerts alerts={data.alerts} />
+          <Alerts alerts={pendingVerifications.length
+            ? [{ level: 'warning', text: `${pendingVerifications.length} ${pendingVerifications.length === 1 ? 'frilansare väntar' : 'frilansare väntar'} på företagsverifiering. Se Verifiering nedan.` }, ...data.alerts]
+            : data.alerts} />
+        </Section>
+
+        <Section id="verifiering" title="Verifiering och referenser" description={`Referensförfrågningar: ${trust.referencesSent} skickade av ${trust.providersAsking} frilansare, ${trust.referencesAnswered} besvarade. Företag: kontrollera namn och status på Bolagsverket (eller allabolag.se) och F-skatt på Skatteverket innan du godkänner. Organisationsnumret visas bara här.`}>
+          {trust.verifications.length === 0 ? <p className="surface p-5 text-sm text-slate-600">Ingen har skickat in företagsuppgifter ännu.</p> : (
+            <ul className="space-y-3">
+              {trust.verifications.map(row => (
+                <li key={row.user_id} className="surface p-5 text-sm">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <Link href={`/profile/${row.user_id}`} className="font-semibold text-slate-900 hover:text-accent-strong">{row.name}</Link>
+                      <p className="mt-1 text-slate-700">{row.company_name} · <span className="tabular-nums">{formatOrgNumber(row.org_number)}</span> · {row.f_skatt ? 'Uppger F-skatt' : 'Uppger inte F-skatt'}</p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        Inskickad {when(row.submitted_at)}{row.reviewed_at ? ` · granskad ${when(row.reviewed_at)}` : ''}
+                        {' · '}<a href={`https://www.google.com/search?q=${encodeURIComponent(row.org_number.slice(0, 6) + '-' + row.org_number.slice(6))}`} target="_blank" rel="noopener noreferrer" className="font-semibold text-blue-700 hover:underline">Sök organisationsnumret</a>
+                      </p>
+                      {row.review_note && <p className="mt-1 text-xs text-red-700">{row.review_note}</p>}
+                    </div>
+                    <Badge variant={row.status === 'verified' ? 'success' : row.status === 'rejected' ? 'danger' : 'warning'}>
+                      {row.status === 'verified' ? 'Verifierad' : row.status === 'rejected' ? 'Avslagen' : 'Väntar'}
+                    </Badge>
+                  </div>
+                  {row.status !== 'verified' && (
+                    <form action={reviewCompanyVerification} className="mt-4 flex flex-wrap items-center gap-2">
+                      <input type="hidden" name="user_id" value={row.user_id} />
+                      <button name="decision" value="verified" className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700">Godkänn</button>
+                      <input name="note" maxLength={500} placeholder="Skäl vid avslag (visas för frilansaren)" className="min-w-0 flex-1 rounded-lg border border-slate-300 px-3 py-1.5 text-xs" />
+                      <button name="decision" value="rejected" className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-bold text-red-700 hover:bg-red-50">Avslå</button>
+                    </form>
+                  )}
+                  {row.status === 'verified' && (
+                    <form action={reviewCompanyVerification} className="mt-3">
+                      <input type="hidden" name="user_id" value={row.user_id} />
+                      <input type="hidden" name="note" value="Verifieringen har återkallats." />
+                      <button name="decision" value="rejected" className="text-xs font-semibold text-slate-500 hover:text-red-700">Återkalla märket</button>
+                    </form>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
         </Section>
 
         <Section id="dina-uppdrag" title="Dina uppdrag: får de svar?" description="Uppdrag som publicerats från interna konton, med offerterna de fått och hur många frilansare som fått mejl om dem.">
