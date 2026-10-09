@@ -104,3 +104,13 @@ test('accounts that cannot sign in are internal, not real customers', () => {
   assert.match(insights.alerts.map(alert => alert.text).join('\n'), /1 konton saknar fungerande inloggning/)
   assert.equal(insights.externalJobs[0].customerEmail, 'buyer@example.com')
 })
+
+test('senaste aktiviteten listar nyast först och räknar bara externa senaste veckan', () => {
+  const { recent } = buildAdminInsights(fixture(), now)
+  assert.deepEqual(recent.signups.map(p => p.id), ['late', 'buyer', 'early', 'theo'])
+  assert.equal(recent.signups7d, 1)
+  assert.equal(recent.offers[0].jobTitle, 'Påhittat')
+  assert.equal(recent.offers[0].customerName, 'theo')
+  assert.equal(recent.offers7d, 0)
+  assert.equal(recent.conversations.length, 1)
+})

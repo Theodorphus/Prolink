@@ -3,8 +3,8 @@ import Link from 'next/link'
 import { loadAdminInsights, requireAdmin } from '@/lib/admin'
 import { getCategoryLabel } from '@/lib/categories'
 import { formatCurrency } from '@/lib/utils'
-import { Badge } from '@/components/ui/Badge'
-import { Alerts, Funnel, JobActivity, Section, StatTile, Table, day, num, td, th, when } from '@/components/admin/AdminUi'
+import { Badge, StatusBadge } from '@/components/ui/Badge'
+import { Alerts, Funnel, JobActivity, RecentList, Section, StatTile, Table, day, num, td, th, when } from '@/components/admin/AdminUi'
 
 export const metadata: Metadata = { title: 'Admin', robots: { index: false, follow: false } }
 
@@ -13,7 +13,7 @@ const EVENT_LABEL = {
 } as const
 
 const NAV = [
-  ['att-gora', 'Att uppmärksamma'], ['dina-uppdrag', 'Dina uppdrag'], ['kunders-uppdrag', 'Kunders uppdrag'],
+  ['senaste', 'Senaste aktivitet'], ['att-gora', 'Att uppmärksamma'], ['dina-uppdrag', 'Dina uppdrag'], ['kunders-uppdrag', 'Kunders uppdrag'],
   ['tratt', 'Tratt'], ['anvandare', 'Användare'], ['kategorier', 'Kategorier'], ['veckor', 'Veckor'],
   ['tjanster', 'Tjänster'], ['handelser', 'Händelser'], ['mejl', 'Mejlnotiser'],
 ] as const
@@ -21,7 +21,7 @@ const NAV = [
 export default async function AdminPage() {
   await requireAdmin()
   const data = await loadAdminInsights()
-  const { kpis } = data
+  const { kpis, recent } = data
   const providers = data.people.filter(person => person.role === 'provider')
 
   return (
@@ -49,6 +49,46 @@ export default async function AdminPage() {
       </div>
 
       <div className="mt-12 space-y-12">
+        <Section id="senaste" title="Senaste aktivitet" description="Det senaste av varje slag, interna konton märkta. Siffrorna gäller senaste sju dagarna utan interna konton. Meddelandenas innehåll visas inte.">
+          <div className="grid gap-3 lg:grid-cols-3">
+            <RecentList title="Registreringar" count={recent.signups7d} empty="Inga konton ännu.">
+              {recent.signups.map(person => (
+                <li key={person.id} className="px-4 py-3 text-sm">
+                  <Link href={`/profile/${person.id}`} className="font-semibold text-slate-900 hover:text-accent-strong">{person.name}</Link>
+                  {person.internal && <Badge className="ml-2">Intern</Badge>}
+                  <div className="text-xs text-slate-500">{person.role === 'customer' ? 'Köpare' : 'Frilansare'} · {person.email ?? '–'}</div>
+                  <time className="text-xs tabular-nums text-slate-500">{when(person.createdAt)}</time>
+                </li>
+              ))}
+            </RecentList>
+            <RecentList title="Offerter" count={recent.offers7d} empty="Inga offerter har skickats ännu.">
+              {recent.offers.map(offer => (
+                <li key={offer.id} className="px-4 py-3 text-sm">
+                  <Link href={`/profile/${offer.providerId}`} className="font-semibold text-slate-900 hover:text-accent-strong">{offer.providerName}</Link>
+                  {offer.internal && <Badge className="ml-2">Intern</Badge>}
+                  <div className="text-xs text-slate-500">
+                    på <Link href={`/jobs/${offer.jobId}`} className="hover:text-accent-strong">{offer.jobTitle}</Link> ({offer.customerName}) · {formatCurrency(offer.price)}{offer.priceType === 'hourly' ? '/tim' : ''}
+                  </div>
+                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                    <time className="tabular-nums">{when(offer.createdAt)}</time>
+                    {offer.status === 'pending' && <span className={offer.customerRead ? undefined : 'font-semibold text-amber-800'}>{offer.customerRead ? 'Läst av kunden' : 'Oläst av kunden'}</span>}
+                    <StatusBadge status={offer.status} />
+                  </div>
+                </li>
+              ))}
+            </RecentList>
+            <RecentList title="Meddelanden" count={recent.messages7d} empty="Inga chattmeddelanden har skickats ännu.">
+              {recent.conversations.map((conversation, index) => (
+                <li key={`${conversation.at}-${index}`} className="px-4 py-3 text-sm">
+                  <span className="text-slate-700">{conversation.text}</span>
+                  {conversation.internal && <Badge className="ml-2">Intern</Badge>}
+                  <div><time className="text-xs tabular-nums text-slate-500">{when(conversation.at)}</time></div>
+                </li>
+              ))}
+            </RecentList>
+          </div>
+        </Section>
+
         <Section id="att-gora" title="Att uppmärksamma">
           <Alerts alerts={data.alerts} />
         </Section>

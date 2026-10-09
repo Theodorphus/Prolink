@@ -66,6 +66,14 @@ export interface AdminAlert {
   text: string
 }
 
+export interface AdminEvent {
+  at: string
+  kind: 'user' | 'job' | 'inquiry' | 'offer' | 'service' | 'review' | 'message'
+  text: string
+  href: string | null
+  internal: boolean
+}
+
 export interface AdminInsights {
   kpis: {
     externalUsers: number
@@ -87,6 +95,14 @@ export interface AdminInsights {
     reviews: number
   }
   alerts: AdminAlert[]
+  recent: {
+    signups7d: number
+    offers7d: number
+    messages7d: number
+    signups: { id: string; name: string; email: string | null; role: 'customer' | 'provider'; internal: boolean; createdAt: string }[]
+    offers: { id: string; jobId: string; jobTitle: string; customerName: string; providerId: string; providerName: string; internal: boolean; price: number; priceType: 'fixed' | 'hourly'; status: string; customerRead: boolean; createdAt: string }[]
+    conversations: AdminEvent[]
+  }
   funnels: { providers: { label: string; count: number }[]; customers: { label: string; count: number }[] }
   categories: { category: string | null; services: number; providers: number; subscribers: number; externalJobs: number; internalJobs: number; offers: number }[]
   weekly: { start: string; customers: number; providers: number; jobs: number; services: number; offers: number; messages: number }[]
@@ -95,7 +111,7 @@ export interface AdminInsights {
   internalJobs: AdminJob[]
   externalJobs: AdminJob[]
   services: { id: string; title: string; category: string | null; price: number; providerId: string; providerName: string; internal: boolean; createdAt: string; inquiries: number }[]
-  events: { at: string; kind: 'user' | 'job' | 'inquiry' | 'offer' | 'service' | 'review' | 'message'; text: string; href: string | null; internal: boolean }[]
+  events: AdminEvent[]
 }
 
 export function parseEmailList(value: string | undefined | null): string[]

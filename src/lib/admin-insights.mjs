@@ -223,6 +223,31 @@ export function buildAdminInsights(input, now = Date.now()) {
     inquiries: inquiriesByService.get(service.id) ?? 0,
   })).sort((a, b) => b.createdAt.localeCompare(a.createdAt))
 
+  // Senaste aktiviteten överst på sidan: de tio senaste av varje slag, interna
+  // konton inkluderade men märkta, plus antal utan interna konton senaste veckan.
+  const conversations = summariseConversations(messages, offersById, jobsById, nameOf, isInternal)
+  const recent = {
+    signups7d: external.filter(p => within(p.createdAt, now, 7)).length,
+    offers7d: realOffers.filter(o => within(o.created_at, now, 7)).length,
+    messages7d: realMessages.filter(m => within(m.created_at, now, 7)).length,
+    signups: people.slice(0, 10).map(p => ({ id: p.id, name: p.name, email: p.email, role: p.role, internal: p.internal, createdAt: p.createdAt })),
+    offers: [...offers].sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 10).map(o => ({
+      id: o.id,
+      jobId: o.job_id,
+      jobTitle: jobsById.get(o.job_id)?.title ?? 'Okänt uppdrag',
+      customerName: nameOf(jobsById.get(o.job_id)?.customer_id),
+      providerId: o.provider_id,
+      providerName: nameOf(o.provider_id),
+      internal: isInternal(o.provider_id),
+      price: o.price,
+      priceType: o.price_type,
+      status: o.status,
+      customerRead: Boolean(o.customer_read_at),
+      createdAt: o.created_at,
+    })),
+    conversations: [...conversations].sort((a, b) => b.at.localeCompare(a.at)).slice(0, 10),
+  }
+
   // Händelselogg. Meddelandens innehåll lämnas medvetet utanför.
   const events = [
     ...people.map(p => ({ at: p.createdAt, kind: 'user', text: `${p.name} registrerade sig som ${p.role === 'customer' ? 'köpare' : 'frilansare'}`, href: `/profile/${p.id}`, internal: p.internal })),
@@ -230,7 +255,7 @@ export function buildAdminInsights(input, now = Date.now()) {
     ...offers.map(o => ({ at: o.created_at, kind: 'offer', text: `${nameOf(o.provider_id)} skickade en offert på ${jobsById.get(o.job_id)?.title ?? 'ett uppdrag'}`, href: `/jobs/${o.job_id}`, internal: isInternal(o.provider_id) })),
     ...serviceRows.map(s => ({ at: s.createdAt, kind: 'service', text: `${s.providerName} publicerade tjänsten ${s.title}`, href: `/services/${s.id}`, internal: s.internal })),
     ...reviews.map(r => ({ at: r.created_at, kind: 'review', text: `${nameOf(r.reviewer_id)} gav ${nameOf(r.reviewee_id)} ${r.rating}/5`, href: `/profile/${r.reviewee_id}`, internal: isInternal(r.reviewer_id) })),
-    ...summariseConversations(messages, offersById, jobsById, nameOf, isInternal),
+    ...conversations,
   ].filter(event => event.at).sort((a, b) => b.at.localeCompare(a.at)).slice(0, 60)
 
   const failedNotifications = outbox.filter(item => !item.sent_at && item.attempts >= 8)
@@ -264,7 +289,7 @@ export function buildAdminInsights(input, now = Date.now()) {
   if (optedOut.length) alerts.push({ level: 'info', text: `${optedOut.length} frilansare har stängt av mejl om nya uppdrag.` })
 
   return {
-    kpis, alerts, funnels, categories, weekly, notifications,
+    kpis, alerts, recent, funnels, categories, weekly, notifications,
     people, internalJobs, externalJobs, services: serviceRows, events,
   }
 }

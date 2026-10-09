@@ -38,6 +38,18 @@ export function StatTile({ label, value, detail, emphasis }: { label: string; va
   )
 }
 
+export function RecentList({ title, count, empty, children }: { title: string; count: number; empty: string; children: React.ReactNode[] }) {
+  return (
+    <div className="surface">
+      <div className="flex items-baseline justify-between gap-3 border-b border-slate-100 px-4 py-3">
+        <h3 className="text-sm font-bold text-slate-900">{title}</h3>
+        <span className={cn('text-xs tabular-nums', count ? 'font-semibold text-emerald-700' : 'text-slate-500')}>{count} senaste 7 dagarna</span>
+      </div>
+      {children.length ? <ol className="divide-y divide-slate-100">{children}</ol> : <p className="px-4 py-4 text-sm text-slate-600">{empty}</p>}
+    </div>
+  )
+}
+
 const ALERT_STYLE: Record<AdminAlert['level'], { label: string; className: string; icon: string }> = {
   critical: { label: 'Åtgärda', className: 'border-red-200 bg-red-50 text-red-900', icon: '!' },
   warning: { label: 'Bevaka', className: 'border-amber-200 bg-amber-50 text-amber-900', icon: '▲' },
