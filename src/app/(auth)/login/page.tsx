@@ -19,11 +19,11 @@ export default async function LoginPage(
   // Meddelandet speglar vad användaren var på väg att göra.
   const targeted = redirect.startsWith('/jobs/create?') && (redirect.includes('service=') || redirect.includes('provider='))
   const intent = targeted
-    ? { title: 'Logga in för att skicka din förfrågan', body: 'Vi behåller vald tjänst och mottagare. Förfrågan blir privat mellan dig och leverantören.' }
+    ? { title: 'Logga in för att skicka din förfrågan', body: 'Det du skrivit är sparat. Efter inloggningen kommer du tillbaka till förfrågan och skickar den. Den blir privat mellan dig och leverantören.' }
     : redirect.startsWith('/jobs/create')
     ? {
         title: 'Kontot behövs för att publicera uppdraget',
-        body: 'Vi kopplar uppdraget till dig så att du kan ta emot offerter och svara frilansare. Det är kostnadsfritt att publicera och du binder dig inte till något.',
+        body: 'Det du skrivit är sparat. Vi kopplar uppdraget till dig så att du kan ta emot offerter och svara frilansare. Det är kostnadsfritt att publicera och du binder dig inte till något.',
       }
     : redirect.includes('/offer')
       ? {

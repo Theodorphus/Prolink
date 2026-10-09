@@ -210,24 +210,15 @@ export default async function ProfilePage(props: { params: Promise<{ id: string 
 
               <p className="muted text-xs">Medlem sedan {formatDate(profile.created_at)}</p>
 
-              {/* Kontakt kräver inloggning först när besökaren faktiskt agerar,
-                  inte för att läsa profilen. */}
+              {/* Kontakt kräver inloggning först när förfrågan skickas,
+                  inte för att läsa profilen eller skriva förfrågan. */}
               {!isOwn && isProvider && (
-                user ? (
-                  <Link
-                    href={`/jobs/create?provider=${profile.id}`}
-                    className="block rounded-xl bg-blue-700 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-800 hover:shadow-lg"
-                  >
-                    Skicka förfrågan
-                  </Link>
-                ) : (
-                  <Link
-                    href={`/login?redirect=${encodeURIComponent(`/jobs/create?provider=${profile.id}`)}`}
-                    className="block rounded-xl bg-blue-700 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-800 hover:shadow-lg"
-                  >
-                    Logga in för att kontakta
-                  </Link>
-                )
+                <Link
+                  href={`/jobs/create?provider=${profile.id}`}
+                  className="block rounded-xl bg-blue-700 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-800 hover:shadow-lg"
+                >
+                  Skicka förfrågan
+                </Link>
               )}
             </CardBody>
           </Card>

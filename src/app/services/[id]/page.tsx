@@ -189,19 +189,12 @@ export default async function ServicePage(props: { params: Promise<{ id: string 
                 <p className="rounded-xl bg-slate-50 p-3 text-center text-sm font-semibold text-slate-600">
                   Leverantören tar inte emot förfrågningar just nu.
                 </p>
-              ) : user ? (
+              ) : (
                 <Link
                   href={`/jobs/create?service=${service.id}`}
                   className="block rounded-xl bg-blue-700 px-5 py-3.5 text-center text-sm font-bold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-800 hover:shadow-lg"
                 >
                   Skicka förfrågan
-                </Link>
-              ) : (
-                <Link
-                  href={`/login?redirect=${encodeURIComponent(`/jobs/create?service=${service.id}`)}`}
-                  className="block rounded-xl bg-blue-700 px-5 py-3.5 text-center text-sm font-bold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-800 hover:shadow-lg"
-                >
-                  Logga in för att kontakta
                 </Link>
               )}
 

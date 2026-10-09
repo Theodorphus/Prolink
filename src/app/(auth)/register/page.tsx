@@ -22,6 +22,15 @@ export default async function RegisterPage({ searchParams }: { searchParams: Pro
             </Link>
           </p>
         </div>
+        {/* Köpare som skrivit ett uppdrag utloggade kommer hit när de publicerar. */}
+        {redirect.startsWith('/jobs/create') && (
+          <div className="mb-5 rounded-2xl border border-blue-100 bg-blue-50 px-5 py-4">
+            <p className="text-sm font-bold text-blue-900">Ditt uppdrag är sparat</p>
+            <p className="mt-1.5 text-xs leading-5 text-blue-800">
+              Skapa ett gratis konto så kommer du tillbaka till det och publicerar. Bekräftar du via mejl, öppna länken i samma webbläsare så finns texten kvar.
+            </p>
+          </div>
+        )}
         <RegisterForm action={register} redirect={redirect} />
         <Link className="mt-4 block text-center text-sm underline" href={`/confirm-email?redirect=${encodeURIComponent(redirect)}`}>Skicka nytt bekräftelsemejl</Link>
         <p className="muted mt-6 text-center text-xs">

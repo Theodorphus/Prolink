@@ -6,7 +6,9 @@ import { NextResponse, type NextRequest } from 'next/server'
 // Sidan hämtar bara publika kolumner för andra användare, och privata
 // uppgifter (telefon) ligger i user_private_profiles bakom egen RLS.
 // Redigeringsformuläret renderas bara för den inloggade ägaren.
-const protectedRoutes = ['/jobs/create', '/services/create', '/messages', '/offers']
+// /jobs/create är också öppen: köparen skriver uppdraget först och skapar
+// konto när det ska publiceras, så att kontot inte stoppar dem innan de börjat.
+const protectedRoutes = ['/services/create', '/messages', '/offers']
 const authRoutes = ['/login', '/register']
 
 // Sidor som förrenderas och cachas. De läser aldrig sessionen på servern

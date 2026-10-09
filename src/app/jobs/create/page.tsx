@@ -1,4 +1,4 @@
-import { redirect, notFound } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import { createClient, getUser } from '@/lib/supabase/server'
 import CreateJobForm from '@/components/jobs/CreateJobForm'
 import { CATEGORIES } from '@/lib/categories'
@@ -15,11 +15,6 @@ export default async function CreateJobPage({ searchParams }: { searchParams: Pr
   const supabase = await createClient()
   const { data: { user } } = await getUser()
 
-  const query = new URLSearchParams()
-  if (serviceId) query.set('service', serviceId)
-  if (providerId) query.set('provider', providerId)
-  if (initialCategory) query.set('category', initialCategory)
-  if (!user) redirect(`/login?redirect=${encodeURIComponent(`/jobs/create?${query}`)}`)
   let target: { id: string; name: string; serviceId?: string; title?: string; category?: string } | undefined
   if (serviceId || providerId) {
     const { data: service, error: serviceError } = serviceId ? await supabase.from('services').select('id, title, category, provider_id').eq('id', serviceId).maybeSingle() : { data: null, error: null }
@@ -27,7 +22,7 @@ export default async function CreateJobPage({ searchParams }: { searchParams: Pr
     if (serviceId && !service) notFound()
     const { data: provider, error } = await supabase.from('users').select('id, name').eq('id', service?.provider_id ?? providerId!).eq('role', 'provider').maybeSingle()
     if (error) throw new Error('Leverantören kunde inte hämtas.')
-    if (!provider || provider.id === user.id) notFound()
+    if (!provider || provider.id === user?.id) notFound()
     target = { ...provider, serviceId: service?.id, title: service?.title, category: service?.category }
   }
 
@@ -37,7 +32,9 @@ export default async function CreateJobPage({ searchParams }: { searchParams: Pr
         <h1 className="text-3xl font-black text-gray-900 mb-2">{target ? `Förfrågan till ${target.name}` : 'Publicera ett uppdrag'}</h1>
         <p className="text-gray-500">{target ? 'Förfrågan är privat mellan er. Leverantören svarar med en offert, sedan kan ni fortsätta i chatten.' : 'Beskriv vad du behöver och ta emot offerter från frilansare med rätt kompetens.'}</p>
       </div>
-      <CreateJobForm target={target} initialCategory={initialCategory} />
+      {/* Utloggade skriver uppdraget först. Utkastet sparas i webbläsaren och
+          kontot skapas när de publicerar. */}
+      <CreateJobForm target={target} initialCategory={initialCategory} signedIn={Boolean(user)} />
     </div>
   )
 }
