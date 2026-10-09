@@ -1,6 +1,10 @@
 import { notFound, redirect } from 'next/navigation'
 import { createClient, getUser } from '@/lib/supabase/server'
+import Link from 'next/link'
 import ChatWindow from '@/components/chat/ChatWindow'
+import MarkOfferRead from '@/components/offers/MarkOfferRead'
+import { StatusBadge } from '@/components/ui/Badge'
+import { formatCurrency } from '@/lib/utils'
 import type { MessageWithSender } from '@/types/database'
 
 export const metadata = { title: 'Chatt', robots: { index: false, follow: false } }
@@ -14,7 +18,7 @@ export default async function MessagesPage(props: { params: Promise<{ offerId: s
 
   const { data: offer } = await supabase
     .from('offers')
-    .select('id, status, provider_id, job:jobs(id, title, customer_id, customer:users!jobs_customer_id_fkey(name)), provider:users(name)')
+    .select('id, status, price, price_type, provider_id, job:jobs(id, title, customer_id, customer:users!jobs_customer_id_fkey(name)), provider:users(name)')
     .eq('id', params.offerId)
     .single()
 
@@ -55,6 +59,21 @@ export default async function MessagesPage(props: { params: Promise<{ offerId: s
           <h1 className="text-lg font-bold text-gray-900">{job?.title}</h1>
           <p className="text-sm text-gray-500">Chatt med {otherParty}</p>
         </div>
+      </div>
+
+      {/* Chatten hör till en offert. Utan den här raden såg kunden bara en tom
+          chatt och fick aldrig veta att det fanns en offert att svara på. */}
+      {isCustomer && <MarkOfferRead offerId={offer.id} />}
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3">
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <span className="font-semibold text-slate-900">
+            {isCustomer ? `Offert från ${provider?.name ?? 'leverantören'}` : 'Din offert'}: {formatCurrency(offer.price)}{offer.price_type === 'hourly' ? '/tim' : ''}
+          </span>
+          <StatusBadge status={offer.status} />
+        </div>
+        <Link href={`/offers/${offer.id}`} className="text-sm font-bold text-blue-700 hover:underline">
+          {isCustomer && offer.status === 'pending' ? 'Läs offerten och svara' : 'Visa offerten'}
+        </Link>
       </div>
 
       <ChatWindow

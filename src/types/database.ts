@@ -209,6 +209,10 @@ export type Database = {
         Args: { p_offer_id: string }
         Returns: undefined
       }
+      unread_count: {
+        Args: Record<string, never>
+        Returns: number
+      }
     }
     Enums: {
       user_role: UserRole

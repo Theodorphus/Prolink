@@ -102,8 +102,30 @@ test('real PostgreSQL migration replay and marketplace authorization', async t =
     const mine=(await as(customer,'select * from conversation_list(1)')).rows
     assert.ok(mine.some(row=>row.id===offer && row.unread))
     assert.equal((await as(outsider,'select * from conversation_list(1)')).rows.length,0)
+    assert.ok((await as(customer,'select unread_count() as n')).rows[0].n>=1)
+    assert.equal((await as(outsider,'select unread_count() as n')).rows[0].n,0)
+    // Att öppna offerten tar bort "ny offert" men markerar inte meddelanden
+    // som skickats efter offerten som lästa.
     await as(customer,'select mark_offer_read($1)',[offer])
-    assert.equal((await as(customer,'select * from conversation_list(1)')).rows.find(row=>row.id===offer).unread,false)
+    const latest=(await db.query('select id from messages where offer_id=$1 and sender_id<>$2 order by created_at desc,id desc limit 1',[offer,customer])).rows[0]
+    if (latest) {
+      assert.equal((await as(customer,'select * from conversation_list(1)')).rows.find(row=>row.id===offer).unread,true)
+      await as(customer,'select mark_conversation_read($1,$2)',[offer,latest.id])
+    }
+    const row=(await as(customer,'select * from conversation_list(1)')).rows.find(row=>row.id===offer)
+    assert.equal(row.unread,false)
+    assert.equal(row.is_customer,true)
+    assert.ok(Number(row.price)>0)
+  })
+  await t.test('a new offer is unread for the customer until opened',async()=>{
+    const j=(await as(customer, `insert into jobs(customer_id,title,description,category) values ($1,'Unread offer job','A sufficiently long description','webbutveckling') returning id`,[customer])).rows[0].id
+    const o=(await as(provider, `insert into offers(job_id,provider_id,price,description,timeline) values ($1,$2,1500,'A sufficiently long offer description','1 vecka') returning id`,[j,provider])).rows[0].id
+    const before=(await as(customer,'select unread_count() as n')).rows[0].n
+    assert.equal((await as(customer,'select * from conversation_list(1)')).rows.find(row=>row.id===o).unread,true)
+    assert.equal((await as(provider,'select * from conversation_list(1)')).rows.find(row=>row.id===o).unread,false)
+    await as(customer,'select mark_offer_read($1)',[o])
+    assert.equal((await as(customer,'select * from conversation_list(1)')).rows.find(row=>row.id===o).unread,false)
+    assert.equal((await as(customer,'select unread_count() as n')).rows[0].n,before-1)
   })
   await t.test('read receipts acknowledge fetched messages only and never move backwards', async () => {
     await db.query('update offers set customer_read_at=null where id=$1', [offer])

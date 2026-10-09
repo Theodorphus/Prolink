@@ -5,14 +5,26 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import MobileMenu from './MobileMenu'
 import { useNavUser } from './useNavUser'
+import { useUnreadCount } from './useUnreadCount'
 
 interface NavLink {
   href: string
   label: string
 }
 
+export function UnreadBadge({ count }: { count: number }) {
+  if (!count) return null
+  return (
+    <span className="min-w-5 rounded-full bg-blue-600 px-1.5 py-0.5 text-center text-xs font-bold leading-none text-white">
+      {count > 9 ? '9+' : count}
+      <span className="sr-only"> olästa</span>
+    </span>
+  )
+}
+
 export default function NavAuth({ links }: { links: NavLink[] }) {
   const user = useNavUser()
+  const unread = useUnreadCount(user?.id)
   const router = useRouter()
 
   // Utloggningen sker i webbläsaren så att useNavUser får SIGNED_OUT direkt.
@@ -25,7 +37,7 @@ export default function NavAuth({ links }: { links: NavLink[] }) {
     }
   }
 
-  const mobileLinks = user ? [...links, { href: '/messages', label: 'Meddelanden' }] : links
+  const mobileLinks = user ? [...links, { href: '/messages', label: 'Meddelanden', badge: unread }] : links
 
   return (
     <>
@@ -37,9 +49,10 @@ export default function NavAuth({ links }: { links: NavLink[] }) {
           <>
             <Link
               href="/messages"
-              className="text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors px-3 py-1.5"
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors px-3 py-1.5"
             >
               Meddelanden
+              <UnreadBadge count={unread} />
             </Link>
             <Link
               href="/jobs/create"

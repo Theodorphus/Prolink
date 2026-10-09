@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { notifyUnreadChanged } from '@/components/layout/useUnreadCount'
 import { createClient } from '@/lib/supabase/client'
 import ChatMessage from './ChatMessage'
 import ChatInput from './ChatInput'
@@ -55,7 +56,10 @@ function Conversation({ offerId, currentUserId, initialMessages }: { offerId: st
       pending = true
       try {
         const { error: readError } = await supabase.rpc('mark_conversation_read', { p_offer_id: offerId, p_message_id: latest.id })
-        if (!readError) lastRead.current = latest.id
+        if (!readError) {
+          lastRead.current = latest.id
+          notifyUnreadChanged()
+        }
       } catch { /* Retry on the next refresh or focus event. */ }
       finally { pending = false }
     }
@@ -146,7 +150,7 @@ function Conversation({ offerId, currentUserId, initialMessages }: { offerId: st
     {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
     <div ref={list} onScroll={() => { const el = list.current; if (el) stickToBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80 }} role="log" aria-label="Meddelanden" aria-live="polite" className="flex-1 overflow-y-auto space-y-4 pr-1">
       {older && <button type="button" disabled={loadingOlder} onClick={loadOlder} className="text-sm underline">{loadingOlder ? 'Hämtar…' : 'Visa äldre meddelanden'}</button>}
-      {messages.length === 0 && <p className="py-12 text-center text-slate-500">Inget skrivet än — starta konversationen!</p>}
+      {messages.length === 0 && <p className="py-12 text-center text-slate-500">Inga meddelanden ännu. Har du frågor om offerten kan du skriva här.</p>}
       {messages.map(message => <ChatMessage key={message.id} message={message} isOwn={message.sender_id === userId} />)}
     </div>
     <div className="mt-4 border-t border-gray-200 pt-4"><ChatInput onSend={handleSend} offerId={offerId} /></div>

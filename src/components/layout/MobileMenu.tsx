@@ -4,10 +4,12 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { UnreadBadge } from './NavAuth'
 
 interface NavLink {
   href: string
   label: string
+  badge?: number
 }
 
 interface MobileUser {
@@ -28,6 +30,7 @@ function Menu({
   onSignOut: () => void
 }) {
   const [open, setOpen] = useState(false)
+  const unread = links.reduce((sum, link) => sum + (link.badge ?? 0), 0)
   const layer = useRef<HTMLDivElement>(null)
   const toggle = useRef<HTMLButtonElement>(null)
   const pathname = usePathname()
@@ -107,16 +110,17 @@ function Menu({
         </div>
 
         <div className="px-4 py-4">
-          {links.map(({ href, label }) => (
+          {links.map(({ href, label, badge }) => (
             <Link
               key={href}
               href={href}
               onClick={close}
-              className={`block rounded-xl px-4 py-3.5 text-base font-semibold transition-colors ${
+              className={`flex items-center gap-2 rounded-xl px-4 py-3.5 text-base font-semibold transition-colors ${
                 pathname === href ? 'bg-blue-50 text-blue-600' : 'text-gray-800 active:bg-gray-100'
               }`}
             >
               {label}
+              <UnreadBadge count={badge ?? 0} />
             </Link>
           ))}
 
@@ -178,11 +182,12 @@ function Menu({
         ref={toggle}
         type="button"
         onClick={() => setOpen(true)}
-        aria-label="Öppna meny"
+        aria-label={unread ? `Öppna meny, ${unread} olästa` : 'Öppna meny'}
         aria-expanded={open}
         aria-controls="mobil-meny"
-        className="flex h-11 w-11 items-center justify-center rounded-lg text-gray-700 active:bg-gray-100"
+        className="relative flex h-11 w-11 items-center justify-center rounded-lg text-gray-700 active:bg-gray-100"
       >
+        {unread > 0 && <span aria-hidden className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-blue-600 ring-2 ring-white" />}
         <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} aria-hidden>
           <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
         </svg>

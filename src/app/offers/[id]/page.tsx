@@ -8,6 +8,7 @@ import AcceptRejectButtons from '@/components/offers/AcceptRejectButtons'
 import MarkDeliveredButton from '@/components/offers/MarkDeliveredButton'
 import CompleteJobButton from '@/components/offers/CompleteJobButton'
 import WriteReviewForm from '@/components/reviews/WriteReviewForm'
+import MarkOfferRead from '@/components/offers/MarkOfferRead'
 
 export async function generateMetadata(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
@@ -65,6 +66,7 @@ export default async function OfferPage(
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-12">
+      {isCustomer && <MarkOfferRead offerId={offer.id} />}
       {searchParams.already === '1' && (
         <div className="mb-6 flex items-start gap-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl px-4 py-3 text-sm">
           <svg className="w-4 h-4 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
