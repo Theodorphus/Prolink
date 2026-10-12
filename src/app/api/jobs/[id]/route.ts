@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { PUBLIC_JOB_FIELDS } from '@/lib/jobs'
-import { isUuid } from '@/lib/validation'
+import { InputValidationError, isUuid } from '@/lib/validation'
+import { parseJobContent, type JobContent } from '@/lib/job-input'
 
 export async function GET(_: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
@@ -43,10 +44,22 @@ export async function PATCH(request: NextRequest, props: { params: Promise<{ id:
   const body = await request.json().catch(() => null)
   if (!body || typeof body !== 'object') return NextResponse.json({ error: 'Ogiltig förfrågan' }, { status: 400 })
 
-  // Whitelist: only allow status changes, nothing else
-  const allowed: Record<string, unknown> = {}
+  // Antingen status eller hela innehållet. Redigeringsformuläret skickar alltid
+  // samtliga fält, så samma validering som vid publicering gäller.
+  const allowed: Partial<JobContent> & { status?: 'open' | 'closed' } = {}
   if (body.status === 'open' || body.status === 'closed') {
     allowed.status = body.status
+  }
+  const editsContent = 'title' in body
+  if (editsContent) {
+    try {
+      Object.assign(allowed, parseJobContent(body))
+    } catch (error) {
+      return NextResponse.json(
+        { error: error instanceof InputValidationError ? error.message : 'Ogiltig förfrågan.' },
+        { status: 400 }
+      )
+    }
   }
   if (Object.keys(allowed).length === 0) {
     return NextResponse.json({ error: 'Inga giltiga fält att uppdatera' }, { status: 400 })
@@ -60,7 +73,15 @@ export async function PATCH(request: NextRequest, props: { params: Promise<{ id:
     .select()
     .maybeSingle()
 
-  if (error) return NextResponse.json({ error: 'Uppdraget kunde inte uppdateras' }, { status: error.code === '23514' ? 409 : 500 })
+  // 23514 kommer från databasens regler: stängda uppdrag kan inte öppnas igen
+  // eller redigeras.
+  if (error?.code === '23514') {
+    return NextResponse.json(
+      { error: editsContent ? 'Uppdraget är stängt och kan inte längre redigeras.' : 'Uppdraget kunde inte uppdateras' },
+      { status: 409 }
+    )
+  }
+  if (error) return NextResponse.json({ error: 'Uppdraget kunde inte uppdateras' }, { status: 500 })
   if (!data) return NextResponse.json({ error: 'Uppdraget hittades inte' }, { status: 404 })
 
   return NextResponse.json(data)

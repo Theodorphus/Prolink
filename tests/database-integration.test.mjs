@@ -66,7 +66,8 @@ test('real PostgreSQL migration replay and marketplace authorization', async t =
     const privateJob = (await as(customer, `insert into jobs(customer_id,requested_provider_id,title,description,category) values ($1,$2,'Private request','A private request description','webbutveckling') returning id`,[customer,provider])).rows[0].id
     assert.equal((await as(outsider,'select id from jobs where id=$1',[privateJob])).rows.length,0)
     assert.equal((await as(provider,'select id from jobs where id=$1',[privateJob])).rows.length,1)
-    await assert.rejects(as(customer,'update jobs set requested_provider_id=$1 where id=$2',[outsider,privateJob]),{code:'23514'})
+    // Kolumnen går inte att uppdatera alls sedan 023; triggern är andra linjen.
+    await assert.rejects(as(customer,'update jobs set requested_provider_id=$1 where id=$2',[outsider,privateJob]),{code:'42501'})
     await assert.rejects(as(outsider,`insert into offers(job_id,provider_id,price,timeline,description) values ($1,$2,100,'Two days','A sufficiently long offer')`,[privateJob,outsider]))
   })
   await t.test('direct writes obey database quota; reads do not consume it', async () => {
@@ -213,6 +214,27 @@ test('real PostgreSQL migration replay and marketplace authorization', async t =
     await as(provider, `update users set website_url='https://example.com/' where id=$1`, [provider])
     await as(outsider, `update users set website_url='https://evil.example/' where id=$1`, [provider])
     assert.equal((await db.query('select website_url from users where id=$1', [provider])).rows[0].website_url, 'https://example.com/')
+  })
+
+  await t.test('owners edit open requests only, edits are stamped and bookkeeping columns stay locked', async () => {
+    // Egen kund: den delade har förbrukat sin skrivkvot för uppdrag i tidigare tester.
+    const editor = '44444444-4444-4444-8444-444444444444'
+    await db.query(`insert into auth.users values ($1, '{"name":"Editor","role":"customer"}')`, [editor])
+    const insert = `insert into jobs(customer_id,title,description,category,budget) values ($1,'Editable request','A sufficiently long description','design',5000) returning id`
+    const open = (await as(editor, insert, [editor])).rows[0].id
+    await as(editor, `update jobs set title='Edited request', budget=6000 where id=$1`, [open])
+    const edited = (await db.query('select title, budget, edited_at from jobs where id=$1', [open])).rows[0]
+    assert.deepEqual([edited.title, Number(edited.budget), edited.edited_at !== null], ['Edited request', 6000, true])
+
+    await as(outsider, `update jobs set title='Hijacked' where id=$1`, [open])
+    assert.equal((await db.query('select title from jobs where id=$1', [open])).rows[0].title, 'Edited request')
+    await assert.rejects(as(editor, `update jobs set created_at=now() + interval '1 day' where id=$1`, [open]), { code: '42501' })
+    await assert.rejects(as(editor, `update jobs set archived_at=null where id=$1`, [open]), { code: '42501' })
+
+    const closed = (await as(editor, insert, [editor])).rows[0].id
+    await as(editor, `update jobs set status='closed' where id=$1`, [closed])
+    assert.equal((await db.query('select edited_at from jobs where id=$1', [closed])).rows[0].edited_at, null)
+    await assert.rejects(as(editor, `update jobs set title='Too late' where id=$1`, [closed]), { code: '23514' })
   })
 
 })

@@ -32,6 +32,8 @@ export interface UserPrivateProfile {
 
 export interface Job {
   archived_at: string | null
+  /** Senaste ändring av innehållet. Sätts av databasen, null om aldrig redigerat. */
+  edited_at: string | null
   requested_provider_id: string | null
   service_id: string | null
   id: string

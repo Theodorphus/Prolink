@@ -46,7 +46,7 @@ export default async function JobPage(props: { params: Promise<{ id: string }> }
   // Literalen behålls här eftersom .single() förlorar typinferensen med en mall-literal.
   const { data: job, error: detailError } = await supabase
     .from('jobs')
-    .select('id, customer_id, title, description, budget, status, archived_at, created_at, category, location, work_type, customer:users!jobs_customer_id_fkey(id, name, bio, avatar_url, created_at)')
+    .select('id, customer_id, title, description, budget, status, archived_at, created_at, edited_at, category, location, work_type, customer:users!jobs_customer_id_fkey(id, name, bio, avatar_url, created_at)')
     .eq('id', id)
     .single()
 
@@ -159,6 +159,10 @@ export default async function JobPage(props: { params: Promise<{ id: string }> }
                 <div>
                   <dt className="text-xs font-semibold uppercase tracking-wider text-slate-400">Publicerat</dt>
                   <dd className="mt-1 font-semibold text-slate-800">{formatDate(job.created_at)}</dd>
+                  {/* Leverantörer som redan lämnat offert ska se att villkoren kan ha ändrats. */}
+                  {job.edited_at && (
+                    <dd className="mt-0.5 text-xs text-slate-500">Redigerat {formatDate(job.edited_at)}</dd>
+                  )}
                 </div>
               </dl>
 
@@ -246,7 +250,17 @@ export default async function JobPage(props: { params: Promise<{ id: string }> }
                     </p>
                   ) : (
                     <>
-                      {job.status === 'open' && <CloseJobButton jobId={job.id} />}
+                      {job.status === 'open' && (
+                        <>
+                          <Link
+                            href={`/jobs/${job.id}/edit`}
+                            className="block rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-center text-sm font-semibold text-slate-800 transition hover:border-slate-300 hover:shadow-sm"
+                          >
+                            Redigera uppdrag
+                          </Link>
+                          <CloseJobButton jobId={job.id} />
+                        </>
+                      )}
                       <DeleteJobButton jobId={job.id} />
                     </>
                   )}
