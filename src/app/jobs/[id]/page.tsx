@@ -9,7 +9,8 @@ import { createClient, getUser } from '@/lib/supabase/server'
 import { Card, CardBody } from '@/components/ui/Card'
 import { StatusBadge } from '@/components/ui/Badge'
 import { formatCurrency, formatDate } from '@/lib/utils'
-import { getCategoryEmoji, getCategoryLabel } from '@/lib/categories'
+import { getCategoryLabel } from '@/lib/categories'
+import CategoryThumb from '@/components/ui/CategoryThumb'
 import CloseJobButton from '@/components/jobs/CloseJobButton'
 import DeleteJobButton from '@/components/jobs/DeleteJobButton'
 
@@ -117,9 +118,7 @@ export default async function JobPage(props: { params: Promise<{ id: string }> }
                   kategorietiketten. */}
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3 text-xs font-black uppercase tracking-wider text-blue-700">
-                  <span className="rounded-xl bg-blue-50 p-2 text-xl" aria-hidden>
-                    {getCategoryEmoji(job.category)}
-                  </span>
+                  <CategoryThumb category={job.category} size={44} />
                   {getCategoryLabel(job.category)}
                 </div>
                 <span

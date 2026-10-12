@@ -3,7 +3,8 @@ import Link from 'next/link'
 import { createPublicClient } from '@/lib/supabase/public'
 import { PUBLIC_JOB_FIELDS } from '@/lib/jobs'
 import { formatCurrency, timeAgo } from '@/lib/utils'
-import { getCategoryEmoji, getCategoryLabel } from '@/lib/categories'
+import { getCategoryLabel } from '@/lib/categories'
+import CategoryThumb from '@/components/ui/CategoryThumb'
 import type { PublicJob, User } from '@/types/database'
 
 type FeaturedJob = PublicJob & { customer: Pick<User, 'name'> | null }
@@ -71,13 +72,7 @@ export default async function LatestJobs() {
           >
             <article className="gradient-border surface surface-interactive flex h-full flex-col p-6">
               <div className="flex items-start justify-between gap-4">
-                <span
-                  className="flex h-11 w-11 items-center justify-center rounded-xl text-xl transition-transform duration-300 group-hover:scale-110"
-                  style={{ background: 'var(--accent-tint)' }}
-                  aria-hidden
-                >
-                  {getCategoryEmoji(job.category)}
-                </span>
+                <CategoryThumb category={job.category} size={44} className="transition-transform duration-300 group-hover:scale-110" />
                 <span
                   className="shrink-0 rounded-full px-3 py-1.5 text-xs font-bold"
                   style={{ background: 'var(--teal-tint)', color: 'var(--teal-deep)' }}

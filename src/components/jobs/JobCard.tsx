@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { formatCurrency, formatDate } from '@/lib/utils'
-import { getCategoryEmoji, getCategoryLabel } from '@/lib/categories'
+import { getCategoryLabel } from '@/lib/categories'
+import CategoryThumb from '@/components/ui/CategoryThumb'
 
 export interface JobCardJob {
   id: string
@@ -49,12 +50,7 @@ export default function JobCard({
           <div className="flex items-start justify-between gap-5">
             <div className="min-w-0 flex-1">
               <div className="mb-2.5 flex items-center gap-3">
-                <span
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-xl"
-                  aria-hidden
-                >
-                  {getCategoryEmoji(job.category)}
-                </span>
+                <CategoryThumb category={job.category} size={40} />
                 <h3 className="truncate text-lg font-bold tracking-[-0.02em] text-slate-900 transition-colors group-hover:text-blue-700">
                   {job.title}
                 </h3>
@@ -115,12 +111,7 @@ export default function JobCard({
     <Link href={`/jobs/${job.id}`} className="group block h-full">
       <article className="surface surface-interactive flex h-full flex-col p-6">
         <div className="flex items-start justify-between gap-4">
-          <span
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-xl"
-            aria-hidden
-          >
-            {getCategoryEmoji(job.category)}
-          </span>
+          <CategoryThumb category={job.category} size={40} />
           <span className="rounded-full bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-700 ring-1 ring-inset ring-slate-200">
             {budget}
           </span>

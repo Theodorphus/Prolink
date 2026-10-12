@@ -1,14 +1,14 @@
 export const CATEGORIES = [
-  { value: 'webbutveckling', label: 'Webbutveckling', emoji: '⌘' },
-  { value: 'design', label: 'Design & varumärke', emoji: '◐' },
-  { value: 'marknadsforing', label: 'Digital marknadsföring', emoji: '↗' },
-  { value: 'redovisning', label: 'Ekonomi & redovisning', emoji: '∑' },
-  { value: 'juridik', label: 'Juridik & avtal', emoji: '§' },
-  { value: 'text', label: 'Text & översättning', emoji: '✎' },
-  { value: 'foto-video', label: 'Foto, video & redigering', emoji: '◉' },
-  { value: 'it-support', label: 'IT & teknisk support', emoji: '⚙' },
-  { value: 'affarsstod', label: 'Administration & affärsstöd', emoji: '▦' },
-  { value: 'annat', label: 'Annat', emoji: '✦' },
+  { value: 'webbutveckling', label: 'Webbutveckling' },
+  { value: 'design', label: 'Design & varumärke' },
+  { value: 'marknadsforing', label: 'Digital marknadsföring' },
+  { value: 'redovisning', label: 'Ekonomi & redovisning' },
+  { value: 'juridik', label: 'Juridik & avtal' },
+  { value: 'text', label: 'Text & översättning' },
+  { value: 'foto-video', label: 'Foto, video & redigering' },
+  { value: 'it-support', label: 'IT & teknisk support' },
+  { value: 'affarsstod', label: 'Administration & affärsstöd' },
+  { value: 'annat', label: 'Annat' },
 ] as const
 
 // Kategorierna som lyfts först på mobil. Urvalet speglar de tjänster som
@@ -27,7 +27,8 @@ export function getCategoryLabel(value: string | null | undefined): string {
   return CATEGORIES.find(category => category.value === value)?.label ?? value
 }
 
-export function getCategoryEmoji(value: string | null | undefined): string {
-  if (!value) return '✦'
-  return CATEGORIES.find(category => category.value === value)?.emoji ?? '✦'
+/** Bilden i public/categories. Okända och saknade kategorier får Annat. */
+export function getCategoryImage(value: string | null | undefined): string {
+  const known = CATEGORIES.some(category => category.value === value)
+  return `/categories/${known ? value : 'annat'}.webp`
 }

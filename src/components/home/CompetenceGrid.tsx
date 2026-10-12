@@ -1,5 +1,6 @@
+import Image from 'next/image'
 import Link from 'next/link'
-import { CATEGORIES, PRIORITY_CATEGORIES } from '@/lib/categories'
+import { CATEGORIES, PRIORITY_CATEGORIES, getCategoryImage } from '@/lib/categories'
 
 /** Kort förklaring per kategori. Beskriver vad man kan köpa, inte vem som finns. */
 const BLURBS: Record<string, string> = {
@@ -12,6 +13,21 @@ const BLURBS: Record<string, string> = {
   'foto-video': 'Produktbilder, företagsporträtt, filmproduktion och redigering.',
   'it-support': 'Drift, säkerhet, molntjänster och teknisk support på distans.',
   affarsstod: 'Administration, projektledning, research och virtuell assistans.',
+}
+
+function CategoryImage({ category, interactive }: { category: string; interactive?: boolean }) {
+  return (
+    <div className="aspect-[3/2] overflow-hidden bg-slate-100">
+      <Image
+        src={getCategoryImage(category)}
+        alt=""
+        width={1200}
+        height={800}
+        sizes="(min-width: 1280px) 400px, (min-width: 1024px) 33vw, 50vw"
+        className={`h-full w-full object-cover ${interactive ? 'transition-transform duration-500 group-hover:scale-105' : ''}`}
+      />
+    </div>
+  )
 }
 
 export default function CompetenceGrid() {
@@ -45,26 +61,22 @@ export default function CompetenceGrid() {
             <Link
               key={category.value}
               href={`/hitta/${category.value}`}
-              className={`gradient-border surface surface-interactive group flex flex-col p-6 ${
+              className={`gradient-border surface surface-interactive group flex flex-col overflow-hidden ${
                 priority.has(category.value) ? '' : 'hidden sm:flex'
               }`}
             >
-              <span
-                className="flex h-12 w-12 items-center justify-center rounded-xl text-2xl transition-transform duration-300 group-hover:scale-110"
-                style={{ background: 'var(--accent-tint)', color: 'var(--accent-deep)' }}
-                aria-hidden
-              >
-                {category.emoji}
-              </span>
-              <h3 className="mt-5 font-bold leading-snug tracking-[-0.02em] text-slate-900 transition-colors group-hover:text-indigo-600">
-                {category.label}
-              </h3>
-              <p className="mt-2 flex-1 text-[13px] leading-6 text-slate-500">
-                {BLURBS[category.value] ?? ''}
-              </p>
-              <p className="mt-4 text-xs font-bold text-indigo-600 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                Hitta specialist →
-              </p>
+              <CategoryImage category={category.value} interactive />
+              <div className="flex flex-1 flex-col p-5 sm:p-6">
+                <h3 className="font-bold leading-snug tracking-[-0.02em] text-slate-900 transition-colors group-hover:text-indigo-600">
+                  {category.label}
+                </h3>
+                <p className="mt-2 flex-1 text-[13px] leading-6 text-slate-500">
+                  {BLURBS[category.value] ?? ''}
+                </p>
+                <p className="mt-4 text-xs font-bold text-indigo-600 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                  Hitta specialist →
+                </p>
+              </div>
             </Link>
           ))}
         </div>
@@ -81,21 +93,17 @@ export default function CompetenceGrid() {
                 <Link
                   key={category.value}
                   href={`/hitta/${category.value}`}
-                  className="surface flex flex-col p-6"
+                  className="surface flex flex-col overflow-hidden"
                 >
-                  <span
-                    className="flex h-12 w-12 items-center justify-center rounded-xl text-2xl"
-                    style={{ background: 'var(--accent-tint)', color: 'var(--accent-deep)' }}
-                    aria-hidden
-                  >
-                    {category.emoji}
-                  </span>
-                  <h3 className="mt-5 font-bold leading-snug tracking-[-0.02em] text-slate-900">
-                    {category.label}
-                  </h3>
-                  <p className="mt-2 text-[13px] leading-6 text-slate-500">
-                    {BLURBS[category.value] ?? ''}
-                  </p>
+                  <CategoryImage category={category.value} />
+                  <div className="p-5">
+                    <h3 className="font-bold leading-snug tracking-[-0.02em] text-slate-900">
+                      {category.label}
+                    </h3>
+                    <p className="mt-2 text-[13px] leading-6 text-slate-500">
+                      {BLURBS[category.value] ?? ''}
+                    </p>
+                  </div>
                 </Link>
               ))}
           </div>

@@ -6,7 +6,8 @@ import Image from 'next/image'
 import { createClient, getUser } from '@/lib/supabase/server'
 import { Card, CardBody } from '@/components/ui/Card'
 import { formatCurrency, formatDate } from '@/lib/utils'
-import { getCategoryEmoji, getCategoryLabel } from '@/lib/categories'
+import { getCategoryLabel } from '@/lib/categories'
+import CategoryThumb from '@/components/ui/CategoryThumb'
 import { getCategoryContent } from '@/lib/category-content'
 import ReviewCard from '@/components/reviews/ReviewCard'
 import StarRating from '@/components/reviews/StarRating'
@@ -127,9 +128,7 @@ export default async function ServicePage(props: { params: Promise<{ id: string 
           <div>
             {service.category && (
               <div className="flex items-center gap-3 text-xs font-black uppercase tracking-wider text-blue-700">
-                <span className="rounded-xl bg-blue-50 p-2 text-xl" aria-hidden>
-                  {getCategoryEmoji(service.category)}
-                </span>
+                <CategoryThumb category={service.category} size={44} />
                 {getCategoryLabel(service.category)}
               </div>
             )}

@@ -187,6 +187,8 @@
     opacity: 0;
     transition: opacity var(--dur-base) var(--ease-out);
     pointer-events: none;
+    /* Över innehåll som går ut i kanten, till exempel kortbilder. */
+    z-index: 1;
   }
 
   .gradient-border:hover::before {

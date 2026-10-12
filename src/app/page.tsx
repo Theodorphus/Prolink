@@ -82,7 +82,6 @@ export default function HomePage() {
       <Hero />
       <Suspense fallback={<LatestJobsSkeleton />}><FeaturedServices /></Suspense>
       <ProcessTimeline />
-      <CompetenceGrid />
 
       <section className="border-b border-slate-200/70 bg-white px-4 py-14 sm:px-6 sm:py-24 lg:px-8">
         <div className="mx-auto max-w-7xl">
@@ -104,6 +103,8 @@ export default function HomePage() {
           </Suspense>
         </div>
       </section>
+
+      <CompetenceGrid />
 
       <Suspense fallback={<TrustSection providerCount={0} openJobCount={0} serviceCount={0} pending />}>
         <TrustSectionWithCounts />
