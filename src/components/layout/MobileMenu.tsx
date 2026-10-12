@@ -4,17 +4,13 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { UnreadBadge } from './NavAuth'
+import { NavAvatar, UnreadBadge } from './NavAuth'
+import type { NavUser } from './useNavUser'
 
 interface NavLink {
   href: string
   label: string
   badge?: number
-}
-
-interface MobileUser {
-  id: string
-  name: string
 }
 
 const noSubscription = () => () => {}
@@ -26,7 +22,7 @@ function Menu({
 }: {
   links: NavLink[]
   /** undefined medan inloggningsläget ännu inte är känt. */
-  user: MobileUser | null | undefined
+  user: NavUser | null | undefined
   onSignOut: () => void
 }) {
   const [open, setOpen] = useState(false)
@@ -138,9 +134,7 @@ function Menu({
                 onClick={close}
                 className="flex items-center gap-3 rounded-xl px-4 py-3.5 text-base font-semibold text-gray-800 active:bg-gray-100"
               >
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-sm font-bold text-gray-600">
-                  {user.name?.[0]?.toUpperCase() || 'P'}
-                </span>
+                <NavAvatar user={user} size={32} />
                 {user.name?.split(' ')[0] || 'Profil'}
               </Link>
               <button
@@ -198,7 +192,7 @@ function Menu({
   )
 }
 
-export default function MobileMenu(props: { links: NavLink[]; user: MobileUser | null | undefined; onSignOut: () => void }) {
+export default function MobileMenu(props: { links: NavLink[]; user: NavUser | null | undefined; onSignOut: () => void }) {
   const pathname = usePathname()
   return <Menu key={pathname} {...props} />
 }

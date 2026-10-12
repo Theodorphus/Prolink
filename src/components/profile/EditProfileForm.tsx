@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { Card, CardBody, CardHeader } from '@/components/ui/Card'
 import { createClient } from '@/lib/supabase/client'
+import { notifyProfileChanged } from '@/components/layout/useNavUser'
 import { CATEGORIES } from '@/lib/categories'
 import AvatarUpload from '@/components/profile/AvatarUpload'
 import type { User, UserPrivateProfile } from '@/types/database'
@@ -84,6 +85,7 @@ export default function EditProfileForm({ profile }: { profile: EditableProfile 
       if (privateError) throw privateError
 
       setSuccess(true)
+      notifyProfileChanged()
       router.refresh()
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'Profilen kunde inte sparas.')

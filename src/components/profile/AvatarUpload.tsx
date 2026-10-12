@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { notifyProfileChanged } from '@/components/layout/useNavUser'
 
 interface AvatarUploadProps {
   userId: string
@@ -63,6 +64,7 @@ export default function AvatarUpload({ userId, name, currentAvatarUrl }: AvatarU
       setError('Kunde inte spara profilbilden. Försök igen.')
     } else {
       setPreview(avatarUrl)
+      notifyProfileChanged()
       router.refresh()
     }
 

@@ -1,10 +1,11 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import MobileMenu from './MobileMenu'
-import { useNavUser } from './useNavUser'
+import { useNavUser, type NavUser } from './useNavUser'
 import { useUnreadCount } from './useUnreadCount'
 
 interface NavLink {
@@ -18,6 +19,21 @@ export function UnreadBadge({ count }: { count: number }) {
     <span className="min-w-5 rounded-full bg-blue-600 px-1.5 py-0.5 text-center text-xs font-bold leading-none text-white">
       {count > 9 ? '9+' : count}
       <span className="sr-only"> olästa</span>
+    </span>
+  )
+}
+
+export function NavAvatar({ user, size }: { user: NavUser; size: number }) {
+  return (
+    <span
+      style={{ width: size, height: size }}
+      className="flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-200 text-xs font-bold text-gray-600"
+    >
+      {user.avatarUrl ? (
+        <Image src={user.avatarUrl} alt="" width={size} height={size} className="h-full w-full object-cover" />
+      ) : (
+        user.name?.[0]?.toUpperCase() || 'P'
+      )}
     </span>
   )
 }
@@ -64,9 +80,7 @@ export default function NavAuth({ links }: { links: NavLink[] }) {
               href={`/profile/${user.id}`}
               className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors pl-2 pr-3 py-1.5 rounded-lg hover:bg-gray-100"
             >
-              <span className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600">
-                {user.name?.[0]?.toUpperCase() || 'P'}
-              </span>
+              <NavAvatar user={user} size={28} />
               <span>{user.name?.split(' ')[0] || 'Profil'}</span>
             </Link>
             <button
