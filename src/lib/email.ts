@@ -1,5 +1,5 @@
 import { Resend } from 'resend'
-import { SITE_URL } from '@/lib/site'
+import { CONTACT_EMAIL, SITE_URL } from '@/lib/site'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -67,7 +67,8 @@ export async function sendQueuedNotification(item: { id: string; kind: string; t
           ? 'Du får det här mejlet för att du ansökt om företagsverifiering på Prolink.'
           : 'Ändra mejlnotiser i din profil.'
   const result = await resend.emails.send({
-    from: FROM, to: item.to, subject: safeSubjectValue(item.subject),
+    // Svar går till en adress som läses, eftersom avsändaren är en noreply-adress.
+    from: FROM, replyTo: CONTACT_EMAIL, to: item.to, subject: safeSubjectValue(item.subject),
     html: `<h2>${escapeHtml(item.subject)}</h2><p>${escapeHtml(item.body).replace(/\n/g, '<br>')}</p><p><a href="${escapeHtml(APP_URL + item.path)}">${action}</a></p><p>${footer}</p>`,
     text: `${item.subject}\n${item.body}\n${APP_URL + item.path}\n${footer}`,
   }, { idempotencyKey: `notification/${item.id}` })

@@ -36,6 +36,21 @@ export async function GET(request: NextRequest) {
           if (reviewError) throw reviewError
           disabled = (count ?? 0) > 0
         }
+        // Välkomstmejlet väntar tills adressen är bekräftad, så att ingen kan få
+        // mejl genom att någon annan registrerar deras adress. Obekräftade
+        // konton provas igen om en timme, utan att det räknas som ett misslyckat
+        // försök, och efter en vecka ges det upp.
+        if (!disabled && item.kind === 'welcome' && !data.user.email_confirmed_at) {
+          const waitedDays = (Date.now() - Date.parse(item.created_at)) / 86_400_000
+          if (waitedDays < 7) {
+            await admin.from('notification_outbox').update({
+              available_at: new Date(Date.now() + 3_600_000).toISOString(),
+              attempts: Math.max(item.attempts - 1, 0),
+            }).eq('id', item.id).eq('lease_token', item.lease_token)
+            continue
+          }
+          disabled = true
+        }
         // Välkomstmejlet formuleras nu, efter kontots roll i dag.
         let message = item
         if (!disabled && item.kind === 'welcome') {
@@ -48,11 +63,15 @@ export async function GET(request: NextRequest) {
       const { error: ackError } = await admin.from('notification_outbox').update({ sent_at: new Date().toISOString(), last_error: null }).eq('id', item.id).eq('lease_token', item.lease_token)
       if (ackError) throw ackError
       sent++
-    } catch {
+    } catch (error) {
       failed++
+      // Orsaken sparas så att den syns i databasen och inte bara i leverantörens
+      // loggar. Meddelandet kommer från Resend eller vår egen kod, aldrig från
+      // mottagaren, och tabellen är bara läsbar för servern.
+      const reason = error instanceof Error ? error.message : typeof error === 'object' && error && 'message' in error ? String(error.message) : 'okänt fel'
       const { error: retryError } = await admin.from('notification_outbox').update({
         available_at: new Date(Date.now() + Math.min(3600, 60 * 2 ** item.attempts) * 1000).toISOString(),
-        last_error: 'Delivery failed; inspect provider logs',
+        last_error: reason.slice(0, 300),
       }).eq('id', item.id).eq('lease_token', item.lease_token)
       if (retryError) console.error('Could not reschedule notification', item.id)
     }
