@@ -46,16 +46,29 @@ export async function sendQueuedNotification(item: { id: string; kind: string; t
   const problem = emailConfigurationProblem()
   if (problem) throw new Error(problem)
   const reference = item.kind === 'reference'
-  const validPath = reference ? /^\/referens\/[A-Za-z0-9_-]{32,}$/ : /^\/(jobs|offers|messages)\/[0-9a-f-]+$/i
+  const admin = item.kind === 'admin_verification'
+  const welcome = item.kind === 'welcome'
+  const verification = item.kind === 'verification_result'
+  const validPath = reference ? /^\/referens\/[A-Za-z0-9_-]{32,}$/
+    : admin ? /^\/admin$/
+    : welcome ? /^\/(profile\/[0-9a-f-]+|jobs\/create)$/i
+    : verification ? /^\/profile\/[0-9a-f-]+$/i
+    : /^\/(jobs|offers|messages)\/[0-9a-f-]+$/i
   if (!validPath.test(item.path)) throw new Error('Invalid notification path')
   // Mottagaren av en referensförfrågan har inget konto och inga inställningar.
-  const action = reference ? 'Lämna ditt omdöme' : 'Öppna i Prolink'
+  const action = reference ? 'Lämna ditt omdöme' : admin ? 'Öppna adminpanelen' : welcome ? 'Kom igång' : verification ? 'Se din profil' : 'Öppna i Prolink'
   const footer = reference
     ? 'Du får det här mejlet för att en frilansare angett dig som tidigare kund. Känner du inte igen det kan du ignorera mejlet.'
-    : 'Ändra mejlnotiser i din profil.'
+    : admin
+      ? 'Du får det här mejlet som administratör för Prolink.'
+      : welcome
+        ? 'Du får det här mejlet för att du skapade ett konto på Prolink.'
+        : verification
+          ? 'Du får det här mejlet för att du ansökt om företagsverifiering på Prolink.'
+          : 'Ändra mejlnotiser i din profil.'
   const result = await resend.emails.send({
     from: FROM, to: item.to, subject: safeSubjectValue(item.subject),
-    html: `<h2>${escapeHtml(item.subject)}</h2><p>${escapeHtml(item.body)}</p><p><a href="${escapeHtml(APP_URL + item.path)}">${action}</a></p><p>${footer}</p>`,
+    html: `<h2>${escapeHtml(item.subject)}</h2><p>${escapeHtml(item.body).replace(/\n/g, '<br>')}</p><p><a href="${escapeHtml(APP_URL + item.path)}">${action}</a></p><p>${footer}</p>`,
     text: `${item.subject}\n${item.body}\n${APP_URL + item.path}\n${footer}`,
   }, { idempotencyKey: `notification/${item.id}` })
   if (result.error) throw new Error(`Resend nekade utskicket: ${result.error.message ?? 'okänt fel'}`)

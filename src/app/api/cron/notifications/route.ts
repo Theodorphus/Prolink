@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendQueuedNotification } from '@/lib/email'
+import { welcomeContent } from '@/lib/notification-content'
 export const maxDuration = 60
 export async function GET(request: NextRequest) {
   if (!process.env.CRON_SECRET || request.headers.get('authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Ej behörig' }, { status: 401 })
   }
   const admin = createAdminClient()
+  // Påminnelser köas här, inte av en trigger, eftersom de beror på att tid går.
+  // Ett fel får inte stoppa utskicket av det som redan ligger i kön.
+  const { error: reminderError } = await admin.rpc('queue_offer_reminders')
+  if (reminderError) console.error('[e-post] Påminnelser kunde inte köas:', reminderError.message)
   const { data: items, error } = await admin.rpc('claim_notifications')
   if (error) return NextResponse.json({ error: 'Kön kunde inte läsas' }, { status: 503 })
   let sent = 0
@@ -23,8 +28,22 @@ export async function GET(request: NextRequest) {
         if (userError || !data.user?.email) throw new Error('Recipient unavailable')
         const { data: preferences, error: preferencesError } = await admin.from('user_private_profiles').select('email_jobs, email_messages').eq('user_id', item.recipient_id).maybeSingle()
         if (preferencesError) throw preferencesError
-        const disabled = (item.kind === 'job' && preferences?.email_jobs === false) || (item.kind === 'message' && preferences?.email_messages === false)
-        if (!disabled) await sendQueuedNotification({ ...item, to: data.user.email })
+        let disabled = (item.kind === 'job' && preferences?.email_jobs === false) || (item.kind === 'message' && preferences?.email_messages === false)
+        // Omdömesmejl är meningslösa om omdömet redan är lämnat.
+        if (!disabled && (item.kind === 'review_request' || item.kind === 'reminder_review')) {
+          const { count, error: reviewError } = await admin.from('reviews').select('id', { count: 'exact', head: true })
+            .eq('offer_id', String(item.path).split('/').pop()!).eq('reviewer_id', item.recipient_id)
+          if (reviewError) throw reviewError
+          disabled = (count ?? 0) > 0
+        }
+        // Välkomstmejlet formuleras nu, efter kontots roll i dag.
+        let message = item
+        if (!disabled && item.kind === 'welcome') {
+          const { data: profile, error: profileError } = await admin.from('users').select('role, name').eq('id', item.recipient_id).maybeSingle()
+          if (profileError) throw profileError
+          message = { ...item, ...welcomeContent({ id: item.recipient_id, role: profile?.role ?? null, name: profile?.name ?? null }) }
+        }
+        if (!disabled) await sendQueuedNotification({ ...message, to: data.user.email })
       }
       const { error: ackError } = await admin.from('notification_outbox').update({ sent_at: new Date().toISOString(), last_error: null }).eq('id', item.id).eq('lease_token', item.lease_token)
       if (ackError) throw ackError
