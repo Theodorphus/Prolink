@@ -240,6 +240,18 @@ test('real PostgreSQL migration replay and marketplace authorization', async t =
     await assert.rejects(as(provider, `select edit_offer($1,999,'fixed','One day','A different long offer')`, [o]), { code: '23514' })
   })
 
+  await t.test('a provider can have at most ten services', async () => {
+    // A fresh provider: earlier tests already filled the other providers' lists.
+    const fresh = '55555555-5555-4555-8555-555555555555'
+    await db.query(`insert into auth.users values ($1, '{"name":"Fresh","role":"provider"}')`, [fresh])
+    await db.query('delete from write_quotas')
+    const insert = title => as(fresh, `insert into services(provider_id,title,description,price,delivery_time,category) values ($1,$2,'En tillräckligt lång beskrivning',1000,'5 dagar','design')`, [fresh, title])
+    for (let n = 1; n <= 10; n++) await insert(`Tjänst ${n}`)
+    await assert.rejects(insert('Tjänst 11'), { code: '54000', message: /Service limit/ })
+    // Leave the account list as it was: a later test counts the welcome mails.
+    await db.query('delete from public.users where id=$1', [fresh])
+  })
+
   await t.test('every new account is queued one welcome mail', async () => {
     const rows = (await db.query(`select recipient_id from notification_outbox where kind='welcome' order by recipient_id`)).rows.map(r => r.recipient_id)
     assert.deepEqual(rows, [customer, provider, outsider])

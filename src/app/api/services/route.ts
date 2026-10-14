@@ -58,6 +58,10 @@ export async function POST(request: NextRequest) {
     const { data: saved } = await supabase.from('services').select('id').eq('id', requestId).eq('provider_id', user.id).maybeSingle()
     if (saved) return NextResponse.json(saved)
   }
+  // Samma felkod som skrivkvoten, så meddelandet avgör vilket tak som nåddes.
+  if (error?.code === '54000' && error.message.includes('Service limit')) {
+    return NextResponse.json({ error: 'Du kan ha högst 10 tjänster. Redigera eller ta bort en befintlig för att lägga till en ny.' }, { status: 409 })
+  }
   if (error?.code === '54000') return NextResponse.json({ error: 'För många försök. Vänta en stund och försök igen.' }, { status: 429, headers: { 'Retry-After': '3600' } })
 
   if (error) return NextResponse.json({ error: 'Tjänsten kunde inte sparas' }, { status: 500 })
