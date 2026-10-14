@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { Card, CardBody } from '@/components/ui/Card'
 
-export default function AcceptRejectButtons({ offerId }: { offerId: string }) {
+export default function AcceptRejectButtons({ offerId, version }: { offerId: string; version: string | null }) {
   const router = useRouter()
   const [loading, setLoading] = useState<'accept' | 'reject' | null>(null)
   const [error, setError] = useState('')
@@ -17,7 +17,7 @@ export default function AcceptRejectButtons({ offerId }: { offerId: string }) {
       const res = await fetch(`/api/offers/${offerId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status, seen_version: version }),
       })
       if (res.ok) {
         router.refresh()

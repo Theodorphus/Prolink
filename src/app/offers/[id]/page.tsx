@@ -107,13 +107,23 @@ export default async function OfferPage(
                 <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-1">Beskrivning</p>
                 <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{offer.description}</p>
               </div>
-              <p className="text-xs text-gray-400">Skickad {formatDate(offer.created_at)}</p>
+              <p className="text-xs text-gray-400">
+                Skickad {formatDate(offer.created_at)}
+                {offer.edited_at && ` · Redigerad ${formatDate(offer.edited_at)}`}
+              </p>
             </CardBody>
           </Card>
 
           {/* Accept / Reject (only customer, only pending) */}
           {isCustomer && offer.status === 'pending' && (
-            <AcceptRejectButtons offerId={offer.id} />
+            <AcceptRejectButtons offerId={offer.id} version={offer.edited_at ?? null} />
+          )}
+
+          {/* Provider: ändra en offert som ännu inte besvarats */}
+          {isProvider && offer.status === 'pending' && (
+            <Link href={`/offers/${offer.id}/edit`} className="inline-flex rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 transition hover:border-slate-300 hover:shadow-sm">
+              Redigera offert
+            </Link>
           )}
 
           {/* Provider: mark as delivered */}

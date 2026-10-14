@@ -1,14 +1,8 @@
 import { PAGE_SIZE, pageNumber } from '@/lib/pagination'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import {
-  categoryValue,
-  InputValidationError,
-  positivePrice,
-  requiredText,
-  uuidValue,
-  oneOf,
-} from '@/lib/validation'
+import { InputValidationError, uuidValue } from '@/lib/validation'
+import { parseServiceContent, type ServiceContent } from '@/lib/service-input'
 
 export async function GET(request: NextRequest) {
   const page = pageNumber(request.nextUrl.searchParams.get('page'))
@@ -35,25 +29,11 @@ export async function POST(request: NextRequest) {
   if (profile?.role !== 'provider') return NextResponse.json({ error: 'Endast leverantörer kan skapa tjänster' }, { status: 403 })
 
   let requestId: string
-  let input: {
-    title: string
-    description: string
-    price: number
-    deliveryTime: string
-    vatIncluded: boolean | null
-    category: string
-  }
+  let input: ServiceContent
   try {
     const body = await request.json()
     requestId = body.id ? uuidValue(body.id, 'Förfrågan') : crypto.randomUUID()
-    input = {
-      title: requiredText(body.title, 'Titel', 3, 120),
-      description: requiredText(body.description, 'Beskrivning', 10, 5000),
-      price: positivePrice(body.price),
-      deliveryTime: requiredText(body.delivery_time, 'Leveranstid', 2, 120),
-      category: categoryValue(body.category),
-      vatIncluded: body.vat_included == null ? null : oneOf(String(body.vat_included), ['true', 'false'] as const, 'Moms') === 'true',
-    }
+    input = parseServiceContent(body)
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof InputValidationError ? error.message : 'Ogiltig förfrågan.' },
@@ -69,12 +49,7 @@ export async function POST(request: NextRequest) {
     .insert({
       id: requestId,
       provider_id: user.id,
-      title: input.title,
-      description: input.description,
-      price: input.price,
-      delivery_time: input.deliveryTime,
-      category: input.category,
-      vat_included: input.vatIncluded,
+      ...input,
     })
     .select()
     .single()

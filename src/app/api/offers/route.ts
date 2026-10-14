@@ -1,15 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { canSubmitOffer } from '@/lib/marketplace-rules.mjs'
-import {
-  InputValidationError,
-  oneOf,
-  positivePrice,
-  requiredText,
-  uuidValue,
-} from '@/lib/validation'
-
-const PRICE_TYPES = ['fixed', 'hourly'] as const
+import { InputValidationError, uuidValue } from '@/lib/validation'
+import { parseOfferContent, type OfferContent } from '@/lib/offer-input'
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
@@ -17,23 +10,11 @@ export async function POST(request: NextRequest) {
 
   if (!user) return NextResponse.json({ error: 'Ej inloggad' }, { status: 401 })
 
-  let input: {
-    jobId: string
-    price: number
-    priceType: 'fixed' | 'hourly'
-    timeline: string
-    description: string
-  }
+  let input: OfferContent & { jobId: string }
 
   try {
     const body = await request.json()
-    input = {
-      jobId: uuidValue(body.job_id, 'Uppdrag'),
-      price: positivePrice(body.price),
-      priceType: oneOf(body.price_type, PRICE_TYPES, 'Pristyp'),
-      timeline: requiredText(body.timeline, 'Tidsestimat', 2, 120),
-      description: requiredText(body.description, 'Offertbeskrivning', 10, 5000),
-    }
+    input = { jobId: uuidValue(body.job_id, 'Uppdrag'), ...parseOfferContent(body) }
   } catch (error) {
     const message = error instanceof InputValidationError ? error.message : 'Ogiltig förfrågan.'
     return NextResponse.json({ error: message }, { status: 400 })
@@ -68,7 +49,7 @@ export async function POST(request: NextRequest) {
       job_id: input.jobId,
       provider_id: user.id,
       price: input.price,
-      price_type: input.priceType,
+      price_type: input.price_type,
       timeline: input.timeline,
       description: input.description,
       status: 'pending',

@@ -175,8 +175,8 @@ export type Database = {
       }
       services: {
         Row: Service
-        Insert: Omit<Service, 'id' | 'created_at'>
-        Update: Partial<Omit<Service, 'id' | 'created_at'>>
+        Insert: Omit<Service, 'id' | 'created_at' | 'edited_at'>
+        Update: Partial<Omit<Service, 'id' | 'created_at' | 'edited_at'>>
         Relationships: []
       }
       offers: {

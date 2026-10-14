@@ -133,7 +133,10 @@ export default async function ServicePage(props: { params: Promise<{ id: string 
               </div>
             )}
             <h1 className="page-heading mt-4 text-3xl sm:text-4xl">{service.title}</h1>
-            <p className="muted mt-2 text-sm">Publicerad {formatDate(service.created_at)}</p>
+            <p className="muted mt-2 text-sm">
+              Publicerad {formatDate(service.created_at)}
+              {service.edited_at && ` · Redigerad ${formatDate(service.edited_at)}`}
+            </p>
           </div>
 
           <section className="surface p-7">
@@ -187,9 +190,19 @@ export default async function ServicePage(props: { params: Promise<{ id: string 
               </div>
 
               {isOwn ? (
+                <div className="space-y-2">
                 <p className="rounded-xl bg-blue-50 p-3 text-center text-sm font-bold text-blue-800">
                   {isActiveProvider ? 'Det här är din tjänst' : 'Din tjänst är dold medan du är uppdragsgivare'}
                 </p>
+                  {isActiveProvider && (
+                    <Link
+                      href={`/services/${service.id}/edit`}
+                      className="block rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-center text-sm font-semibold text-slate-800 transition hover:border-slate-300 hover:shadow-sm"
+                    >
+                      Redigera tjänst
+                    </Link>
+                  )}
+                </div>
               ) : !isActiveProvider ? (
                 <p className="rounded-xl bg-slate-50 p-3 text-center text-sm font-semibold text-slate-600">
                   Leverantören tar inte emot förfrågningar just nu.

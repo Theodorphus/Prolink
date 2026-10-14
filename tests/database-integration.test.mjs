@@ -156,11 +156,93 @@ test('real PostgreSQL migration replay and marketplace authorization', async t =
     assert.deepEqual(await notices(loser), [`offer:${customer}`, `rejected:${outsider}`])
     await as(provider, `select transition_offer($1,'delivered')`, [winner])
     await as(customer, `select transition_offer($1,'completed')`, [winner])
-    const expected = [`accepted:${provider}`, `completed:${provider}`, `delivered:${customer}`, `offer:${customer}`]
+    const expected = [`accepted:${provider}`, `completed:${provider}`, `delivered:${customer}`, `offer:${customer}`, `review_request:${customer}`]
     assert.deepEqual(await notices(winner), expected)
+    // Omdömesfrågan till kunden väntar ett dygn; leverantörens går direkt.
+    const due = (await db.query(`select kind from notification_outbox where path=$1 and available_at > now() + interval '23 hours'`, ['/offers/' + winner])).rows
+    assert.deepEqual(due.map(r => r.kind), ['review_request'])
     // Read receipts update the offer without changing status and must not queue anything.
     await db.query('update offers set provider_read_at = now(), customer_read_at = now() where id=$1', [winner])
     assert.deepEqual(await notices(winner), expected)
+  })
+
+  await t.test('stalled deals get one reminder each, and only for missing reviews', async () => {
+    const j = (await as(customer, `insert into jobs(customer_id,title,description,category) values ($1,'Reminder job','A sufficiently long description','webbutveckling') returning id`, [customer])).rows[0].id
+    const o = (await as(provider, `insert into offers(job_id,provider_id,price,timeline,description) values ($1,$2,100,'Two days','A sufficiently long offer') returning id`, [j, provider])).rows[0].id
+    const reminders = async () => (await db.query(`select kind, recipient_id from notification_outbox where path=$1 and kind like 'reminder%'`, ['/offers/' + o])).rows.map(n => `${n.kind}:${n.recipient_id}`).sort()
+    await as(customer, `select transition_offer($1,'accepted')`, [o])
+    await as(provider, `select transition_offer($1,'delivered')`, [o])
+    // Recently delivered: nothing is overdue yet.
+    await db.query('select queue_offer_reminders()')
+    assert.deepEqual(await reminders(), [])
+    await db.query(`update offers set status_changed_at = now() - interval '4 days' where id=$1`, [o])
+    await db.query('select queue_offer_reminders()')
+    await db.query('select queue_offer_reminders()')
+    assert.deepEqual(await reminders(), [`reminder_confirm:${customer}`])
+    await as(customer, `select transition_offer($1,'completed')`, [o])
+    await as(customer, `insert into reviews(offer_id,reviewer_id,reviewee_id,rating) values ($1,$2,$3,5)`, [o, customer, provider])
+    await db.query(`update offers set status_changed_at = now() - interval '8 days' where id=$1`, [o])
+    await db.query('select queue_offer_reminders()')
+    // The customer has already reviewed, so only the provider is reminded.
+    assert.deepEqual(await reminders(), [`reminder_confirm:${customer}`, `reminder_review:${provider}`])
+    await assert.rejects(as(customer, 'select queue_offer_reminders()'), { code: '42501' })
+  })
+
+  await t.test('providers edit only the content of their own services', async () => {
+    const s = (await as(provider, `insert into services(provider_id,title,description,price,delivery_time,category) values ($1,'Webbsida','En tillräckligt lång beskrivning',5000,'5 dagar','webbutveckling') returning id`, [provider])).rows[0].id
+    assert.equal((await db.query('select edited_at from services where id=$1', [s])).rows[0].edited_at, null)
+    await as(provider, `update services set title='Ny webbsida', price=6000 where id=$1`, [s])
+    const edited = (await db.query('select title, price::int as price, edited_at from services where id=$1', [s])).rows[0]
+    assert.deepEqual({ title: edited.title, price: edited.price, stamped: edited.edited_at !== null }, { title: 'Ny webbsida', price: 6000, stamped: true })
+    // Someone else's service is untouched: RLS filters the row, no error.
+    await as(outsider, `update services set title='Kapad' where id=$1`, [s])
+    assert.equal((await db.query('select title from services where id=$1', [s])).rows[0].title, 'Ny webbsida')
+    // Columns outside the content, such as created_at and provider_id, are not editable.
+    await assert.rejects(as(provider, `update services set created_at = now() + interval '1 year' where id=$1`, [s]), { code: '42501' })
+    await assert.rejects(as(provider, `update services set provider_id=$2 where id=$1`, [s, outsider]), { code: '42501' })
+  })
+
+  await t.test('portfolio items can be edited by their owner, within their own folder', async () => {
+    const own = `https://example.supabase.co/storage/v1/object/public/avatars/${provider}/portfolio/a.png`
+    const foreign = `https://example.supabase.co/storage/v1/object/public/avatars/${outsider}/portfolio/a.png`
+    const item = (await as(provider, `insert into portfolio_items(user_id,title,url) values ($1,'Första','https://example.com') returning id`, [provider])).rows[0].id
+    await as(provider, `update portfolio_items set title='Ändrad', description='Beskrivning', image_url=$2 where id=$1`, [item, own])
+    assert.equal((await db.query('select title from portfolio_items where id=$1', [item])).rows[0].title, 'Ändrad')
+    // Someone else's item is filtered out by RLS: no error, no change.
+    await as(outsider, `update portfolio_items set title='Kapad' where id=$1`, [item])
+    assert.equal((await db.query('select title from portfolio_items where id=$1', [item])).rows[0].title, 'Ändrad')
+    // The image must stay in the owner's folder, and the item cannot move or be reordered.
+    await assert.rejects(as(provider, `update portfolio_items set image_url=$2 where id=$1`, [item, foreign]), { code: '42501' })
+    await assert.rejects(as(provider, `update portfolio_items set user_id=$2 where id=$1`, [item, outsider]), { code: '42501' })
+    await assert.rejects(as(provider, `update portfolio_items set created_at=now() + interval '1 year' where id=$1`, [item]), { code: '42501' })
+    // Leave the profile empty: a later test fills it to the cap of six.
+    await db.query('delete from portfolio_items where id=$1', [item])
+  })
+
+  await t.test('a pending offer can be edited by its provider, and the customer is told', async () => {
+    // Earlier tests have used up the hourly creation quotas for jobs and offers.
+    await db.query('delete from write_quotas')
+    const j = (await as(customer, `insert into jobs(customer_id,title,description,category) values ($1,'Edit offer job','A sufficiently long description','webbutveckling') returning id`, [customer])).rows[0].id
+    const o = (await as(provider, `insert into offers(job_id,provider_id,price,timeline,description) values ($1,$2,100,'Two days','A sufficiently long offer') returning id`, [j, provider])).rows[0].id
+    await as(customer, `select mark_offer_read($1)`, [o])
+    await assert.rejects(as(customer, `select edit_offer($1,200,'fixed','One day','A different long offer')`, [o]), { code: '42501' })
+    await assert.rejects(as(outsider, `select edit_offer($1,200,'fixed','One day','A different long offer')`, [o]), { code: '42501' })
+    await as(provider, `select edit_offer($1,200,'fixed','One day','A different long offer')`, [o])
+    const edited = (await db.query('select price::int as price, timeline, edited_at, customer_read_at from offers where id=$1', [o])).rows[0]
+    assert.deepEqual({ price: edited.price, timeline: edited.timeline, stamped: edited.edited_at !== null, unread: edited.customer_read_at === null }, { price: 200, timeline: 'One day', stamped: true, unread: true })
+    const notices = async () => (await db.query(`select recipient_id from notification_outbox where kind='offer_edited' and path=$1`, ['/offers/' + o])).rows.map(r => r.recipient_id)
+    assert.deepEqual(await notices(), [customer])
+    // A second quick correction does not send a second mail.
+    await as(provider, `select edit_offer($1,250,'fixed','One day','A different long offer')`, [o])
+    assert.deepEqual(await notices(), [customer])
+    // Once the customer has accepted, the offer is a contract and can no longer change.
+    await as(customer, `select transition_offer($1,'accepted')`, [o])
+    await assert.rejects(as(provider, `select edit_offer($1,999,'fixed','One day','A different long offer')`, [o]), { code: '23514' })
+  })
+
+  await t.test('every new account is queued one welcome mail', async () => {
+    const rows = (await db.query(`select recipient_id from notification_outbox where kind='welcome' order by recipient_id`)).rows.map(r => r.recipient_id)
+    assert.deepEqual(rows, [customer, provider, outsider])
   })
 
   await t.test('company verification is private until an admin verifies it', async () => {

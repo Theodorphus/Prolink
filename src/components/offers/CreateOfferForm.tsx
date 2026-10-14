@@ -7,11 +7,15 @@ import { Textarea } from '@/components/ui/Textarea'
 import { Button } from '@/components/ui/Button'
 import { Card, CardBody } from '@/components/ui/Card'
 
-export default function CreateOfferForm({ jobId }: { jobId: string }) {
+export interface OfferDefaults { price: string; price_type: 'fixed' | 'hourly'; timeline: string; description: string }
+
+/** Skickar en ny offert, eller redigerar en befintlig när `edit` anges. */
+export default function CreateOfferForm({ jobId, edit }: { jobId: string; edit?: { offerId: string; defaults: OfferDefaults } }) {
+  const defaults = edit?.defaults
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [priceType, setPriceType] = useState<'fixed' | 'hourly'>('fixed')
+  const [priceType, setPriceType] = useState<'fixed' | 'hourly'>(defaults?.price_type ?? 'fixed')
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -22,11 +26,11 @@ export default function CreateOfferForm({ jobId }: { jobId: string }) {
     try {
     const form = new FormData(e.currentTarget)
 
-    const res = await fetch('/api/offers', {
-      method: 'POST',
+    const res = await fetch(edit ? `/api/offers/${edit.offerId}` : '/api/offers', {
+      method: edit ? 'PATCH' : 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        job_id: jobId,
+        ...(edit ? {} : { job_id: jobId }),
         price: Number(form.get('price')),
         price_type: priceType,
         timeline: form.get('timeline'),
@@ -38,6 +42,7 @@ export default function CreateOfferForm({ jobId }: { jobId: string }) {
     if (!res.ok) { setError(data.error); setLoading(false); return }
 
     router.push(`/offers/${data.id}`)
+    if (edit) router.refresh()
     } catch { setError('Kunde inte skicka. Kontrollera anslutningen och försök igen.') }
     finally { setLoading(false) }
   }
@@ -80,6 +85,7 @@ export default function CreateOfferForm({ jobId }: { jobId: string }) {
             type="number"
             min="1"
             required
+            defaultValue={defaults?.price}
             placeholder={priceType === 'fixed' ? 'T.ex. 12000' : 'T.ex. 850'}
           />
 
@@ -87,6 +93,7 @@ export default function CreateOfferForm({ jobId }: { jobId: string }) {
             label="Tidsestimat / Leveranstid"
             name="timeline" minLength={2} maxLength={120}
             required
+            defaultValue={defaults?.timeline}
             placeholder="T.ex. 10 arbetsdagar, 2 veckor"
           />
 
@@ -95,6 +102,7 @@ export default function CreateOfferForm({ jobId }: { jobId: string }) {
             name="description" minLength={10} maxLength={5000}
             required
             rows={6}
+            defaultValue={defaults?.description}
             placeholder="Beskriv vad du ska leverera, hur du tänker lösa uppdraget och varför du är rätt person..."
           />
 
@@ -103,7 +111,7 @@ export default function CreateOfferForm({ jobId }: { jobId: string }) {
               Avbryt
             </Button>
             <Button type="submit" loading={loading}>
-              Skicka offert
+              {edit ? 'Spara ändringar' : 'Skicka offert'}
             </Button>
           </div>
         </form>
