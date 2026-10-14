@@ -6,6 +6,7 @@ import { formatCurrency, timeAgo } from '@/lib/utils'
 import { getCategoryLabel } from '@/lib/categories'
 import CategoryThumb from '@/components/ui/CategoryThumb'
 import type { PublicJob, User } from '@/types/database'
+import { PUBLIC_JOBS_TAG } from '@/lib/revalidate'
 
 type FeaturedJob = PublicJob & { customer: Pick<User, 'name'> | null }
 
@@ -45,7 +46,7 @@ const latestJobs = unstable_cache(async () => {
 
   if (error) throw new Error('Uppdragen kunde inte hämtas.')
   return data
-}, ['public-latest-jobs'], { revalidate: 60 })
+}, ['public-latest-jobs'], { revalidate: 60, tags: [PUBLIC_JOBS_TAG] })
 
 export default async function LatestJobs() {
   let data

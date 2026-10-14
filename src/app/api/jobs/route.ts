@@ -1,3 +1,4 @@
+import { refreshPublicJobSurfaces } from '@/lib/revalidate'
 import { PAGE_SIZE, pageNumber } from '@/lib/pagination'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
@@ -87,6 +88,7 @@ export async function POST(request: NextRequest) {
   if (error?.code === '54000') return NextResponse.json({ error: 'För många försök. Vänta en stund och försök igen.' }, { status: 429, headers: { 'Retry-After': '3600' } })
 
   if (error) return NextResponse.json({ error: 'Jobbet kunde inte sparas' }, { status: 500 })
+  refreshPublicJobSurfaces()
 
   return NextResponse.json(data, { status: 201 })
 }

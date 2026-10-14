@@ -11,6 +11,7 @@ import LatestJobs, { LatestJobsSkeleton } from '@/components/home/LatestJobs'
 import JsonLd from '@/components/seo/JsonLd'
 import { pageMetadata } from '@/lib/seo'
 import { CONTACT_EMAIL, SITE_URL } from '@/lib/site'
+import { PUBLIC_JOBS_TAG } from '@/lib/revalidate'
 
 // Startsidan förrenderas och byggs om högst en gång i minuten, i takt med
 // cachen för siffror, tjänster och uppdrag nedan.
@@ -61,7 +62,7 @@ const publicCounts = unstable_cache(async () => {
   ])
   if (results.some(result => result.error)) throw new Error('Public counts unavailable')
   return results.map(result => result.count ?? 0)
-}, ['public-home-counts'], { revalidate: 60 })
+}, ['public-home-counts'], { revalidate: 60, tags: [PUBLIC_JOBS_TAG] })
 async function TrustSectionWithCounts() {
   let counts: number[]
   try { counts = await publicCounts() }

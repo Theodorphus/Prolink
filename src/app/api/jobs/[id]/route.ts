@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { PUBLIC_JOB_FIELDS } from '@/lib/jobs'
 import { InputValidationError, isUuid } from '@/lib/validation'
 import { parseJobContent, type JobContent } from '@/lib/job-input'
+import { refreshPublicJobSurfaces } from '@/lib/revalidate'
 
 export async function GET(_: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
@@ -29,6 +30,7 @@ export async function DELETE(_: NextRequest, props: { params: Promise<{ id: stri
 
   const { error } = await supabase.rpc('archive_job', { p_job_id: params.id })
   if (error) return NextResponse.json({ error: 'Uppdraget kunde inte arkiveras.' }, { status: error.code === '42501' ? 403 : 500 })
+  refreshPublicJobSurfaces()
 
   return NextResponse.json({ success: true })
 }
@@ -83,6 +85,7 @@ export async function PATCH(request: NextRequest, props: { params: Promise<{ id:
   }
   if (error) return NextResponse.json({ error: 'Uppdraget kunde inte uppdateras' }, { status: 500 })
   if (!data) return NextResponse.json({ error: 'Uppdraget hittades inte' }, { status: 404 })
+  refreshPublicJobSurfaces()
 
   return NextResponse.json(data)
 }

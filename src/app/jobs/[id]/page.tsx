@@ -84,6 +84,10 @@ export default async function JobPage(props: { params: Promise<{ id: string }> }
     ? await supabase.from('offers').select('id, status').eq('job_id', job.id).eq('provider_id', user.id).maybeSingle()
     : { data: null }
 
+  // Ett arkiverat uppdrag är borttaget ur allas flöden. Bara uppdragsgivaren och
+  // den som lämnat offert, som är part i det, kan fortfarande öppna det.
+  if (isArchived && !isOwner && !existingOffer) notFound()
+
   const workType =
     job.work_type === 'remote'
       ? 'På distans'
