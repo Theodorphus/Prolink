@@ -1,4 +1,8 @@
+'use client'
+
 import { cn } from '@/lib/utils'
+import { useT } from '@/i18n/client'
+import { msg } from '@/i18n/msg.mjs'
 
 type BadgeVariant = 'default' | 'success' | 'warning' | 'danger' | 'info'
 
@@ -43,21 +47,22 @@ const DOTS: Record<BadgeVariant, string> = {
 }
 
 export function StatusBadge({ status }: { status: string }) {
+  const t = useT()
   const map: Record<string, { label: string; variant: BadgeVariant }> = {
-    open: { label: 'Öppet', variant: 'success' },
-    closed: { label: 'Stängt', variant: 'default' },
-    pending: { label: 'Inväntar svar', variant: 'warning' },
-    accepted: { label: 'Accepterad', variant: 'success' },
-    rejected: { label: 'Avslagen', variant: 'danger' },
-    delivered: { label: 'Levererad', variant: 'info' },
-    completed: { label: 'Slutförd', variant: 'success' },
+    open: { label: msg('Öppet'), variant: 'success' },
+    closed: { label: msg('Stängt'), variant: 'default' },
+    pending: { label: msg('Inväntar svar'), variant: 'warning' },
+    accepted: { label: msg('Accepterad'), variant: 'success' },
+    rejected: { label: msg('Avslagen'), variant: 'danger' },
+    delivered: { label: msg('Levererad'), variant: 'info' },
+    completed: { label: msg('Slutförd'), variant: 'success' },
   }
   const config = map[status] ?? { label: status, variant: 'default' as BadgeVariant }
 
   return (
     <Badge variant={config.variant}>
       <span className={cn('h-1.5 w-1.5 rounded-full', DOTS[config.variant])} aria-hidden />
-      {config.label}
+      {t(config.label)}
     </Badge>
   )
 }

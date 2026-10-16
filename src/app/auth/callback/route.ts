@@ -81,6 +81,11 @@ export async function GET(request: NextRequest) {
     updates.role = role
   }
 
+  // Språket för mejl: nya konton får det språk de använde när de loggade in.
+  if (isNewUser && request.cookies.get('lang')?.value === 'en') {
+    await supabase.from('user_private_profiles').update({ locale: 'en' }).eq('user_id', user.id)
+  }
+
   // Sync Google avatar if the user doesn't have one yet
   const googleAvatar = user.user_metadata?.avatar_url || user.user_metadata?.picture
   if (googleAvatar && !profile?.avatar_url) {

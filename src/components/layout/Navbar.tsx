@@ -1,16 +1,18 @@
-import Link from 'next/link'
+import Link from '@/components/i18n/Link'
 import NavAuth from './NavAuth'
-
-const NAV_LINKS = [
-  { href: '/jobs', label: 'Hitta uppdrag' },
-  { href: '/services', label: 'Hitta tjänster' },
-  { href: '/jobs/create', label: 'Publicera uppdrag' },
-]
+import LanguageSwitcher from './LanguageSwitcher'
+import { getT } from '@/i18n/server'
 
 // Navigeringen läser inga cookies på servern. Den ligger i rotlayouten, så
 // en enda cookieläsning här gjorde varje sida dynamisk och omöjlig att
 // cacha. Inloggningsläget hämtas i stället i webbläsaren av NavAuth.
-export default function Navbar() {
+export default async function Navbar() {
+  const t = await getT()
+  const NAV_LINKS = [
+    { href: '/jobs', label: t('Hitta uppdrag') },
+    { href: '/services', label: t('Hitta tjänster') },
+    { href: '/jobs/create', label: t('Publicera uppdrag') },
+  ]
   return (
     <header className="w-full bg-white/95 backdrop-blur-sm border-b border-gray-100 nav-header">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -35,6 +37,7 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center gap-1">
+            <LanguageSwitcher className="hidden md:inline-block text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors px-3 py-1.5" />
             <NavAuth links={NAV_LINKS} />
           </div>
         </div>

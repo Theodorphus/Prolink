@@ -5,10 +5,13 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { Card, CardBody } from '@/components/ui/Card'
 import ServiceFields, { serviceFormPayload } from './ServiceFields'
+import { useLocalePath, useT } from '@/i18n/client'
 
 export default function CreateServiceForm() {
   const requestId = useRef<string | null>(null)
   const router = useRouter()
+  const t = useT()
+  const localePath = useLocalePath()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -29,11 +32,11 @@ export default function CreateServiceForm() {
     })
 
     const data = await res.json()
-    if (!res.ok) { setError(data.error); setLoading(false); return }
+    if (!res.ok) { setError(t(data.error)); setLoading(false); return }
 
-    router.push(`/services/${data.id}`)
+    router.push(localePath(`/services/${data.id}`))
     } catch {
-      setError('Kunde inte spara. Kontrollera anslutningen och försök igen.')
+      setError(t('Kunde inte spara. Kontrollera anslutningen och försök igen.'))
     } finally {
       setLoading(false)
     }
@@ -49,8 +52,8 @@ export default function CreateServiceForm() {
 
           <ServiceFields />
           <div className="flex justify-end gap-3 pt-2">
-            <Button type="button" variant="secondary" onClick={() => router.back()}>Avbryt</Button>
-            <Button type="submit" loading={loading}>Publicera tjänst</Button>
+            <Button type="button" variant="secondary" onClick={() => router.back()}>{t('Avbryt')}</Button>
+            <Button type="submit" loading={loading}>{t('Publicera tjänst')}</Button>
           </div>
         </form>
       </CardBody>

@@ -1,14 +1,17 @@
+import { msg } from '@/i18n/msg.mjs'
+import type { TFunction } from '@/i18n/translate'
+
 export const CATEGORIES = [
-  { value: 'webbutveckling', label: 'Webbutveckling' },
-  { value: 'design', label: 'Design & varumärke' },
-  { value: 'marknadsforing', label: 'Digital marknadsföring' },
-  { value: 'redovisning', label: 'Ekonomi & redovisning' },
-  { value: 'juridik', label: 'Juridik & avtal' },
-  { value: 'text', label: 'Text & översättning' },
-  { value: 'foto-video', label: 'Foto, video & redigering' },
-  { value: 'it-support', label: 'IT & teknisk support' },
-  { value: 'affarsstod', label: 'Administration & affärsstöd' },
-  { value: 'annat', label: 'Annat' },
+  { value: 'webbutveckling', label: msg('Webbutveckling') },
+  { value: 'design', label: msg('Design & varumärke') },
+  { value: 'marknadsforing', label: msg('Digital marknadsföring') },
+  { value: 'redovisning', label: msg('Ekonomi & redovisning') },
+  { value: 'juridik', label: msg('Juridik & avtal') },
+  { value: 'text', label: msg('Text & översättning') },
+  { value: 'foto-video', label: msg('Foto, video & redigering') },
+  { value: 'it-support', label: msg('IT & teknisk support') },
+  { value: 'affarsstod', label: msg('Administration & affärsstöd') },
+  { value: 'annat', label: msg('Annat') },
 ] as const
 
 // Kategorierna som lyfts först på mobil. Urvalet speglar de tjänster som
@@ -22,9 +25,16 @@ export const PRIORITY_CATEGORIES = [
 
 export type CategoryValue = typeof CATEGORIES[number]['value']
 
-export function getCategoryLabel(value: string | null | undefined): string {
-  if (!value) return 'Okategoriserad'
-  return CATEGORIES.find(category => category.value === value)?.label ?? value
+/** Kategorierna med etiketterna översatta till sidans språk. */
+export function localizedCategories(t: TFunction) {
+  return CATEGORIES.map(category => ({ value: category.value, label: t(category.label) }))
+}
+
+export function getCategoryLabel(value: string | null | undefined, t?: TFunction): string {
+  const translate: TFunction = t ?? (text => text)
+  if (!value) return translate(msg('Okategoriserad'))
+  const label = CATEGORIES.find(category => category.value === value)?.label
+  return label ? translate(label) : value
 }
 
 /** Bilden i public/categories. Okända och saknade kategorier får Annat. */

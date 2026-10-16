@@ -1,4 +1,5 @@
 import { categoryValue, oneOf, optionalText, positivePrice, requiredText } from '@/lib/validation'
+import { msg } from '@/i18n/msg.mjs'
 
 const WORK_TYPES = ['remote', 'onsite', 'hybrid'] as const
 
@@ -18,13 +19,13 @@ export interface JobContent {
  * användaren.
  */
 export function parseJobContent(body: Record<string, unknown>): JobContent {
-  const workType = optionalText(body.work_type, 'Arbetsform', 30)
+  const workType = optionalText(body.work_type, msg('Arbetsform'), 30)
   return {
-    title: requiredText(body.title, 'Titel', 3, 120),
-    description: requiredText(body.description, 'Beskrivning', 10, 5000),
+    title: requiredText(body.title, msg('Titel'), 3, 120),
+    description: requiredText(body.description, msg('Beskrivning'), 10, 5000),
     category: categoryValue(body.category),
-    budget: body.budget === undefined || body.budget === null || body.budget === '' ? null : positivePrice(body.budget, 'Budget'),
-    location: optionalText(body.location, 'Plats', 120),
-    work_type: workType ? oneOf(workType, WORK_TYPES, 'Arbetsform') : null,
+    budget: body.budget === undefined || body.budget === null || body.budget === '' ? null : positivePrice(body.budget, msg('Budget')),
+    location: optionalText(body.location, msg('Plats'), 120),
+    work_type: workType ? oneOf(workType, WORK_TYPES, msg('Arbetsform')) : null,
   }
 }

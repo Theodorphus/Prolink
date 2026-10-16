@@ -4,6 +4,8 @@
 // Organisationsnummer (och personnummer för enskild firma) har tio siffror där
 // den sista är en kontrollsiffra enligt Luhn. Tolv siffror med sekel (16, 19
 // eller 20) och bindestreck godtas och normaliseras bort.
+import { msg } from '../i18n/msg.mjs'
+
 export function normalizeOrgNumber(value) {
   const digits = String(value ?? '').replace(/[\s-]/g, '')
   if (!/^\d+$/.test(digits)) return null
@@ -36,11 +38,11 @@ const SHARED_DOMAINS = new Set([
 export function referenceEmailProblem(clientEmail, providerEmail) {
   const client = String(clientEmail ?? '').trim().toLowerCase()
   const own = String(providerEmail ?? '').trim().toLowerCase()
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(client)) return 'Ange en giltig e-postadress.'
-  if (client === own) return 'Du kan inte be dig själv om en referens.'
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(client)) return msg('Ange en giltig e-postadress.')
+  if (client === own) return msg('Du kan inte be dig själv om en referens.')
   const domain = client.split('@')[1]
   if (own && domain === own.split('@')[1] && !SHARED_DOMAINS.has(domain)) {
-    return 'Adressen har samma domän som din egen. Be om referenser från kunder, inte kollegor.'
+    return msg('Adressen har samma domän som din egen. Be om referenser från kunder, inte kollegor.')
   }
   return null
 }
@@ -72,15 +74,15 @@ export function websiteLabel(value) {
 // Det som gör en frilansprofil trovärdig, i den ordning det väger tyngst.
 // Varje steg har en länk till var på profilen det fixas.
 const PROFILE_STEPS = [
-  { key: 'avatar', label: 'Lägg till en profilbild', done: p => Boolean(p.avatar_url), anchor: '#redigera' },
-  { key: 'bio', label: 'Beskriv dig själv med minst 150 tecken', done: p => (p.bio ?? '').trim().length >= 150, anchor: '#redigera' },
-  { key: 'service', label: 'Publicera en tjänst', done: p => p.services > 0, anchor: '/services/create' },
-  { key: 'portfolio', label: 'Visa ett tidigare arbete i portfolion', done: p => p.portfolio > 0, anchor: '#portfolio' },
-  { key: 'skills', label: 'Ange minst tre kompetenser', done: p => (p.skills ?? []).length >= 3, anchor: '#redigera' },
-  { key: 'location', label: 'Ange ort och arbetssätt', done: p => Boolean(p.location && p.work_mode), anchor: '#redigera' },
-  { key: 'link', label: 'Länka hemsida eller LinkedIn', done: p => Boolean(p.website_url || p.linkedin_url), anchor: '#redigera' },
-  { key: 'company', label: 'Verifiera ditt företag', done: p => Boolean(p.companySubmitted), anchor: '#fortroende' },
-  { key: 'reference', label: 'Be en tidigare kund om en referens', done: p => p.referencesRequested > 0, anchor: '#fortroende' },
+  { key: 'avatar', label: msg('Lägg till en profilbild'), done: p => Boolean(p.avatar_url), anchor: '#redigera' },
+  { key: 'bio', label: msg('Beskriv dig själv med minst 150 tecken'), done: p => (p.bio ?? '').trim().length >= 150, anchor: '#redigera' },
+  { key: 'service', label: msg('Publicera en tjänst'), done: p => p.services > 0, anchor: '/services/create' },
+  { key: 'portfolio', label: msg('Visa ett tidigare arbete i portfolion'), done: p => p.portfolio > 0, anchor: '#portfolio' },
+  { key: 'skills', label: msg('Ange minst tre kompetenser'), done: p => (p.skills ?? []).length >= 3, anchor: '#redigera' },
+  { key: 'location', label: msg('Ange ort och arbetssätt'), done: p => Boolean(p.location && p.work_mode), anchor: '#redigera' },
+  { key: 'link', label: msg('Länka hemsida eller LinkedIn'), done: p => Boolean(p.website_url || p.linkedin_url), anchor: '#redigera' },
+  { key: 'company', label: msg('Verifiera ditt företag'), done: p => Boolean(p.companySubmitted), anchor: '#fortroende' },
+  { key: 'reference', label: msg('Be en tidigare kund om en referens'), done: p => p.referencesRequested > 0, anchor: '#fortroende' },
 ]
 
 export function profileCompleteness(profile) {
@@ -92,11 +94,11 @@ export function profileCompleteness(profile) {
 // till grova intervall så att enstaka svar inte ger falsk precision.
 export function responseTimeLabel(medianHours, samples) {
   if (medianHours == null || samples < 3) return null
-  if (medianHours <= 1) return 'Svarar oftast inom en timme'
-  if (medianHours <= 4) return 'Svarar oftast inom några timmar'
-  if (medianHours <= 24) return 'Svarar oftast inom ett dygn'
-  if (medianHours <= 72) return 'Svarar oftast inom några dagar'
+  if (medianHours <= 1) return msg('Svarar oftast inom en timme')
+  if (medianHours <= 4) return msg('Svarar oftast inom några timmar')
+  if (medianHours <= 24) return msg('Svarar oftast inom ett dygn')
+  if (medianHours <= 72) return msg('Svarar oftast inom några dagar')
   return null
 }
 
-export const WORK_MODES = { remote: 'På distans', onsite: 'På plats', hybrid: 'På plats eller distans' }
+export const WORK_MODES = { remote: msg('På distans'), onsite: msg('På plats'), hybrid: msg('På plats eller distans') }

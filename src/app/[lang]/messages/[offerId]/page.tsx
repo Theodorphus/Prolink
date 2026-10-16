@@ -1,0 +1,94 @@
+import { notFound, redirect } from 'next/navigation'
+import { createClient, getUser } from '@/lib/supabase/server'
+import Link from '@/components/i18n/Link'
+import ChatWindow from '@/components/chat/ChatWindow'
+import MarkOfferRead from '@/components/offers/MarkOfferRead'
+import { StatusBadge } from '@/components/ui/Badge'
+import { formatCurrency } from '@/lib/utils'
+import type { MessageWithSender } from '@/types/database'
+import { getLocale, getT } from '@/i18n/server'
+import { localePath } from '@/i18n/config'
+import { cachedTitles } from '@/lib/content-translation'
+
+export async function generateMetadata() {
+  return { title: (await getT())('Chatt'), robots: { index: false, follow: false } }
+}
+
+export default async function MessagesPage(props: { params: Promise<{ offerId: string }> }) {
+  const params = await props.params;
+  const locale = await getLocale()
+  const t = await getT()
+  const supabase = await createClient()
+  const { data: { user } } = await getUser()
+
+  if (!user) redirect(localePath(locale, '/login'))
+
+  const { data: offer } = await supabase
+    .from('offers')
+    .select('id, status, price, price_type, provider_id, job:jobs(id, title, customer_id, customer:users!jobs_customer_id_fkey(name)), provider:users(name)')
+    .eq('id', params.offerId)
+    .single()
+
+  if (!offer) notFound()
+
+  const job = Array.isArray(offer.job) ? offer.job[0] : offer.job
+  const provider = Array.isArray(offer.provider) ? offer.provider[0] : offer.provider
+  const customer = Array.isArray(job?.customer) ? job?.customer[0] : job?.customer
+
+  const isCustomer = user.id === job?.customer_id
+  const isProvider = user.id === offer.provider_id
+
+  if (!isCustomer && !isProvider) redirect(localePath(locale, '/'))
+
+  // Hela konversationen hämtades tidigare vid varje sidvisning. En långkörd
+  // chatt växer obegränsat, så de senaste meddelandena hämtas fallande och
+  // vänds sedan till stigande för visningen.
+  const MESSAGE_PAGE_SIZE = 50
+  const { data: latestMessages, error: messagesError } = await supabase
+    .from('messages')
+    .select('*, sender:users(id, name, avatar_url)')
+    .eq('offer_id', params.offerId)
+    .order('created_at', { ascending: false }).order('id', { ascending: false })
+    .limit(MESSAGE_PAGE_SIZE)
+
+  if (messagesError) throw new Error('Meddelandena kunde inte hämtas. Försök igen.')
+  const messages = (latestMessages ?? []).slice().reverse()
+
+  const otherParty = isCustomer ? provider?.name : customer?.name
+  const jobTitle = job ? (await cachedTitles('job', [job.id], locale)).get(job.id) ?? job.title : undefined
+
+  // 100vh räknar med Safaris största läge, utan verktygsfält, så skrivfältet
+  // kunde hamna bakom det på mobil. dvh följer den synliga ytan; vh behålls
+  // som reserv för webbläsare utan stöd.
+  return (
+    <div className="max-w-3xl mx-auto px-4 py-8 h-[calc(100vh-4rem)] supports-[height:100dvh]:h-[calc(100dvh-4rem)] flex flex-col">
+      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200">
+        <div>
+          <h1 className="text-lg font-bold text-gray-900">{jobTitle}</h1>
+          <p className="text-sm text-gray-500">{t('Chatt med {name}', { name: otherParty ?? '' })}</p>
+        </div>
+      </div>
+
+      {/* Chatten hör till en offert. Utan den här raden såg kunden bara en tom
+          chatt och fick aldrig veta att det fanns en offert att svara på. */}
+      {isCustomer && <MarkOfferRead offerId={offer.id} />}
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3">
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <span className="font-semibold text-slate-900">
+            {isCustomer ? t('Offert från {name}', { name: provider?.name ?? t('leverantören') }) : t('Din offert')}: {formatCurrency(offer.price, locale)}{offer.price_type === 'hourly' ? t('/tim') : ''}
+          </span>
+          <StatusBadge status={offer.status} />
+        </div>
+        <Link href={`/offers/${offer.id}`} className="text-sm font-bold text-blue-700 hover:underline">
+          {isCustomer && offer.status === 'pending' ? t('Läs offerten och svara') : t('Visa offerten')}
+        </Link>
+      </div>
+
+      <ChatWindow
+        offerId={params.offerId}
+        currentUserId={user.id}
+        initialMessages={(messages ?? []) as MessageWithSender[]}
+      />
+    </div>
+  )
+}

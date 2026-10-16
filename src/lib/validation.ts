@@ -1,5 +1,6 @@
 import { CATEGORIES } from '@/lib/categories'
 import { isAttachmentPathForOffer } from '@/lib/marketplace-rules.mjs'
+import { msg } from '@/i18n/msg.mjs'
 
 export class InputValidationError extends Error {
   constructor(message: string) {
@@ -41,7 +42,7 @@ export function optionalText(value: unknown, label: string, maxLength: number): 
   return normalized
 }
 
-export function positivePrice(value: unknown, label = 'Pris'): number {
+export function positivePrice(value: unknown, label: string = msg('Pris')): number {
   const parsed = typeof value === 'number' ? value : Number(value)
   if (!Number.isFinite(parsed) || parsed <= 0 || parsed > 99_999_999.99) {
     throw new InputValidationError(`${label} måste vara ett positivt belopp.`)
@@ -61,7 +62,7 @@ export function oneOf<const T extends readonly string[]>(
 }
 
 export function categoryValue(value: unknown): string {
-  return oneOf(value, CATEGORIES.map(category => category.value), 'Kategori')
+  return oneOf(value, CATEGORIES.map(category => category.value), msg('Kategori'))
 }
 
 export function isUuid(value: unknown): value is string {
@@ -75,7 +76,7 @@ export function uuidValue(value: unknown, label: string): string {
   return value
 }
 
-export function emailValue(value: unknown, label = 'E-post'): string {
+export function emailValue(value: unknown, label: string = msg('E-post')): string {
   const email = requiredText(value, label, 3, 254).toLowerCase()
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     throw new InputValidationError(`${label} är ogiltig.`)
@@ -98,9 +99,9 @@ export function optionalHttpUrl(value: unknown, label: string): string | null {
 
 export function attachmentPath(value: unknown, offerId: string): string | null {
   if (value === undefined || value === null || value === '') return null
-  const path = requiredText(value, 'Bilaga', 1, 1024)
+  const path = requiredText(value, msg('Bilaga'), 1, 1024)
   if (!isAttachmentPathForOffer(path, offerId)) {
-    throw new InputValidationError('Bilagans sökväg är ogiltig.')
+    throw new InputValidationError(msg('Bilagans sökväg är ogiltig.'))
   }
   return path
 }

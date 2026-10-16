@@ -4,9 +4,11 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { Card, CardBody } from '@/components/ui/Card'
+import { useT } from '@/i18n/client'
 
 export default function CloseJobButton({ jobId }: { jobId: string }) {
   const router = useRouter()
+  const t = useT()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -14,7 +16,7 @@ export default function CloseJobButton({ jobId }: { jobId: string }) {
   // sidan ändå, uppdraget låg kvar som öppet och användaren fick ingen
   // förklaring alls.
   async function handleClose() {
-    if (!confirm('Vill du stänga uppdraget? Det går inte att ångra.')) return
+    if (!confirm(t('Vill du stänga uppdraget? Det går inte att ångra.'))) return
     setLoading(true)
     setError('')
     try {
@@ -27,10 +29,10 @@ export default function CloseJobButton({ jobId }: { jobId: string }) {
         router.refresh()
       } else {
         const data = await res.json().catch(() => null)
-        setError(data?.error ?? 'Uppdraget kunde inte stängas.')
+        setError(t(data?.error ?? 'Uppdraget kunde inte stängas.'))
       }
     } catch {
-      setError('Uppdraget kunde inte stängas. Kontrollera anslutningen.')
+      setError(t('Uppdraget kunde inte stängas. Kontrollera anslutningen.'))
     } finally {
       setLoading(false)
     }
@@ -39,10 +41,10 @@ export default function CloseJobButton({ jobId }: { jobId: string }) {
   return (
     <Card>
       <CardBody>
-        <p className="text-sm text-gray-600 mb-3">Har du hittat en leverantör?</p>
+        <p className="text-sm text-gray-600 mb-3">{t('Har du hittat en leverantör?')}</p>
         {error && <p role="alert" className="mb-3 text-sm text-red-600">{error}</p>}
         <Button variant="secondary" className="w-full" onClick={handleClose} loading={loading}>
-          Stäng uppdraget
+          {t('Stäng uppdraget')}
         </Button>
       </CardBody>
     </Card>

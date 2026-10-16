@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import Link from '@/components/i18n/Link'
 import { cn, formatCurrency } from '@/lib/utils'
 import { Badge, StatusBadge } from '@/components/ui/Badge'
 import { getCategoryLabel } from '@/lib/categories'

@@ -1,4 +1,5 @@
-import Link from 'next/link'
+import Link from '@/components/i18n/Link'
+import { getT } from '@/i18n/server'
 
 /**
  * Förtroendeavsnitt.
@@ -13,7 +14,7 @@ import Link from 'next/link'
  * ny, och de garantier som faktiskt gäller. När det finns riktiga omdömen kan de
  * lyftas in här.
  */
-export default function TrustSection({
+export default async function TrustSection({
   providerCount,
   openJobCount,
   serviceCount,
@@ -27,37 +28,38 @@ export default function TrustSection({
   serviceCount: number
   pending?: boolean
 }) {
+  const t = await getT()
   const stats = [
-    { value: providerCount, label: providerCount === 1 ? 'frilansare' : 'frilansare', suffix: '' },
-    { value: openJobCount, label: openJobCount === 1 ? 'öppet uppdrag' : 'öppna uppdrag', suffix: '' },
-    { value: serviceCount, label: serviceCount === 1 ? 'publicerad tjänst' : 'publicerade tjänster', suffix: '' },
+    { value: providerCount, label: providerCount === 1 ? t('frilansare').replace(/s$/, '') : t('frilansare') },
+    { value: openJobCount, label: openJobCount === 1 ? t('öppet uppdrag') : t('öppna uppdrag') },
+    { value: serviceCount, label: serviceCount === 1 ? t('publicerad tjänst') : t('publicerade tjänster') },
   ]
 
   const guarantees = [
     {
-      title: 'Kostnadsfritt att komma igång',
-      body: 'Publicera uppdrag och skapa profil utan avgift. Inga bindningstider och ingen provision på det ni kommer överens om.',
+      title: t('Kostnadsfritt att komma igång'),
+      body: t('Publicera uppdrag och skapa profil utan avgift. Inga bindningstider och ingen provision på det ni kommer överens om.'),
       icon: (
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       ),
     },
     {
-      title: 'Omdömen först efter genomfört uppdrag',
-      body: 'Bara parter i ett slutfört uppdrag kan lämna omdöme. Du får se erfarenheter från verkliga samarbeten.',
+      title: t('Omdömen först efter genomfört uppdrag'),
+      body: t('Bara parter i ett slutfört uppdrag kan lämna omdöme. Du får se erfarenheter från verkliga samarbeten.'),
       icon: (
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       ),
     },
     {
-      title: 'Ni äger dialogen',
-      body: 'Ingen mellanhand som styr kontakten. Uppdrag, offerter och chatt samlas på ett ställe, men villkoren är era.',
+      title: t('Ni äger dialogen'),
+      body: t('Ingen mellanhand som styr kontakten. Uppdrag, offerter och chatt samlas på ett ställe, men villkoren är era.'),
       icon: (
         <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
       ),
     },
     {
-      title: 'Privata uppgifter stannar privata',
-      body: 'Ditt telefonnummer och din e-postadress visas aldrig på din publika profil.',
+      title: t('Privata uppgifter stannar privata'),
+      body: t('Ditt telefonnummer och din e-postadress visas aldrig på din publika profil.'),
       icon: (
         <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
       ),
@@ -68,13 +70,12 @@ export default function TrustSection({
     <section className="border-b border-slate-200/70 px-4 py-14 sm:px-6 sm:py-24 lg:px-8" style={{ background: 'var(--surface-page)' }}>
       <div className="mx-auto max-w-7xl">
         <div className="max-w-2xl">
-          <p className="page-eyebrow">Läget just nu</p>
+          <p className="page-eyebrow">{t('Läget just nu')}</p>
           <h2 className="page-heading mt-3 text-[2rem] sm:text-4xl">
-            Ny plattform, tydliga spelregler
+            {t('Ny plattform, tydliga spelregler')}
           </h2>
           <p className="mt-4 text-lg leading-8 text-slate-600">
-            Prolink är i ett tidigt skede. Hjälp oss bygga nätverket genom att publicera ett uppdrag eller en tjänst. Vi visar den
-            aktivitet som finns just nu.
+            {t('Prolink är i ett tidigt skede. Hjälp oss bygga nätverket genom att publicera ett uppdrag eller en tjänst. Vi visar den aktivitet som finns just nu.')}
           </p>
         </div>
 
@@ -95,9 +96,9 @@ export default function TrustSection({
         </div>
 
         <p className="muted mt-5 text-center text-sm">
-          Siffrorna uppdateras ungefär varje minut.{' '}
+          {t('Siffrorna uppdateras ungefär varje minut.')}{' '}
           <Link href="/jobs" className="font-semibold text-indigo-600 underline-offset-4 hover:underline">
-            Se uppdragen själv
+            {t('Se uppdragen själv')}
           </Link>
           .
         </p>

@@ -1,10 +1,14 @@
-import Link from 'next/link'
+'use client'
+
+import Link from '@/components/i18n/Link'
 import Image from 'next/image'
 import StarRating from '@/components/reviews/StarRating'
 import { formatDate } from '@/lib/utils'
 import type { ReviewWithReviewer } from '@/types/database'
+import { useLocale } from '@/i18n/client'
 
 export default function ReviewCard({ review }: { review: ReviewWithReviewer }) {
+  const locale = useLocale()
   return (
     <div className="py-4 border-b border-gray-100 last:border-0">
       <div className="flex items-start gap-3">
@@ -22,7 +26,7 @@ export default function ReviewCard({ review }: { review: ReviewWithReviewer }) {
             <Link href={`/profile/${review.reviewer.id}`} className="text-sm font-semibold text-gray-900 hover:text-blue-600">
               {review.reviewer.name}
             </Link>
-            <span className="text-xs text-gray-400 shrink-0">{formatDate(review.created_at)}</span>
+            <span className="text-xs text-gray-400 shrink-0">{formatDate(review.created_at, locale)}</span>
           </div>
           <StarRating value={review.rating} readonly size="sm" />
           {review.comment && (

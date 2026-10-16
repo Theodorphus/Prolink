@@ -1,8 +1,10 @@
 'use client'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useState, useTransition } from 'react'
-import { CATEGORIES } from '@/lib/categories'
+import { localizedCategories } from '@/lib/categories'
+import { useT } from '@/i18n/client'
 export default function MarketplaceFilters({ services = false }: { services?: boolean }) {
+  const t = useT()
   const pathname = usePathname()
   const params = useSearchParams()
   const router = useRouter()
@@ -21,19 +23,19 @@ export default function MarketplaceFilters({ services = false }: { services?: bo
     new FormData(event.currentTarget).forEach((value, key) => { if (String(value).trim()) next.set(key, String(value).trim()) })
     startTransition(() => router.replace(`${pathname}?${next}`, { scroll: false }))
   }}>
-    <label className="space-y-1 text-sm font-medium">Sök {services ? 'tjänster' : 'uppdrag'}<input name="q" type="search" maxLength={120} defaultValue={params.get('q') ?? ''} className={field} /></label>
+    <label className="space-y-1 text-sm font-medium">{services ? t('Sök tjänster') : t('Sök uppdrag')}<input name="q" type="search" maxLength={120} defaultValue={params.get('q') ?? ''} className={field} /></label>
     <div id="fler-filter" className={`${expanded ? 'grid' : 'hidden'} gap-3 sm:contents`}>
-      <label className="space-y-1 text-sm font-medium">Kategori<select name="category" defaultValue={params.get('category') ?? ''} className={field}><option value="">Alla kategorier</option>{CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}</select></label>
-      {services ? <label className="space-y-1 text-sm font-medium">Maxpris (kr)<input name="max_price" type="number" inputMode="numeric" min="0" max="99999999" defaultValue={params.get('max_price') ?? ''} className={field} /></label> : <label className="space-y-1 text-sm font-medium">Arbetsform<select name="worktype" defaultValue={params.get('worktype') ?? ''} className={field}><option value="">Alla arbetsformer</option><option value="remote">På distans</option><option value="onsite">På plats</option><option value="hybrid">Hybrid</option></select></label>}
-      <label className="space-y-1 text-sm font-medium">Sortering<select name="sort" defaultValue={params.get('sort') ?? 'newest'} className={field}><option value="newest">Nyast först</option><option value="oldest">Äldst först</option>{services && <><option value="price_asc">Pris: lägst först</option><option value="price_desc">Pris: högst först</option></>}</select></label>
+      <label className="space-y-1 text-sm font-medium">{t('Kategori')}<select name="category" defaultValue={params.get('category') ?? ''} className={field}><option value="">{t('Alla kategorier')}</option>{localizedCategories(t).map(c => <option key={c.value} value={c.value}>{c.label}</option>)}</select></label>
+      {services ? <label className="space-y-1 text-sm font-medium">{t('Maxpris (kr)')}<input name="max_price" type="number" inputMode="numeric" min="0" max="99999999" defaultValue={params.get('max_price') ?? ''} className={field} /></label> : <label className="space-y-1 text-sm font-medium">{t('Arbetsform')}<select name="worktype" defaultValue={params.get('worktype') ?? ''} className={field}><option value="">{t('Alla arbetsformer')}</option><option value="remote">{t('På distans')}</option><option value="onsite">{t('På plats')}</option><option value="hybrid">{t('Hybrid')}</option></select></label>}
+      <label className="space-y-1 text-sm font-medium">{t('Sortering')}<select name="sort" defaultValue={params.get('sort') ?? 'newest'} className={field}><option value="newest">{t('Nyast först')}</option><option value="oldest">{t('Äldst först')}</option>{services && <><option value="price_asc">{t('Pris: lägst först')}</option><option value="price_desc">{t('Pris: högst först')}</option></>}</select></label>
     </div>
     <div className="flex items-center gap-2">
       <button type="button" className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 sm:hidden" aria-expanded={expanded} aria-controls="fler-filter" onClick={() => setExpanded(value => !value)}>
-        Filter{activeFilters > 0 ? ` (${activeFilters})` : ''}
+        {t('Filter')}{activeFilters > 0 ? ` (${activeFilters})` : ''}
       </button>
-      <button disabled={pending} className="rounded-xl bg-blue-700 px-4 py-2.5 font-semibold text-white" type="submit">{pending ? 'Söker…' : 'Sök'}</button>
-      <button type="button" className="rounded-xl px-3 py-2.5 text-sm underline" onClick={() => startTransition(() => router.replace(pathname, { scroll: false }))}>Rensa</button>
+      <button disabled={pending} className="rounded-xl bg-blue-700 px-4 py-2.5 font-semibold text-white" type="submit">{pending ? t('Söker…') : t('Sök')}</button>
+      <button type="button" className="rounded-xl px-3 py-2.5 text-sm underline" onClick={() => startTransition(() => router.replace(pathname, { scroll: false }))}>{t('Rensa')}</button>
     </div>
-    <span role="status" className="sr-only">{pending ? 'Söker…' : ''}</span>
+    <span role="status" className="sr-only">{pending ? t('Söker…') : ''}</span>
   </form>
 }

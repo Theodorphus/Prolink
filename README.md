@@ -99,6 +99,30 @@ npx supabase gen types typescript --project-id YOUR_PROJECT_ID --schema public >
 
 Review the generated diff before replacing the manual types.
 
+## Languages (Swedish and English)
+
+Swedish is the default and lives on the existing URLs (`/jobs`, `/services`, ...).
+English lives under `/en`. All pages sit in `src/app/[lang]`; `src/proxy.ts` rewrites
+Swedish URLs internally to `/sv/...` (the prefix is never shown) and remembers the
+choice in a `lang` cookie so links without a prefix still land on the right language.
+
+- **Texts** are written in Swedish in the code, and the Swedish text is the key:
+  `t('Hitta uppdrag')` on the server (`getT()` from `@/i18n/server`) or in client
+  components (`useT()` from `@/i18n/client`). English lives in `src/i18n/en/*.json`.
+  Use `msg('...')` to mark a text that is written in one place and translated in
+  another (lists, error messages). `npm test` fails if a text lacks an English
+  translation; `node scripts/i18n-keys.mjs` lists what is missing.
+- **Links** use `@/components/i18n/Link` (adds the `/en` prefix), and `localePath()`
+  for `redirect()` and `router.push()`.
+- **Long-form content** with its own structure (category landing pages) has a parallel
+  English file, `src/lib/category-content.en.ts`.
+- **User-written listings** (jobs and services) are machine translated on demand when a
+  visitor reads English, cached in `content_translations` (migration 028) and shown with
+  "Automatically translated · Show the original". It needs `ANTHROPIC_API_KEY`; without
+  it listings are simply shown in Swedish. The admin pages are Swedish only.
+- **Email** is written in the recipient's language (`user_private_profiles.locale`,
+  set at sign-up and editable in the profile).
+
 ## Verification
 
 ```bash

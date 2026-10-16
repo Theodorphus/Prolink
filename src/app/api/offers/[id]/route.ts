@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { canTransitionOffer, OFFER_STATUSES } from '@/lib/marketplace-rules.mjs'
 import { InputValidationError, oneOf, uuidValue } from '@/lib/validation'
 import { parseOfferContent } from '@/lib/offer-input'
+import { msg } from '@/i18n/msg.mjs'
 
 // transition_offer i databasen kastar engelska felmeddelanden. De affärsregler
 // en användare faktiskt kan träffa översätts här så att gränssnittet är på
@@ -11,16 +12,16 @@ function transitionErrorMessage(message: string): string {
   const normalized = message.toLowerCase()
 
   if (normalized.includes('already has a winning offer')) {
-    return 'Uppdraget har redan en accepterad offert.'
+    return msg('Uppdraget har redan en accepterad offert.')
   }
   if (normalized.includes('no longer open')) {
-    return 'Uppdraget är inte längre öppet.'
+    return msg('Uppdraget är inte längre öppet.')
   }
   if (normalized.includes('invalid offer transition')) {
-    return 'Offerten kan inte ändras till den statusen.'
+    return msg('Offerten kan inte ändras till den statusen.')
   }
 
-  return 'Offerten kunde inte uppdateras.'
+  return msg('Offerten kunde inte uppdateras.')
 }
 
 export async function PATCH(request: NextRequest, props: { params: Promise<{ id: string }> }) {
@@ -37,7 +38,7 @@ export async function PATCH(request: NextRequest, props: { params: Promise<{ id:
   if (raw && typeof raw === 'object' && !('status' in raw) && 'description' in raw) {
     let content
     try {
-      uuidValue(params.id, 'Offert')
+      uuidValue(params.id, msg('Offert'))
       content = parseOfferContent(raw)
     } catch (error) {
       return NextResponse.json({ error: error instanceof InputValidationError ? error.message : 'Ogiltig förfrågan.' }, { status: 400 })
@@ -55,9 +56,9 @@ export async function PATCH(request: NextRequest, props: { params: Promise<{ id:
   let offerId: string
   let status: 'pending' | 'accepted' | 'rejected' | 'delivered' | 'completed'
   try {
-    offerId = uuidValue(params.id, 'Offert')
+    offerId = uuidValue(params.id, msg('Offert'))
     const body = await request.json()
-    status = oneOf(body.status, OFFER_STATUSES, 'Status')
+    status = oneOf(body.status, OFFER_STATUSES, msg('Status'))
   } catch (error) {
     const message = error instanceof InputValidationError ? error.message : 'Ogiltig förfrågan.'
     return NextResponse.json({ error: message }, { status: 400 })

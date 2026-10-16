@@ -5,9 +5,12 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { Card, CardBody } from '@/components/ui/Card'
 import ServiceFields, { serviceFormPayload, type ServiceFieldValues } from './ServiceFields'
+import { useLocalePath, useT } from '@/i18n/client'
 
 export default function EditServiceForm({ serviceId, defaults }: { serviceId: string; defaults: ServiceFieldValues }) {
   const router = useRouter()
+  const t = useT()
+  const localePath = useLocalePath()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -24,13 +27,13 @@ export default function EditServiceForm({ serviceId, defaults }: { serviceId: st
       })
       if (!response.ok) {
         const data = await response.json().catch(() => null)
-        setError(data?.error ?? 'Ändringarna kunde inte sparas.')
+        setError(t(data?.error ?? 'Ändringarna kunde inte sparas.'))
         return
       }
-      router.push(`/services/${serviceId}`)
+      router.push(localePath(`/services/${serviceId}`))
       router.refresh()
     } catch {
-      setError('Kunde inte spara. Kontrollera anslutningen och försök igen.')
+      setError(t('Kunde inte spara. Kontrollera anslutningen och försök igen.'))
     } finally {
       setLoading(false)
     }
@@ -45,8 +48,8 @@ export default function EditServiceForm({ serviceId, defaults }: { serviceId: st
           )}
           <ServiceFields defaults={defaults} />
           <div className="flex justify-end gap-3 pt-2">
-            <Button type="button" variant="secondary" onClick={() => router.back()}>Avbryt</Button>
-            <Button type="submit" loading={loading}>Spara ändringar</Button>
+            <Button type="button" variant="secondary" onClick={() => router.back()}>{t('Avbryt')}</Button>
+            <Button type="submit" loading={loading}>{t('Spara ändringar')}</Button>
           </div>
         </form>
       </CardBody>

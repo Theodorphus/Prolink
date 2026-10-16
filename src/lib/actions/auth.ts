@@ -11,6 +11,7 @@ import {
   requiredText,
   safeRelativePath,
 } from '@/lib/validation'
+import { msg } from '@/i18n/msg.mjs'
 
 
 export async function login(_: ActionState, formData: FormData): Promise<ActionState> {
@@ -22,7 +23,7 @@ export async function login(_: ActionState, formData: FormData): Promise<ActionS
     email = emailValue(formData.get('email'))
     password = passwordValue(formData.get('password'), 6)
   } catch (error) {
-    return { error: error instanceof InputValidationError ? error.message : 'Ogiltiga uppgifter.' }
+    return { error: error instanceof InputValidationError ? error.message : msg('Ogiltiga uppgifter.') }
   }
   const redirectTo = safeRelativePath(formData.get('redirect'))
 
@@ -43,25 +44,25 @@ function registerErrorMessage(message: string): string {
   const normalized = message.toLowerCase()
 
   if (normalized.includes('pwned') || normalized.includes('leaked') || normalized.includes('compromised')) {
-    return 'Lösenordet finns med i kända dataläckor. Välj ett annat lösenord.'
+    return msg('Lösenordet finns med i kända dataläckor. Välj ett annat lösenord.')
   }
   if (normalized.includes('weak') || normalized.includes('password should contain')) {
-    return 'Lösenordet är för svagt. Använd minst 8 tecken med stora och små bokstäver samt siffror.'
+    return msg('Lösenordet är för svagt. Använd minst 8 tecken med stora och små bokstäver samt siffror.')
   }
   if (normalized.includes('at least') && normalized.includes('characters')) {
-    return 'Lösenordet måste vara minst 8 tecken.'
+    return msg('Lösenordet måste vara minst 8 tecken.')
   }
   if (normalized.includes('already registered') || normalized.includes('already exists')) {
-    return 'Det finns redan ett konto med den e-postadressen.'
+    return msg('Det finns redan ett konto med den e-postadressen.')
   }
   if (normalized.includes('invalid') && normalized.includes('email')) {
-    return 'E-postadressen är ogiltig.'
+    return msg('E-postadressen är ogiltig.')
   }
   if (normalized.includes('rate limit') || normalized.includes('too many')) {
-    return 'För många försök. Vänta en stund och försök igen.'
+    return msg('För många försök. Vänta en stund och försök igen.')
   }
 
-  return 'Kunde inte skapa kontot. Kontrollera uppgifterna och försök igen.'
+  return msg('Kunde inte skapa kontot. Kontrollera uppgifterna och försök igen.')
 }
 
 export async function register(_: ActionState, formData: FormData): Promise<ActionState> {
@@ -74,10 +75,10 @@ export async function register(_: ActionState, formData: FormData): Promise<Acti
   try {
     email = emailValue(formData.get('email'))
     password = passwordValue(formData.get('password'), 8)
-    name = requiredText(formData.get('name'), 'Namn', 1, 100)
-    role = oneOf(formData.get('role'), ['customer', 'provider'] as const, 'Roll')
+    name = requiredText(formData.get('name'), msg('Namn'), 1, 100)
+    role = oneOf(formData.get('role'), ['customer', 'provider'] as const, msg('Roll'))
   } catch (error) {
-    return { error: error instanceof InputValidationError ? error.message : 'Ogiltiga uppgifter.' }
+    return { error: error instanceof InputValidationError ? error.message : msg('Ogiltiga uppgifter.') }
   }
 
   const redirectTo = safeRelativePath(formData.get('redirect'))
@@ -85,7 +86,7 @@ export async function register(_: ActionState, formData: FormData): Promise<Acti
     email,
     password,
     options: {
-      data: { name, role },
+      data: { name, role, locale: formData.get('locale') === 'en' ? 'en' : 'sv' },
       emailRedirectTo: `${SITE_URL}/auth/callback?next=${encodeURIComponent(redirectTo)}`,
     },
   })
@@ -101,7 +102,7 @@ export async function register(_: ActionState, formData: FormData): Promise<Acti
 
 function passwordValue(value: FormDataEntryValue | null, min: number): string {
   if (typeof value !== 'string' || value.length < min || value.length > 128) {
-    throw new InputValidationError(`Lösenordet måste vara ${min}–128 tecken.`)
+    throw new InputValidationError(min === 8 ? msg('Lösenordet måste vara 8–128 tecken.') : msg('Lösenordet måste vara 6–128 tecken.'))
   }
   return value
 }
@@ -141,5 +142,5 @@ export async function resetPassword(_: ActionState, form: FormData): Promise<Act
     const { error } = await supabase.auth.updateUser({ password })
     if (error) return { error: 'Lösenordet kunde inte sparas. Kontrollera att det är tillräckligt starkt.' }
     return { success: true, redirectTo: '/' }
-  } catch (error) { return { error: error instanceof Error ? error.message : 'Kunde inte ändra lösenordet.' } }
+  } catch (error) { return { error: error instanceof Error ? error.message : msg('Kunde inte ändra lösenordet.') } }
 }

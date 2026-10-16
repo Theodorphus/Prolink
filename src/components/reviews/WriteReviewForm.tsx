@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import StarRating from '@/components/reviews/StarRating'
 import { Card, CardBody, CardHeader } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
+import { useT } from '@/i18n/client'
 
 interface WriteReviewFormProps {
   offerId: string
@@ -14,6 +15,7 @@ interface WriteReviewFormProps {
 
 export default function WriteReviewForm({ offerId, revieweeId, revieweeName }: WriteReviewFormProps) {
   const router = useRouter()
+  const t = useT()
   const [rating, setRating] = useState(0)
   const [comment, setComment] = useState('')
   const [loading, setLoading] = useState(false)
@@ -23,7 +25,7 @@ export default function WriteReviewForm({ offerId, revieweeId, revieweeName }: W
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (loading) return
-    if (rating === 0) { setError('Välj ett betyg'); return }
+    if (rating === 0) { setError(t('Välj ett betyg')); return }
 
     setLoading(true)
     setError('')
@@ -40,9 +42,9 @@ export default function WriteReviewForm({ offerId, revieweeId, revieweeName }: W
       router.refresh()
     } else {
       const data = await res.json()
-      setError(data.error ?? 'Något gick fel')
+      setError(t(data.error ?? 'Något gick fel'))
     }
-    } catch { setError('Kunde inte skicka. Kontrollera anslutningen och försök igen.') }
+    } catch { setError(t('Kunde inte skicka. Kontrollera anslutningen och försök igen.')) }
     finally { setLoading(false) }
   }
 
@@ -53,7 +55,7 @@ export default function WriteReviewForm({ offerId, revieweeId, revieweeName }: W
           <svg className="w-5 h-5 text-green-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
-          <p className="text-sm font-medium text-green-800">Tack! Ditt omdöme har skickats.</p>
+          <p className="text-sm font-medium text-green-800">{t('Tack! Ditt omdöme har skickats.')}</p>
         </CardBody>
       </Card>
     )
@@ -62,7 +64,7 @@ export default function WriteReviewForm({ offerId, revieweeId, revieweeName }: W
   return (
     <Card>
       <CardHeader>
-        <h3 className="font-semibold text-gray-900">Lämna omdöme om {revieweeName}</h3>
+        <h3 className="font-semibold text-gray-900">{t('Lämna omdöme om {name}', { name: revieweeName })}</h3>
       </CardHeader>
       <CardBody>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -70,21 +72,21 @@ export default function WriteReviewForm({ offerId, revieweeId, revieweeName }: W
             <p role="alert" className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>
           )}
           <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-gray-700">Betyg</label>
+            <label className="block text-sm font-medium text-gray-700">{t('Betyg')}</label>
             <StarRating value={rating} onChange={setRating} size="lg" />
           </div>
           <div className="space-y-1.5">
-            <label htmlFor="review-comment" className="block text-sm font-medium text-gray-700">Omdöme <span className="text-gray-400 font-normal">(valfritt)</span></label>
+            <label htmlFor="review-comment" className="block text-sm font-medium text-gray-700">{t('Omdöme')} <span className="text-gray-400 font-normal">({t('valfritt')})</span></label>
             <textarea id="review-comment" maxLength={2000}
               value={comment}
               onChange={e => setComment(e.target.value)}
               rows={3}
-              placeholder={`Berätta om din upplevelse med ${revieweeName}...`}
+              placeholder={t('Berätta om din upplevelse med {name}...', { name: revieweeName })}
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
             />
           </div>
           <Button type="submit" loading={loading} className="w-full">
-            Skicka omdöme
+            {t('Skicka omdöme')}
           </Button>
         </form>
       </CardBody>

@@ -1,4 +1,6 @@
 import { CATEGORIES, type CategoryValue } from '@/lib/categories'
+import { CONTENT_EN } from '@/lib/category-content.en'
+import type { Locale } from '@/i18n/config'
 
 /**
  * Redaktionellt innehåll per kategori.
@@ -340,8 +342,9 @@ const CONTENT: Record<string, CategoryContent> = {
 // CONTENT är ett vanligt objekt, så CONTENT['constructor'] och liknande
 // träffar prototypens egenskaper. /hitta/constructor gav därför en funktion i
 // stället för null och kraschade sidan med 500 i stället för att ge 404.
-export function getCategoryContent(value: string): CategoryContent | null {
-  return Object.hasOwn(CONTENT, value) ? CONTENT[value] : null
+export function getCategoryContent(value: string, locale: Locale = 'sv'): CategoryContent | null {
+  if (!Object.hasOwn(CONTENT, value)) return null
+  return locale === 'en' && Object.hasOwn(CONTENT_EN, value) ? CONTENT_EN[value] : CONTENT[value]
 }
 
 /** Kategorier som har redaktionellt innehåll och därmed en egen landningssida. */

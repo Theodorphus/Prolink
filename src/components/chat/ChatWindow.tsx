@@ -5,6 +5,8 @@ import { notifyUnreadChanged } from '@/components/layout/useUnreadCount'
 import { createClient } from '@/lib/supabase/client'
 import ChatMessage from './ChatMessage'
 import ChatInput from './ChatInput'
+import { useT } from '@/i18n/client'
+import { msg } from '@/i18n/msg.mjs'
 import type { MessageWithSender } from '@/types/database'
 
 export default function ChatWindow({ offerId, currentUserId, initialMessages }: {
@@ -14,10 +16,11 @@ export default function ChatWindow({ offerId, currentUserId, initialMessages }: 
 }
 
 function Conversation({ offerId, currentUserId, initialMessages }: { offerId: string; currentUserId: string; initialMessages: MessageWithSender[] }) {
+  const t = useT()
   const [messages, setMessages] = useState(initialMessages)
   const [supabase] = useState(createClient)
   const userId = currentUserId
-  const [connection, setConnection] = useState('Ansluter…')
+  const [connection, setConnection] = useState(msg('Ansluter…'))
   const [error, setError] = useState('')
   const [older, setOlder] = useState(initialMessages.length === 50)
   const [loadingOlder, setLoadingOlder] = useState(false)
@@ -92,7 +95,7 @@ function Conversation({ offerId, currentUserId, initialMessages }: { offerId: st
         if (rows.length < 50) break
       }
       setError('')
-    } catch { setError('Kunde inte uppdatera chatten. Försöker igen automatiskt.') }
+    } catch { setError(msg('Kunde inte uppdatera chatten. Försöker igen automatiskt.')) }
     finally { refreshing.current = false }
 
   }, [offerId, merge])
@@ -103,7 +106,7 @@ function Conversation({ offerId, currentUserId, initialMessages }: { offerId: st
       event: 'INSERT', schema: 'public', table: 'messages', filter: `offer_id=eq.${offerId}`,
     }, () => { void refresh() }).subscribe(status => {
       if (!active) return
-      setConnection(status === 'SUBSCRIBED' ? 'Ansluten' : 'Återansluter… Du kan fortfarande skicka meddelanden.')
+      setConnection(status === 'SUBSCRIBED' ? msg('Ansluten') : msg('Återansluter… Du kan fortfarande skicka meddelanden.'))
       if (status === 'SUBSCRIBED') void refresh()
     })
     const timer = setInterval(() => { if (document.visibilityState === 'visible') void refresh() }, 15000)
@@ -130,7 +133,7 @@ function Conversation({ offerId, currentUserId, initialMessages }: { offerId: st
       previousHeight.current = list.current?.scrollHeight ?? null
       merge(rows)
       setOlder(rows.length === 50)
-    } catch { setError('Kunde inte hämta äldre meddelanden. Försök igen.') }
+    } catch { setError(msg('Kunde inte hämta äldre meddelanden. Försök igen.')) }
     finally { setLoadingOlder(false) }
   }
 
@@ -140,17 +143,17 @@ function Conversation({ offerId, currentUserId, initialMessages }: { offerId: st
       body: JSON.stringify({ content, attachment_path: attachmentPath, id: requestId }),
     })
     const data = await res.json().catch(() => null)
-    if (!res.ok || !data?.id) throw new Error(data?.error ?? 'Kunde inte skicka. Försök igen.')
+    if (!res.ok || !data?.id) throw new Error(data?.error ?? msg('Kunde inte skicka. Försök igen.'))
     merge([data])
     setTimeout(() => list.current?.scrollTo({ top: list.current.scrollHeight, behavior: 'instant' }), 0)
   }
 
   return <div className="flex flex-col flex-1 min-h-0">
-    <p role="status" className="mb-2 text-xs text-slate-500">{connection}</p>
-    {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
-    <div ref={list} onScroll={() => { const el = list.current; if (el) stickToBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80 }} role="log" aria-label="Meddelanden" aria-live="polite" className="flex-1 overflow-y-auto space-y-4 pr-1">
-      {older && <button type="button" disabled={loadingOlder} onClick={loadOlder} className="text-sm underline">{loadingOlder ? 'Hämtar…' : 'Visa äldre meddelanden'}</button>}
-      {messages.length === 0 && <p className="py-12 text-center text-slate-500">Inga meddelanden ännu. Har du frågor om offerten kan du skriva här.</p>}
+    <p role="status" className="mb-2 text-xs text-slate-500">{t(connection)}</p>
+    {error && <p role="alert" className="text-sm text-red-700">{t(error)}</p>}
+    <div ref={list} onScroll={() => { const el = list.current; if (el) stickToBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80 }} role="log" aria-label={t('Meddelanden')} aria-live="polite" className="flex-1 overflow-y-auto space-y-4 pr-1">
+      {older && <button type="button" disabled={loadingOlder} onClick={loadOlder} className="text-sm underline">{loadingOlder ? t('Hämtar…') : t('Visa äldre meddelanden')}</button>}
+      {messages.length === 0 && <p className="py-12 text-center text-slate-500">{t('Inga meddelanden ännu. Har du frågor om offerten kan du skriva här.')}</p>}
       {messages.map(message => <ChatMessage key={message.id} message={message} isOwn={message.sender_id === userId} />)}
     </div>
     <div className="mt-4 border-t border-gray-200 pt-4"><ChatInput onSend={handleSend} offerId={offerId} /></div>

@@ -205,7 +205,7 @@ test('fritextsökningen kan inte injicera i postgrest-filtret', async () => {
   assert.equal(searchTerm('   '), null, 'tom sökning ska ge null')
 
   // Båda sidorna måste faktiskt använda saneringen.
-  for (const page of ['../src/app/jobs/(list)/page.tsx', '../src/app/services/(list)/page.tsx']) {
+  for (const page of ['../src/app/[lang]/jobs/(list)/page.tsx', '../src/app/[lang]/services/(list)/page.tsx']) {
     const pageSource = await readFile(new URL(page, import.meta.url), 'utf8')
     assert.match(pageSource, /searchTerm\(q\)/, `${page} ska sanera söktermen`)
     assert.ok(
@@ -284,8 +284,8 @@ test('publika tjänstelistor visar bara tjänster från aktiva leverantörer', a
   // men förfrågningsknappen ledde till 404 eftersom databasen kräver
   // leverantörsrollen hos mottagaren.
   for (const file of [
-    '../src/app/services/(list)/page.tsx',
-    '../src/app/hitta/[kategori]/page.tsx',
+    '../src/app/[lang]/services/(list)/page.tsx',
+    '../src/app/[lang]/hitta/[kategori]/page.tsx',
     '../src/components/home/FeaturedServices.tsx',
     '../src/app/api/services/route.ts',
     '../src/lib/sitemaps.ts',
@@ -301,7 +301,7 @@ test('inbäddade omdömen namnger relationen explicit', async () => {
   // reviewee_id. En inbäddning som bara säger users är därför tvetydig och
   // avvisas av PostgREST med 300 (PGRST201). Det tog ner varje profilsida
   // med 500, och på tjänstesidan svaldes felet så att omdömen tyst försvann.
-  for (const page of ['../src/app/profile/[id]/page.tsx', '../src/app/services/[id]/page.tsx']) {
+  for (const page of ['../src/app/[lang]/profile/[id]/page.tsx', '../src/app/[lang]/services/[id]/page.tsx']) {
     const source = await readFile(new URL(page, import.meta.url), 'utf8')
     const embeds = source.match(/reviewer:users[^(]*/g) ?? []
     assert.ok(embeds.length > 0, `${page} förväntas bädda in reviewer`)
@@ -321,16 +321,18 @@ test('rollbytet visas bara för kontots ägare', async () => {
   // sälja byter i stället roll från sin profil. Knappen får bara renderas för
   // ägaren: RLS hindrar visserligen att någon ändrar en annans roll, men en
   // synlig knapp som alltid misslyckas är ett gränssnittsfel.
-  const source = await readFile(new URL('../src/app/profile/[id]/page.tsx', import.meta.url), 'utf8')
+  const source = await readFile(new URL('../src/app/[lang]/profile/[id]/page.tsx', import.meta.url), 'utf8')
 
   assert.match(source, /SwitchRoleButton/, 'profilsidan ska erbjuda rollbyte')
 
   const index = source.indexOf('<SwitchRoleButton')
   assert.ok(index > 0, 'SwitchRoleButton ska renderas')
   const before = source.slice(0, index)
-  const lastOpen = before.lastIndexOf('{isOwn &&')
-  const lastClose = before.lastIndexOf(')}')
-  assert.ok(lastOpen > lastClose, 'SwitchRoleButton måste ligga innanför ett isOwn-villkor')
+  const lastOpen = before.lastIndexOf('{isOwn && (')
+  assert.ok(lastOpen >= 0, 'SwitchRoleButton måste ligga innanför ett isOwn-villkor')
+  // Villkoret avslutas med )} på samma indrag som det öppnades; det får inte ha hunnit stängas.
+  const indent = before.slice(before.lastIndexOf('\n', lastOpen) + 1, lastOpen)
+  assert.ok(!before.slice(lastOpen).includes(`\n${indent})}`), 'SwitchRoleButton måste ligga innanför ett isOwn-villkor')
 
   // Registreringen ska säga att valet inte är permanent, annars ser det ut
   // som att man måste välja sida en gång för alla.
@@ -343,16 +345,16 @@ test('publika sidor kan förrenderas: rotlayout och navigering läser inga cooki
   // varje sida dynamisk med no-store, även FAQ och villkoren, och varje
   // sidvisning gick hela vägen till databasen.
   const read = path => readFile(new URL(path, import.meta.url), 'utf8')
-  for (const file of ['../src/app/layout.tsx', '../src/components/layout/Navbar.tsx', '../src/components/layout/NavbarWrapper.tsx']) {
+  for (const file of ['../src/app/[lang]/layout.tsx', '../src/components/layout/Navbar.tsx', '../src/components/layout/NavbarWrapper.tsx']) {
     const source = await read(file)
     assert.ok(!/supabase\/server|cookies\(|headers\(/.test(source), `${file} får inte läsa cookies eller headers`)
   }
-  for (const page of ['../src/app/page.tsx', '../src/app/faq/page.tsx', '../src/app/terms/page.tsx', '../src/app/privacy/page.tsx', '../src/app/hitta/[kategori]/page.tsx']) {
+  for (const page of ['../src/app/[lang]/page.tsx', '../src/app/[lang]/faq/page.tsx', '../src/app/[lang]/terms/page.tsx', '../src/app/[lang]/privacy/page.tsx', '../src/app/[lang]/hitta/[kategori]/page.tsx']) {
     const source = await read(page)
     assert.ok(!/supabase\/server|cookies\(|headers\(/.test(source), `${page} ska kunna förrenderas`)
   }
   // Proxyn får inte heller göra ett nätverksanrop före varje cachad sida.
-  assert.match(await read('../src/proxy.ts'), /if \(isStaticPublic\(request\.nextUrl\.pathname\)\) return NextResponse\.next\(\)/)
+  assert.match(await read('../src/proxy.ts'), /if \(isStaticPublic\(appPath\)\) return proceed\(\)/)
 })
 
 test('strukturerad data kan inte bryta sig ur skripttaggen', async () => {
@@ -384,7 +386,7 @@ test('sidor sätter delningstaggar via pageMetadata så att og:url och bild föl
     const source = await readFile(new URL('../src/app/' + file.replace(/\\/g, '/'), import.meta.url), 'utf8')
     assert.ok(!/openGraph:\s*\{/.test(source), `${file} ska använda pageMetadata i stället för egen openGraph`)
   }
-  const layout = await readFile(new URL('../src/app/layout.tsx', import.meta.url), 'utf8')
+  const layout = await readFile(new URL('../src/app/[lang]/layout.tsx', import.meta.url), 'utf8')
   assert.ok(!/url:\s*SITE_URL/.test(layout), 'layouten får inte sätta en og:url som alla sidor ärver')
 })
 
@@ -394,7 +396,7 @@ test('mobilmenyn renderas utanför headern', async () => {
   // referensram för position: fixed, så bakgrunden täckte bara 64 pixlar.
   const source = await readFile(new URL('../src/components/layout/MobileMenu.tsx', import.meta.url), 'utf8')
   assert.match(source, /createPortal\(layerContent, document\.body\)/)
-  assert.match(source, /aria-label="Stäng meny"/, 'panelen behöver en egen stängknapp ovanför bakgrunden')
+  assert.match(source, /aria-label=\{t\('Stäng meny'\)\}/, 'panelen behöver en egen stängknapp ovanför bakgrunden')
 })
 
 test('länkar till inloggningssidorna förhämtas inte där inloggade ser dem', async () => {
@@ -402,7 +404,7 @@ test('länkar till inloggningssidorna förhämtas inte där inloggade ser dem', 
   // Förhämtningen av sidfotens kontolänkar följde omdirigeringen och gjordes
   // om i en loop: startsidan hämtades tretton gånger på åtta sekunder.
   const footer = await readFile(new URL('../src/components/layout/Footer.tsx', import.meta.url), 'utf8')
-  assert.match(footer, /prefetch=\{group === 'Konto' \? false : undefined\}/)
+  assert.match(footer, /prefetch=\{href === '\/login' \|\| href === '\/register' \? false : undefined\}/)
   const hero = await readFile(new URL('../src/components/home/Hero.tsx', import.meta.url), 'utf8')
   assert.match(hero, /href="\/register" prefetch=\{false\}/)
 })
@@ -411,7 +413,7 @@ test('kategorisidorna överlever omvalidering', async () => {
   // Med dynamicParams = false kastade Next 16 NoFallbackError när de
   // förrenderade sidorna byggdes om, och varje kategorisida blev 404 efter
   // fem minuter. Okända kategorier ska i stället stoppas av notFound().
-  const source = await readFile(new URL('../src/app/hitta/[kategori]/page.tsx', import.meta.url), 'utf8')
+  const source = await readFile(new URL('../src/app/[lang]/hitta/[kategori]/page.tsx', import.meta.url), 'utf8')
   assert.ok(!/export const dynamicParams\s*=\s*false/.test(source), 'dynamicParams = false får inte kombineras med revalidate')
   assert.match(source, /export const revalidate = \d+/)
   assert.match(source, /if \(!content\) notFound\(\)/)

@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { canSubmitOffer } from '@/lib/marketplace-rules.mjs'
 import { InputValidationError, uuidValue } from '@/lib/validation'
 import { parseOfferContent, type OfferContent } from '@/lib/offer-input'
+import { msg } from '@/i18n/msg.mjs'
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
@@ -14,7 +15,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    input = { jobId: uuidValue(body.job_id, 'Uppdrag'), ...parseOfferContent(body) }
+    input = { jobId: uuidValue(body.job_id, msg('Uppdrag')), ...parseOfferContent(body) }
   } catch (error) {
     const message = error instanceof InputValidationError ? error.message : 'Ogiltig förfrågan.'
     return NextResponse.json({ error: message }, { status: 400 })
@@ -38,7 +39,7 @@ export async function POST(request: NextRequest) {
     requestStatus: job.status,
   })) {
     return NextResponse.json(
-      { error: job.status !== 'open' ? 'Uppdraget är inte längre öppet' : 'Ej behörig att lämna offert' },
+      { error: job.status !== 'open' ? msg('Uppdraget är inte längre öppet') : msg('Ej behörig att lämna offert') },
       { status: job.status !== 'open' ? 409 : 403 }
     )
   }

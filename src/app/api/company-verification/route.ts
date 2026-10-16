@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { adminEmails } from '@/lib/admin'
 import { InputValidationError, requiredText } from '@/lib/validation'
 import { normalizeOrgNumber } from '@/lib/trust.mjs'
+import { msg } from '@/i18n/msg.mjs'
 
 // Frilansaren anger sitt företag. Uppgifterna granskas av en admin innan
 // märket visas; databasfunktionen sätter alltid status till pending.
@@ -17,7 +18,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const orgNumber = normalizeOrgNumber(body.org_number)
     if (!orgNumber) throw new InputValidationError('Organisationsnumret är ogiltigt. Kontrollera siffrorna.')
-    input = { orgNumber, companyName: requiredText(body.company_name, 'Företagsnamn', 2, 120), fSkatt: body.f_skatt === true }
+    input = { orgNumber, companyName: requiredText(body.company_name, msg('Företagsnamn'), 2, 120), fSkatt: body.f_skatt === true }
   } catch (error) {
     return NextResponse.json({ error: error instanceof InputValidationError ? error.message : 'Ogiltig förfrågan.' }, { status: 400 })
   }

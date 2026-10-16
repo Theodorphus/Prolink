@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
 import { Button } from '@/components/ui/Button'
 import { Card, CardBody } from '@/components/ui/Card'
+import { useLocalePath, useT } from '@/i18n/client'
 
 export interface OfferDefaults { price: string; price_type: 'fixed' | 'hourly'; timeline: string; description: string }
 
@@ -13,6 +14,8 @@ export interface OfferDefaults { price: string; price_type: 'fixed' | 'hourly'; 
 export default function CreateOfferForm({ jobId, edit }: { jobId: string; edit?: { offerId: string; defaults: OfferDefaults } }) {
   const defaults = edit?.defaults
   const router = useRouter()
+  const t = useT()
+  const localePath = useLocalePath()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [priceType, setPriceType] = useState<'fixed' | 'hourly'>(defaults?.price_type ?? 'fixed')
@@ -39,11 +42,11 @@ export default function CreateOfferForm({ jobId, edit }: { jobId: string; edit?:
     })
 
     const data = await res.json()
-    if (!res.ok) { setError(data.error); setLoading(false); return }
+    if (!res.ok) { setError(t(data.error)); setLoading(false); return }
 
-    router.push(`/offers/${data.id}`)
+    router.push(localePath(`/offers/${data.id}`))
     if (edit) router.refresh()
-    } catch { setError('Kunde inte skicka. Kontrollera anslutningen och försök igen.') }
+    } catch { setError(t('Kunde inte skicka. Kontrollera anslutningen och försök igen.')) }
     finally { setLoading(false) }
   }
 
@@ -57,7 +60,7 @@ export default function CreateOfferForm({ jobId, edit }: { jobId: string; edit?:
 
           {/* Pristyp */}
           <div className="space-y-2">
-            <span id="pristyp-label" className="block text-sm font-medium text-gray-700">Pristyp</span>
+            <span id="pristyp-label" className="block text-sm font-medium text-gray-700">{t('Pristyp')}</span>
             <div role="radiogroup" aria-labelledby="pristyp-label" className="grid grid-cols-2 gap-3">
               {(['fixed', 'hourly'] as const).map((type) => (
                 <button
@@ -72,46 +75,46 @@ export default function CreateOfferForm({ jobId, edit }: { jobId: string; edit?:
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
-                  <p className="font-medium text-sm">{type === 'fixed' ? 'Fast pris' : 'Timpris'}</p>
-                  <p className="text-xs text-gray-500">{type === 'fixed' ? 'Totalt belopp' : 'Per timme'}</p>
+                  <p className="font-medium text-sm">{type === 'fixed' ? t('Fast pris') : t('Timpris')}</p>
+                  <p className="text-xs text-gray-500">{type === 'fixed' ? t('Totalt belopp') : t('Per timme')}</p>
                 </button>
               ))}
             </div>
           </div>
 
           <Input
-            label={priceType === 'fixed' ? 'Totalt pris (SEK)' : 'Timpris (SEK/h)'}
+            label={priceType === 'fixed' ? t('Totalt pris (SEK)') : t('Timpris (SEK/h)')}
             name="price"
             type="number"
             min="1"
             required
             defaultValue={defaults?.price}
-            placeholder={priceType === 'fixed' ? 'T.ex. 12000' : 'T.ex. 850'}
+            placeholder={priceType === 'fixed' ? t('T.ex. 12000') : t('T.ex. 850')}
           />
 
           <Input
-            label="Tidsestimat / Leveranstid"
+            label={t('Tidsestimat / Leveranstid')}
             name="timeline" minLength={2} maxLength={120}
             required
             defaultValue={defaults?.timeline}
-            placeholder="T.ex. 10 arbetsdagar, 2 veckor"
+            placeholder={t('T.ex. 10 arbetsdagar, 2 veckor')}
           />
 
           <Textarea
-            label="Offertbeskrivning"
+            label={t('Offertbeskrivning')}
             name="description" minLength={10} maxLength={5000}
             required
             rows={6}
             defaultValue={defaults?.description}
-            placeholder="Beskriv vad du ska leverera, hur du tänker lösa uppdraget och varför du är rätt person..."
+            placeholder={t('Beskriv vad du ska leverera, hur du tänker lösa uppdraget och varför du är rätt person...')}
           />
 
           <div className="flex justify-end gap-3 pt-2">
             <Button type="button" variant="secondary" onClick={() => router.back()}>
-              Avbryt
+              {t('Avbryt')}
             </Button>
             <Button type="submit" loading={loading}>
-              {edit ? 'Spara ändringar' : 'Skicka offert'}
+              {edit ? t('Spara ändringar') : t('Skicka offert')}
             </Button>
           </div>
         </form>

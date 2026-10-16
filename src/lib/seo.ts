@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { absoluteUrl } from '@/lib/site'
+import { LOCALES, localePath, ogLocale, type Locale } from '@/i18n/config'
 
 export const DEFAULT_OG_IMAGE = {
   url: '/og-prolink.jpg',
@@ -25,12 +26,15 @@ export function pageMetadata({
   absoluteTitle,
   description,
   path,
+  locale = 'sv',
   routeImage = false,
 }: {
   title?: string
   absoluteTitle?: string
   description: string
   path: string
+  /** Sidans språk. Styr canonical, hreflang-alternativ och og:locale. */
+  locale?: Locale
   /**
    * Sant när segmentet har en egen opengraph-image-fil. En bild i
    * konfigurationen vinner annars över filen, så standardbilden utelämnas.
@@ -41,15 +45,23 @@ export function pageMetadata({
   return {
     title: absoluteTitle ? { absolute: absoluteTitle } : title,
     description,
-    alternates: { canonical: path },
+    // Varje sida finns på båda språken. hreflang talar om för sökmotorerna
+    // vilken adress som är motsvarigheten, så att rätt språk visas i sökträffen.
+    alternates: {
+      canonical: localePath(locale, path),
+      languages: {
+        ...Object.fromEntries(LOCALES.map(code => [code, localePath(code, path)])),
+        'x-default': path,
+      },
+    },
     openGraph: {
       type: 'website',
       siteName: 'Prolink',
-      locale: 'sv_SE',
+      locale: ogLocale(locale),
       title: shareTitle,
       description,
-      url: path,
-      ...(routeImage ? {} : { images: [DEFAULT_OG_IMAGE] }),
+      url: localePath(locale, path),
+      ...(routeImage ? {} : { images: [locale === 'en' ? { ...DEFAULT_OG_IMAGE, alt: 'Prolink – find the right freelancer for your business' } : DEFAULT_OG_IMAGE] }),
     },
     twitter: {
       card: 'summary_large_image',

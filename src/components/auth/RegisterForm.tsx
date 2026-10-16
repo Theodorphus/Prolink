@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import GoogleAuthButton from '@/components/auth/GoogleAuthButton'
+import { useLocale, useLocalePath, useT } from '@/i18n/client'
+import { msg } from '@/i18n/msg.mjs'
 
 import type { ActionState } from '@/types/auth'
 
@@ -16,37 +18,41 @@ interface RegisterFormProps {
 
 function SubmitButton() {
   const { pending } = useFormStatus()
+  const t = useT()
   return (
     <Button type="submit" className="w-full" disabled={pending} loading={pending}>
-      Skapa konto
+      {t('Skapa konto')}
     </Button>
   )
 }
 
 const roles = [
-  { value: 'customer', label: 'Uppdragsgivare', desc: 'Jag vill köpa tjänster' },
-  { value: 'provider', label: 'Frilansare', desc: 'Jag erbjuder tjänster' },
+  { value: 'customer', label: msg('Uppdragsgivare'), desc: msg('Jag vill köpa tjänster') },
+  { value: 'provider', label: msg('Frilansare'), desc: msg('Jag erbjuder tjänster') },
 ]
 
 export default function RegisterForm({ action, redirect }: RegisterFormProps) {
   const [state, formAction] = useActionState<ActionState, FormData>(action, null)
   const [selectedRole, setSelectedRole] = useState<string>('customer')
   const router = useRouter()
+  const t = useT()
+  const locale = useLocale()
+  const localePath = useLocalePath()
 
   useEffect(() => {
     if (state && 'success' in state) {
-      router.push(state.redirectTo)
+      router.push(localePath(state.redirectTo))
       router.refresh()
     }
-  }, [state, router])
+  }, [state, router, localePath])
 
   return (
     <div className="surface p-8 space-y-5">
       {/* Role selector — shared between Google and email signup */}
       <div className="space-y-2">
-        <span id="roll-label" className="block text-sm font-medium text-gray-700">Jag är</span>
+        <span id="roll-label" className="block text-sm font-medium text-gray-700">{t('Jag är')}</span>
         <p id="roll-hjalp" className="text-xs text-gray-500">
-          Du kan byta när som helst från din profil, och göra både och.
+          {t('Du kan byta när som helst från din profil, och göra både och.')}
         </p>
         <div role="radiogroup" aria-labelledby="roll-label" aria-describedby="roll-hjalp" className="grid grid-cols-2 gap-3">
           {roles.map(({ value, label, desc }) => (
@@ -64,8 +70,8 @@ export default function RegisterForm({ action, redirect }: RegisterFormProps) {
                 onChange={() => setSelectedRole(value)}
                 className="sr-only"
               />
-              <span className="font-medium text-gray-900">{label}</span>
-              <span className="text-xs text-gray-500">{desc}</span>
+              <span className="font-medium text-gray-900">{t(label)}</span>
+              <span className="text-xs text-gray-500">{t(desc)}</span>
             </label>
           ))}
         </div>
@@ -75,22 +81,23 @@ export default function RegisterForm({ action, redirect }: RegisterFormProps) {
 
       <div className="flex items-center gap-3">
         <div className="flex-1 h-px bg-gray-200" />
-        <span className="text-xs text-gray-400">eller med e-post</span>
+        <span className="text-xs text-gray-400">{t('eller med e-post')}</span>
         <div className="flex-1 h-px bg-gray-200" />
       </div>
 
       <form action={formAction} className="space-y-4">
         <input type="hidden" name="redirect" value={redirect ?? '/'} />
-        {state && 'message' in state && <p role="status" className="rounded-xl bg-green-50 p-4 text-green-800">{state.message}</p>}
+        <input type="hidden" name="locale" value={locale} />
+        {state && 'message' in state && <p role="status" className="rounded-xl bg-green-50 p-4 text-green-800">{t(state.message)}</p>}
         {state && 'error' in state && (
           <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-            {state.error}
+            {t(state.error)}
           </div>
         )}
 
-        <Input label="Namn" name="name" type="text" required autoComplete="name" />
-        <Input label="E-post" name="email" type="email" required autoComplete="email" />
-        <Input label="Lösenord (minst 8 tecken)" name="password" type="password" required minLength={8} autoComplete="new-password" />
+        <Input label={t('Namn')} name="name" type="text" required autoComplete="name" />
+        <Input label={t('E-post')} name="email" type="email" required autoComplete="email" />
+        <Input label={t('Lösenord (minst 8 tecken)')} name="password" type="password" required minLength={8} autoComplete="new-password" />
         <input type="hidden" name="role" value={selectedRole} />
 
         <SubmitButton />

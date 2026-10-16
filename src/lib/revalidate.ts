@@ -10,6 +10,7 @@ export const PUBLIC_JOBS_TAG = 'public-jobs'
  */
 export function refreshPublicJobSurfaces() {
   revalidateTag(PUBLIC_JOBS_TAG, { expire: 0 })
-  revalidatePath('/')
-  revalidatePath('/hitta/[kategori]', 'page')
+  // Sidorna ligger under [lang], så både svenska och engelska versionen byggs om.
+  revalidatePath('/[lang]', 'page')
+  revalidatePath('/[lang]/hitta/[kategori]', 'page')
 }

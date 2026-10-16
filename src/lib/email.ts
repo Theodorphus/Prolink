@@ -1,5 +1,8 @@
 import { Resend } from 'resend'
 import { CONTACT_EMAIL, SITE_URL } from '@/lib/site'
+import { DEFAULT_LOCALE, htmlLang, localePath, type Locale } from '@/i18n/config'
+import { createT } from '@/i18n/translate'
+import { messagesFor } from '@/i18n/messages'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -42,7 +45,13 @@ function safeSubjectValue(value: string): string {
 // cron-rutten. Resend kastar inte vid HTTP-fel utan returnerar { data, error },
 // så svaret måste kontrolleras: annars ser ett nekat utskick (t.ex. 403 för
 // overifierad domän) ut som ett lyckat, och kön markerar det som skickat.
-export async function sendQueuedNotification(item: { id: string; kind: string; to: string; subject: string; body: string; path: string }) {
+export async function sendQueuedNotification(item: { id: string; kind: string; to: string; subject: string; body: string; path: string; locale?: Locale }) {
+  const locale = item.locale ?? DEFAULT_LOCALE
+  const t = createT(locale, messagesFor(locale))
+  // Rubriker som SQL-triggrarna skriver är fasta svenska fraser; de översätts
+  // här med mottagarens språk. Text som inte finns i ordlistan lämnas orörd.
+  const subject = t(item.subject)
+  const body = t(item.body)
   const problem = emailConfigurationProblem()
   if (problem) throw new Error(problem)
   const reference = item.kind === 'reference'
@@ -56,21 +65,21 @@ export async function sendQueuedNotification(item: { id: string; kind: string; t
     : /^\/(jobs|offers|messages)\/[0-9a-f-]+$/i
   if (!validPath.test(item.path)) throw new Error('Invalid notification path')
   // Mottagaren av en referensförfrågan har inget konto och inga inställningar.
-  const action = reference ? 'Lämna ditt omdöme' : admin ? 'Öppna adminpanelen' : welcome ? 'Kom igång' : verification ? 'Se din profil' : 'Öppna i Prolink'
+  const action = reference ? t('Lämna ditt omdöme') : admin ? t('Öppna adminpanelen') : welcome ? t('Kom igång') : verification ? t('Se din profil') : t('Öppna i Prolink')
   const footer = reference
-    ? 'Du får det här mejlet för att en frilansare angett dig som tidigare kund. Känner du inte igen det kan du ignorera mejlet.'
+    ? t('Du får det här mejlet för att en frilansare angett dig som tidigare kund. Känner du inte igen det kan du ignorera mejlet.')
     : admin
-      ? 'Du får det här mejlet som administratör för Prolink.'
+      ? t('Du får det här mejlet som administratör för Prolink.')
       : welcome
-        ? 'Du får det här mejlet för att du skapade ett konto på Prolink.'
+        ? t('Du får det här mejlet för att du skapade ett konto på Prolink.')
         : verification
-          ? 'Du får det här mejlet för att du ansökt om företagsverifiering på Prolink.'
-          : 'Ändra mejlnotiser i din profil.'
+          ? t('Du får det här mejlet för att du ansökt om företagsverifiering på Prolink.')
+          : t('Ändra mejlnotiser i din profil.')
   const result = await resend.emails.send({
     // Svar går till en adress som läses, eftersom avsändaren är en noreply-adress.
-    from: FROM, replyTo: CONTACT_EMAIL, to: item.to, subject: safeSubjectValue(item.subject),
-    html: `<h2>${escapeHtml(item.subject)}</h2><p>${escapeHtml(item.body).replace(/\n/g, '<br>')}</p><p><a href="${escapeHtml(APP_URL + item.path)}">${action}</a></p><p>${footer}</p>`,
-    text: `${item.subject}\n${item.body}\n${APP_URL + item.path}\n${footer}`,
+    from: FROM, replyTo: CONTACT_EMAIL, to: item.to, subject: safeSubjectValue(subject),
+    html: `<div lang="${htmlLang(locale)}"><h2>${escapeHtml(subject)}</h2><p>${escapeHtml(body).replace(/\n/g, '<br>')}</p><p><a href="${escapeHtml(APP_URL + localePath(locale, item.path))}">${action}</a></p><p>${footer}</p></div>`,
+    text: `${subject}\n${body}\n${APP_URL + localePath(locale, item.path)}\n${footer}`,
   }, { idempotencyKey: `notification/${item.id}` })
   if (result.error) throw new Error(`Resend nekade utskicket: ${result.error.message ?? 'okänt fel'}`)
 }

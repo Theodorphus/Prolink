@@ -2,9 +2,11 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useT } from '@/i18n/client'
 
 export default function DeleteJobButton({ jobId, compact = false }: { jobId: string; compact?: boolean }) {
   const router = useRouter()
+  const t = useT()
   const [loading, setLoading] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [error, setError] = useState('')
@@ -22,9 +24,9 @@ export default function DeleteJobButton({ jobId, compact = false }: { jobId: str
         return
       }
       const data = await res.json().catch(() => null)
-      setError(data?.error ?? 'Uppdraget kunde inte tas bort.')
+      setError(t(data?.error ?? 'Uppdraget kunde inte tas bort.'))
     } catch {
-      setError('Uppdraget kunde inte tas bort. Kontrollera anslutningen.')
+      setError(t('Uppdraget kunde inte tas bort. Kontrollera anslutningen.'))
     } finally {
       setLoading(false)
     }
@@ -38,22 +40,22 @@ export default function DeleteJobButton({ jobId, compact = false }: { jobId: str
           ? "p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
           : "w-full text-sm text-red-500 hover:text-red-700 transition-colors py-2 border border-red-200 rounded-lg hover:border-red-300 hover:bg-red-50"
         }
-        title="Arkivera uppdrag"
+        title={t('Arkivera uppdrag')}
       >
         {compact ? (
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
           </svg>
-        ) : 'Arkivera uppdrag'}
+        ) : t('Arkivera uppdrag')}
       </button>
 
       {showConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowConfirm(false)} />
           <div className="relative bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full">
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Arkivera uppdraget?</h3>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">{t('Arkivera uppdraget?')}</h3>
             <p className="text-sm text-gray-500 mb-6">
-              Uppdraget stängs för nya offerter. Offerter, meddelanden och omdömen finns kvar.
+              {t('Uppdraget stängs för nya offerter. Offerter, meddelanden och omdömen finns kvar.')}
             </p>
             {error && (
               <p role="alert" className="-mt-3 mb-4 text-sm text-red-600">{error}</p>
@@ -64,14 +66,14 @@ export default function DeleteJobButton({ jobId, compact = false }: { jobId: str
                 disabled={loading}
                 className="flex-1 py-2.5 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
               >
-                Avbryt
+                {t('Avbryt')}
               </button>
               <button
                 onClick={handleDelete}
                 disabled={loading}
                 className="flex-1 py-2.5 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50"
               >
-                {loading ? 'Arkiverar...' : 'Arkivera'}
+                {loading ? t('Arkiverar...') : t('Arkivera')}
               </button>
             </div>
           </div>

@@ -1,4 +1,5 @@
 import { ImageResponse } from 'next/og'
+import { DEFAULT_LOCALE, type Locale } from '@/i18n/config'
 
 export const OG_SIZE = { width: 1200, height: 630 }
 
@@ -18,7 +19,7 @@ function clip(value: string, max: number) {
  * alla länkar säger inget om vad länken gäller; med titel, kategori och pris
  * syns det direkt i förhandsvisningen på LinkedIn, Slack och i meddelanden.
  */
-export function renderOgImage({ eyebrow, title, detail }: { eyebrow: string; title: string; detail?: string | null }) {
+export function renderOgImage({ eyebrow, title, detail, locale = DEFAULT_LOCALE }: { eyebrow: string; title: string; detail?: string | null; locale?: Locale }) {
   const heading = clip(title, 90)
   return new ImageResponse(
     (
@@ -46,7 +47,7 @@ export function renderOgImage({ eyebrow, title, detail }: { eyebrow: string; tit
             <div style={{ display: 'flex', marginTop: 28, fontSize: 32, color: '#cbd5e1' }}>{clip(detail, 80)}</div>
           ) : null}
         </div>
-        <div style={{ display: 'flex', fontSize: 24, color: '#94a3b8' }}>Marknadsplatsen där företag och frilansare möts</div>
+        <div style={{ display: 'flex', fontSize: 24, color: '#94a3b8' }}>{locale === 'en' ? 'The marketplace where businesses and freelancers meet' : 'Marknadsplatsen där företag och frilansare möts'}</div>
       </div>
     ),
     OG_SIZE,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { InputValidationError, optionalText, requiredText } from '@/lib/validation'
 import { referenceTokenHash } from '@/lib/references'
+import { msg } from '@/i18n/msg.mjs'
 
 // Den tidigare kunden lämnar sitt omdöme. Länken är engångs: raden uppdateras
 // bara om den inte redan besvarats och inte har gått ut.
@@ -17,10 +18,10 @@ export async function POST(request: NextRequest, props: { params: Promise<{ toke
     if (!Number.isInteger(rating) || rating < 1 || rating > 5) throw new InputValidationError('Välj ett betyg mellan 1 och 5.')
     if (body.confirm !== true) throw new InputValidationError('Bekräfta att du har anlitat frilansaren.')
     input = {
-      client_name: requiredText(body.client_name, 'Namn', 1, 100),
-      client_company: optionalText(body.client_company, 'Företag', 120),
+      client_name: requiredText(body.client_name, msg('Namn'), 1, 100),
+      client_company: optionalText(body.client_company, msg('Företag'), 120),
       rating,
-      comment: optionalText(body.comment, 'Omdöme', 2000),
+      comment: optionalText(body.comment, msg('Omdöme'), 2000),
     }
   } catch (error) {
     return NextResponse.json({ error: error instanceof InputValidationError ? error.message : 'Ogiltig förfrågan.' }, { status: 400 })

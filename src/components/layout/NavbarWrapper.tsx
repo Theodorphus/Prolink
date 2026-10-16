@@ -1,9 +1,10 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
+import { splitLocale } from '@/i18n/config'
 
 export default function NavbarWrapper({ children }: { children: React.ReactNode }) {
-  const isHome = usePathname() === '/'
+  const isHome = splitLocale(usePathname()).path === '/'
 
   return (
     <div

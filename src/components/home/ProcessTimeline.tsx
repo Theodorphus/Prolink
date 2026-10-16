@@ -1,36 +1,40 @@
+import { getT } from '@/i18n/server'
+import { msg } from '@/i18n/msg.mjs'
+
 const STEPS = [
   {
-    title: 'Beskriv uppdraget',
-    body: 'Berätta vad ni behöver, önskad budget och när det ska vara klart. Tar några minuter.',
+    title: msg('Beskriv uppdraget'),
+    body: msg('Berätta vad ni behöver, önskad budget och när det ska vara klart. Tar några minuter.'),
     icon: (
       <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zM19.5 14.25v4.75A2 2 0 0117.5 21h-11a2 2 0 01-2-2v-11a2 2 0 012-2h4.75" />
     ),
   },
   {
-    title: 'Jämför offerter',
-    body: 'Frilansare svarar med pris, upplägg och tidsplan. Du ser deras profiler och tidigare omdömen.',
+    title: msg('Jämför offerter'),
+    body: msg('Frilansare svarar med pris, upplägg och tidsplan. Du ser deras profiler och tidigare omdömen.'),
     icon: (
       <path strokeLinecap="round" strokeLinejoin="round" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
     ),
   },
   {
-    title: 'Samarbeta och slutför',
-    body: 'Ni för dialogen i Prolink, frilansaren levererar, ni godkänner och lämnar omdömen.',
+    title: msg('Samarbeta och slutför'),
+    body: msg('Ni för dialogen i Prolink, frilansaren levererar, ni godkänner och lämnar omdömen.'),
     icon: (
       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
     ),
   },
 ]
 
-export default function ProcessTimeline() {
+export default async function ProcessTimeline() {
+  const t = await getT()
   return (
     <section className="border-b border-slate-200/70 bg-white px-4 py-14 sm:px-6 sm:py-24 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <div className="max-w-2xl">
-          <p className="page-eyebrow">Så funkar det</p>
-          <h2 className="page-heading mt-3 text-[2rem] sm:text-4xl">Från behov till levererat</h2>
+          <p className="page-eyebrow">{t('Så funkar det')}</p>
+          <h2 className="page-heading mt-3 text-[2rem] sm:text-4xl">{t('Från behov till levererat')}</h2>
           <p className="mt-4 text-lg leading-8 text-slate-600">
-            Tre steg. Ingen upphandling, inga mellanhänder och inget krångel.
+            {t('Tre steg. Ingen upphandling, inga mellanhänder och inget krångel.')}
           </p>
         </div>
 
@@ -56,14 +60,14 @@ export default function ProcessTimeline() {
                 </span>
 
                 <p className="text-sm font-black tracking-wider text-indigo-600 md:mt-6">
-                  STEG {index + 1}
+                  {t('STEG {number}', { number: index + 1 })}
                 </p>
               </div>
 
               <h3 className="mt-3 text-xl font-bold tracking-[-0.025em] text-slate-900 md:mt-2">
-                {step.title}
+                {t(step.title)}
               </h3>
-              <p className="mt-2.5 text-[15px] leading-7 text-slate-600">{step.body}</p>
+              <p className="mt-2.5 text-[15px] leading-7 text-slate-600">{t(step.body)}</p>
             </li>
           ))}
         </ol>

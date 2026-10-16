@@ -1,7 +1,8 @@
-import Link from 'next/link'
+import Link from '@/components/i18n/Link'
 import Image from 'next/image'
 import { formatCurrency } from '@/lib/utils'
 import { getCategoryLabel } from '@/lib/categories'
+import { getLocale, getT } from '@/i18n/server'
 
 export interface ServiceCardService {
   id: string
@@ -25,19 +26,21 @@ export interface ServiceCardService {
  * inte kan uttrycka vad som ingår. Att kalla det fast pris vore att lova mer
  * än vad datamodellen bär.
  */
-export default function ServiceCard({
+export default async function ServiceCard({
   service,
   showProvider = true,
 }: {
   service: ServiceCardService
   showProvider?: boolean
 }) {
+  const locale = await getLocale()
+  const t = await getT()
   return (
     <Link href={`/services/${service.id}`} className="group block h-full">
       <article className="surface surface-interactive flex h-full flex-col gap-3 p-6">
         {service.category && (
           <span className="self-start rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 ring-1 ring-inset ring-blue-100">
-            {getCategoryLabel(service.category)}
+            {getCategoryLabel(service.category, t)}
           </span>
         )}
 
@@ -71,9 +74,9 @@ export default function ServiceCard({
         <div className="flex items-end justify-between gap-3">
           <div>
             <p className="text-lg font-black tracking-[-0.02em] text-slate-900">
-              {formatCurrency(service.price)}
+              {formatCurrency(service.price, locale)}
             </p>
-            <p className="text-xs font-medium text-slate-400">från</p>
+            <p className="text-xs font-medium text-slate-400">{t('från')}</p>
           </div>
           <span className="shrink-0 rounded-full bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-600 ring-1 ring-inset ring-slate-200">
             {service.delivery_time}

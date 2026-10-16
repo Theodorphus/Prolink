@@ -8,6 +8,7 @@ import {
   optionalText,
   uuidValue,
 } from '@/lib/validation'
+import { msg } from '@/i18n/msg.mjs'
 
 async function getOfferContext(supabase: Awaited<ReturnType<typeof createClient>>, offerId: string) {
   const { data } = await supabase
@@ -31,7 +32,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ offer
 
   let offerId: string
   try {
-    offerId = uuidValue(params.offerId, 'Offert')
+    offerId = uuidValue(params.offerId, msg('Offert'))
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof InputValidationError ? error.message : 'Ogiltig förfrågan.' },
@@ -71,10 +72,10 @@ export async function POST(request: NextRequest, props: { params: Promise<{ offe
   let content: string
   let storedAttachmentPath: string | null
   try {
-    offerId = uuidValue(params.offerId, 'Offert')
+    offerId = uuidValue(params.offerId, msg('Offert'))
     const body = await request.json()
-    id = body.id ? uuidValue(body.id, 'Meddelande') : crypto.randomUUID()
-    content = optionalText(body.content, 'Meddelande', 5000) ?? ''
+    id = body.id ? uuidValue(body.id, msg('Meddelande')) : crypto.randomUUID()
+    content = optionalText(body.content, msg('Meddelande'), 5000) ?? ''
     storedAttachmentPath = attachmentPath(body.attachment_path, offerId)
     if (!content && !storedAttachmentPath) {
       throw new InputValidationError('Meddelande eller bilaga krävs.')

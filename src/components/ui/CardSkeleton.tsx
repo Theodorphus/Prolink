@@ -1,3 +1,7 @@
+'use client'
+
+import { useT } from '@/i18n/client'
+
 // Delad laddningsplatshållare. Använder samma .skeleton-klass som
 // startsidans LatestJobs, så att väntan ser likadan ut i hela produkten.
 export function CardSkeleton() {
@@ -16,13 +20,14 @@ export function CardSkeleton() {
 }
 
 export function CardListSkeleton({ count = 4 }: { count?: number }) {
+  const t = useT()
   return (
     <div
       className="grid gap-4 sm:grid-cols-2"
       // Skärmläsare ska höra att innehåll laddas, inte tomma rutor.
       role="status"
       aria-live="polite"
-      aria-label="Laddar innehåll"
+      aria-label={t('Laddar innehåll')}
     >
       {Array.from({ length: count }, (_, index) => (
         <CardSkeleton key={index} />

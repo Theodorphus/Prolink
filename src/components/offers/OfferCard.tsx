@@ -1,12 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
+import Link from '@/components/i18n/Link'
 import { useRouter } from 'next/navigation'
 import { Card, CardBody, CardFooter } from '@/components/ui/Card'
 import { StatusBadge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { formatCurrency } from '@/lib/utils'
+import { useLocale, useT } from '@/i18n/client'
 
 import type { Offer } from '@/types/database'
 
@@ -18,6 +19,8 @@ interface OfferCardProps {
 
 export default function OfferCard({ offer, isOwner, currentUserId }: OfferCardProps) {
   const router = useRouter()
+  const t = useT()
+  const locale = useLocale()
   const [loading, setLoading] = useState<'accept' | 'reject' | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -35,9 +38,9 @@ export default function OfferCard({ offer, isOwner, currentUserId }: OfferCardPr
         return
       }
       const body = await res.json().catch(() => null)
-      setError(body?.error ?? 'Något gick fel. Försök igen.')
+      setError(t(body?.error ?? 'Något gick fel. Försök igen.'))
     } catch {
-      setError('Kunde inte nå servern. Kontrollera din uppkoppling.')
+      setError(t('Kunde inte nå servern. Kontrollera din uppkoppling.'))
     } finally {
       setLoading(null)
     }
@@ -57,17 +60,17 @@ export default function OfferCard({ offer, isOwner, currentUserId }: OfferCardPr
               <Link href={`/profile/${offer.provider_id}`} className="font-medium text-gray-900 hover:text-blue-600 text-sm">
                 {offer.provider?.name}
               </Link>
-              <p className="text-xs text-gray-400">{offer.price_type === 'hourly' ? 'Timpris' : 'Fast pris'}</p>
+              <p className="text-xs text-gray-400">{offer.price_type === 'hourly' ? t('Timpris') : t('Fast pris')}</p>
             </div>
           </div>
           <div className="text-right">
-            <p className="font-bold text-blue-600">{formatCurrency(offer.price)}</p>
+            <p className="font-bold text-blue-600">{formatCurrency(offer.price, locale)}</p>
             <StatusBadge status={offer.status} />
           </div>
         </div>
 
         <p className="text-sm text-gray-700 mb-2 whitespace-pre-wrap">{offer.description}</p>
-        <p className="text-xs text-gray-400">Tidsestimat: {offer.timeline}</p>
+        <p className="text-xs text-gray-400">{t('Tidsestimat')}: {offer.timeline}</p>
       </CardBody>
 
       {(isOwner || isOwnOffer) && (
@@ -82,7 +85,7 @@ export default function OfferCard({ offer, isOwner, currentUserId }: OfferCardPr
               href={`/offers/${offer.id}`}
               className="flex-1 text-center bg-gray-100 text-gray-900 text-sm font-medium px-3 py-1.5 rounded-lg hover:bg-gray-200 transition-colors"
             >
-              {isOwnOffer ? 'Din offert' : 'Visa detaljer & chatta'}
+              {isOwnOffer ? t('Din offert') : t('Visa detaljer & chatta')}
             </Link>
             {isOwner && offer.status === 'pending' && (
               <>
@@ -92,7 +95,7 @@ export default function OfferCard({ offer, isOwner, currentUserId }: OfferCardPr
                   loading={loading === 'accept'}
                   disabled={!!loading}
                 >
-                  Acceptera
+                  {t('Acceptera')}
                 </Button>
                 <Button
                   size="sm"
@@ -101,7 +104,7 @@ export default function OfferCard({ offer, isOwner, currentUserId }: OfferCardPr
                   loading={loading === 'reject'}
                   disabled={!!loading}
                 >
-                  Avslå
+                  {t('Avslå')}
                 </Button>
               </>
             )}

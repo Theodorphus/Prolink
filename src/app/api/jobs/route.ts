@@ -1,10 +1,12 @@
 import { refreshPublicJobSurfaces } from '@/lib/revalidate'
 import { PAGE_SIZE, pageNumber } from '@/lib/pagination'
-import { NextRequest, NextResponse } from 'next/server'
+import { after, NextRequest, NextResponse } from 'next/server'
+import { warmTranslation } from '@/lib/content-translation'
 import { createClient } from '@/lib/supabase/server'
 import { PUBLIC_JOB_FIELDS } from '@/lib/jobs'
 import { InputValidationError, oneOf, uuidValue } from '@/lib/validation'
 import { parseJobContent, type JobContent } from '@/lib/job-input'
+import { msg } from '@/i18n/msg.mjs'
 
 const JOB_STATUSES = ['open', 'closed'] as const
 
@@ -14,7 +16,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   let status: 'open' | 'closed'
   try {
-    status = oneOf(searchParams.get('status') ?? 'open', JOB_STATUSES, 'Status')
+    status = oneOf(searchParams.get('status') ?? 'open', JOB_STATUSES, msg('Status'))
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof InputValidationError ? error.message : 'Ogiltig förfrågan.' },
@@ -46,9 +48,9 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    requestId = body.id ? uuidValue(body.id, 'Förfrågan') : crypto.randomUUID()
-    serviceId = body.service_id ? uuidValue(body.service_id, 'Tjänst') : null
-    providerId = body.requested_provider_id ? uuidValue(body.requested_provider_id, 'Leverantör') : null
+    requestId = body.id ? uuidValue(body.id, msg('Förfrågan')) : crypto.randomUUID()
+    serviceId = body.service_id ? uuidValue(body.service_id, msg('Tjänst')) : null
+    providerId = body.requested_provider_id ? uuidValue(body.requested_provider_id, msg('Leverantör')) : null
     input = parseJobContent(body)
   } catch (error) {
     return NextResponse.json(
@@ -89,6 +91,8 @@ export async function POST(request: NextRequest) {
 
   if (error) return NextResponse.json({ error: 'Jobbet kunde inte sparas' }, { status: 500 })
   refreshPublicJobSurfaces()
+  // Översätts i bakgrunden så att första engelska besökaren slipper vänta.
+  after(() => warmTranslation('job', data))
 
   return NextResponse.json(data, { status: 201 })
 }

@@ -2,9 +2,12 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
-import Link from 'next/link'
+import Link from '@/components/i18n/Link'
 import { usePathname } from 'next/navigation'
 import { NavAvatar, UnreadBadge } from './NavAuth'
+import LanguageSwitcher from './LanguageSwitcher'
+import { useT } from '@/i18n/client'
+import { splitLocale } from '@/i18n/config'
 import type { NavUser } from './useNavUser'
 
 interface NavLink {
@@ -29,7 +32,8 @@ function Menu({
   const unread = links.reduce((sum, link) => sum + (link.badge ?? 0), 0)
   const layer = useRef<HTMLDivElement>(null)
   const toggle = useRef<HTMLButtonElement>(null)
-  const pathname = usePathname()
+  const t = useT()
+  const pathname = splitLocale(usePathname()).path
   // Portalen behöver document, som inte finns vid serverrenderingen.
   const mounted = useSyncExternalStore(noSubscription, () => true, () => false)
 
@@ -84,7 +88,7 @@ function Menu({
           meny, och skärmläsare läser upp länkar som inte syns. */}
       <nav
         id="mobil-meny"
-        aria-label="Huvudmeny"
+        aria-label={t('Huvudmeny')}
         aria-hidden={!open}
         inert={!open}
         className={`fixed inset-x-0 top-0 z-[65] max-h-[100dvh] overflow-y-auto bg-white shadow-2xl transition-transform duration-300 ease-out ${
@@ -92,11 +96,11 @@ function Menu({
         }`}
       >
         <div className="flex h-16 items-center justify-between border-b border-gray-100 px-4">
-          <span className="text-lg font-bold tracking-tight text-gray-900">Meny</span>
+          <span className="text-lg font-bold tracking-tight text-gray-900">{t('Meny')}</span>
           <button
             type="button"
             onClick={close}
-            aria-label="Stäng meny"
+            aria-label={t('Stäng meny')}
             className="flex h-11 w-11 items-center justify-center rounded-lg text-gray-700 active:bg-gray-100"
           >
             <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} aria-hidden>
@@ -122,6 +126,8 @@ function Menu({
 
           <div className="my-3 h-px bg-gray-100" />
 
+          <LanguageSwitcher className="block rounded-xl px-4 py-3.5 text-base font-semibold text-gray-800 active:bg-gray-100" />
+
           {/* Kontodelen väntar tills inloggningsläget är känt. Panelen ligger
               precis ovanför skärmen, inom Next.js förhämtningsmarginal, så
               utloggade länkar som renderades i väntan på läget förhämtades
@@ -135,14 +141,14 @@ function Menu({
                 className="flex items-center gap-3 rounded-xl px-4 py-3.5 text-base font-semibold text-gray-800 active:bg-gray-100"
               >
                 <NavAvatar user={user} size={32} />
-                {user.name?.split(' ')[0] || 'Profil'}
+                {user.name?.split(' ')[0] || t('Profil')}
               </Link>
               <button
                 type="button"
                 onClick={() => { close(); onSignOut() }}
                 className="w-full rounded-xl px-4 py-3.5 text-left text-base font-semibold text-gray-500 active:bg-gray-100"
               >
-                Logga ut
+                {t('Logga ut')}
               </button>
             </>
           ) : (
@@ -153,7 +159,7 @@ function Menu({
                 onClick={close}
                 className="block rounded-xl px-4 py-3.5 text-base font-semibold text-gray-800 active:bg-gray-100"
               >
-                Logga in
+                {t('Logga in')}
               </Link>
               <Link
                 href="/register"
@@ -161,7 +167,7 @@ function Menu({
                 onClick={close}
                 className="mt-2 block rounded-xl bg-gray-900 px-4 py-3.5 text-center text-base font-semibold text-white active:bg-gray-700"
               >
-                Kom igång
+                {t('Kom igång')}
               </Link>
             </>
           )}
@@ -176,7 +182,7 @@ function Menu({
         ref={toggle}
         type="button"
         onClick={() => setOpen(true)}
-        aria-label={unread ? `Öppna meny, ${unread} olästa` : 'Öppna meny'}
+        aria-label={unread ? t('Öppna meny, {count} olästa', { count: unread }) : t('Öppna meny')}
         aria-expanded={open}
         aria-controls="mobil-meny"
         className="relative flex h-11 w-11 items-center justify-center rounded-lg text-gray-700 active:bg-gray-100"

@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { after, NextRequest, NextResponse } from 'next/server'
+import { warmTranslation } from '@/lib/content-translation'
 import { createClient } from '@/lib/supabase/server'
 import { InputValidationError, isUuid } from '@/lib/validation'
 import { parseServiceContent } from '@/lib/service-input'
@@ -29,10 +30,11 @@ export async function PATCH(request: NextRequest, props: { params: Promise<{ id:
     .update(content)
     .eq('id', params.id)
     .eq('provider_id', user.id)
-    .select('id')
+    .select('id, title, description')
     .maybeSingle()
 
   if (error) return NextResponse.json({ error: 'Tjänsten kunde inte uppdateras.' }, { status: 500 })
   if (!data) return NextResponse.json({ error: 'Tjänsten hittades inte.' }, { status: 404 })
-  return NextResponse.json(data)
+  after(() => warmTranslation('service', data))
+  return NextResponse.json({ id: data.id })
 }

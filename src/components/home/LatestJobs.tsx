@@ -1,5 +1,5 @@
 import { unstable_cache } from 'next/cache'
-import Link from 'next/link'
+import Link from '@/components/i18n/Link'
 import { createPublicClient } from '@/lib/supabase/public'
 import { PUBLIC_JOB_FIELDS } from '@/lib/jobs'
 import { formatCurrency, timeAgo } from '@/lib/utils'
@@ -7,6 +7,8 @@ import { getCategoryLabel } from '@/lib/categories'
 import CategoryThumb from '@/components/ui/CategoryThumb'
 import type { PublicJob, User } from '@/types/database'
 import { PUBLIC_JOBS_TAG } from '@/lib/revalidate'
+import { getLocale, getT } from '@/i18n/server'
+import { translateListings } from '@/lib/content-translation'
 
 type FeaturedJob = PublicJob & { customer: Pick<User, 'name'> | null }
 
@@ -49,9 +51,11 @@ const latestJobs = unstable_cache(async () => {
 }, ['public-latest-jobs'], { revalidate: 60, tags: [PUBLIC_JOBS_TAG] })
 
 export default async function LatestJobs() {
+  const locale = await getLocale()
+  const t = await getT()
   let data
   try { data = await latestJobs() }
-  catch { return <p className="mt-6 text-sm text-slate-500">Uppdragen kunde inte hämtas. <Link href="/jobs" className="underline">Försök igen</Link></p> }
+  catch { return <p className="mt-6 text-sm text-slate-500">{t('Uppdragen kunde inte hämtas.')} <Link href="/jobs" className="underline">{t('Försök igen')}</Link></p> }
   // Supabase typar den inbäddade relationen som en array eftersom FK-relationen
   // saknas i de handunderhållna typerna. Varje uppdrag har exakt en kund.
   const jobs: FeaturedJob[] = (data ?? []).map(row => ({
@@ -60,11 +64,12 @@ export default async function LatestJobs() {
   })) as FeaturedJob[]
 
   if (jobs.length === 0) return null
+  const shown = await translateListings('job', jobs, locale)
 
   return (
     <div className="mt-11">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {jobs.map((job, index) => (
+        {shown.map((job, index) => (
           <Link
             key={job.id}
             href={`/jobs/${job.id}`}
@@ -78,13 +83,13 @@ export default async function LatestJobs() {
                   className="shrink-0 rounded-full px-3 py-1.5 text-xs font-bold"
                   style={{ background: 'var(--teal-tint)', color: 'var(--teal-deep)' }}
                 >
-                  {job.budget ? formatCurrency(job.budget) : 'Öppen budget'}
+                  {job.budget ? formatCurrency(job.budget, locale) : t('Öppen budget')}
                 </span>
               </div>
 
               {job.category && (
                 <p className="mt-5 text-xs font-bold uppercase tracking-wider text-indigo-600">
-                  {getCategoryLabel(job.category)}
+                  {getCategoryLabel(job.category, t)}
                 </p>
               )}
 
@@ -98,10 +103,10 @@ export default async function LatestJobs() {
 
               <div className="mt-6 flex items-center justify-between gap-3 border-t border-slate-100 pt-4 text-xs font-semibold">
                 <span className="truncate text-slate-500">
-                  {job.customer?.name ?? 'Prolink-kund'} · {timeAgo(job.created_at)}
+                  {job.customer?.name ?? t('Prolink-kund')} · {timeAgo(job.created_at, locale)}
                 </span>
                 <span className="shrink-0 text-indigo-600 transition-transform duration-200 group-hover:translate-x-0.5">
-                  Visa uppdrag →
+                  {t('Visa uppdrag →')}
                 </span>
               </div>
             </article>
@@ -114,7 +119,7 @@ export default async function LatestJobs() {
         href="/jobs"
         className="mt-6 flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-3.5 text-sm font-bold text-slate-800 shadow-sm transition hover:border-slate-300 hover:shadow-md sm:hidden"
       >
-        Alla uppdrag →
+        {t('Alla uppdrag →')}
       </Link>
     </div>
   )

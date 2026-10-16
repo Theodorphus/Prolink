@@ -4,6 +4,7 @@ import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { notifyProfileChanged } from '@/components/layout/useNavUser'
+import { useT } from '@/i18n/client'
 
 interface AvatarUploadProps {
   userId: string
@@ -13,6 +14,7 @@ interface AvatarUploadProps {
 
 export default function AvatarUpload({ userId, name, currentAvatarUrl }: AvatarUploadProps) {
   const router = useRouter()
+  const t = useT()
   const inputRef = useRef<HTMLInputElement>(null)
   const [preview, setPreview] = useState<string | null>(currentAvatarUrl)
   const [loading, setLoading] = useState(false)
@@ -24,12 +26,12 @@ export default function AvatarUpload({ userId, name, currentAvatarUrl }: AvatarU
 
     const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
     if (!ALLOWED_TYPES.includes(file.type)) {
-      setError('Endast JPG, PNG och WebP är tillåtna.')
+      setError(t('Endast JPG, PNG och WebP är tillåtna.'))
       return
     }
 
     if (file.size > 2 * 1024 * 1024) {
-      setError('Bilden får max vara 2 MB.')
+      setError(t('Bilden får max vara 2 MB.'))
       return
     }
 
@@ -46,7 +48,7 @@ export default function AvatarUpload({ userId, name, currentAvatarUrl }: AvatarU
       .upload(path, file, { upsert: true })
 
     if (uploadError) {
-      setError('Uppladdningen misslyckades. Försök igen.')
+      setError(t('Uppladdningen misslyckades. Försök igen.'))
       setLoading(false)
       return
     }
@@ -61,7 +63,7 @@ export default function AvatarUpload({ userId, name, currentAvatarUrl }: AvatarU
       .eq('id', userId)
 
     if (updateError) {
-      setError('Kunde inte spara profilbilden. Försök igen.')
+      setError(t('Kunde inte spara profilbilden. Försök igen.'))
     } else {
       setPreview(avatarUrl)
       notifyProfileChanged()
@@ -69,7 +71,7 @@ export default function AvatarUpload({ userId, name, currentAvatarUrl }: AvatarU
     }
 
     } catch {
-      setError('Uppladdningen misslyckades. Kontrollera anslutningen och försök igen.')
+      setError(t('Uppladdningen misslyckades. Kontrollera anslutningen och försök igen.'))
     } finally {
       setLoading(false)
       if (inputRef.current) inputRef.current.value = ''
@@ -85,7 +87,7 @@ export default function AvatarUpload({ userId, name, currentAvatarUrl }: AvatarU
         onClick={() => inputRef.current?.click()}
         disabled={loading}
         className="relative w-20 h-20 rounded-full overflow-hidden group focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-        title="Byt profilbild"
+        title={t('Byt profilbild')}
       >
         {preview ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -116,7 +118,7 @@ export default function AvatarUpload({ userId, name, currentAvatarUrl }: AvatarU
         disabled={loading}
         className="text-xs text-blue-600 hover:underline disabled:opacity-50"
       >
-        {loading ? 'Laddar upp...' : 'Byt bild'}
+        {loading ? t('Laddar upp...') : t('Byt bild')}
       </button>
 
       {error && <p className="text-xs text-red-600">{error}</p>}

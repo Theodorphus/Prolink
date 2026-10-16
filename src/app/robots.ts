@@ -7,7 +7,7 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
       userAgent: '*',
       allow: '/',
       // Inloggade ytor har inget värde i sökresultat och ska inte krypas.
-      disallow: ['/messages', '/offers', '/api/', '/login', '/register'],
+      disallow: ['/messages', '/offers', '/api/', '/login', '/register', '/en/messages', '/en/offers', '/en/login', '/en/register'],
     },
     sitemap: `${SITE_URL}/sitemap.xml`,
   }

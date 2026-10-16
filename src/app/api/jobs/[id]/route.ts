@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { after, NextRequest, NextResponse } from 'next/server'
+import { warmTranslation } from '@/lib/content-translation'
+import { msg } from '@/i18n/msg.mjs'
 import { createClient } from '@/lib/supabase/server'
 import { PUBLIC_JOB_FIELDS } from '@/lib/jobs'
 import { InputValidationError, isUuid } from '@/lib/validation'
@@ -79,13 +81,14 @@ export async function PATCH(request: NextRequest, props: { params: Promise<{ id:
   // eller redigeras.
   if (error?.code === '23514') {
     return NextResponse.json(
-      { error: editsContent ? 'Uppdraget är stängt och kan inte längre redigeras.' : 'Uppdraget kunde inte uppdateras' },
+      { error: editsContent ? msg('Uppdraget är stängt och kan inte längre redigeras.') : msg('Uppdraget kunde inte uppdateras') },
       { status: 409 }
     )
   }
   if (error) return NextResponse.json({ error: 'Uppdraget kunde inte uppdateras' }, { status: 500 })
   if (!data) return NextResponse.json({ error: 'Uppdraget hittades inte' }, { status: 404 })
   refreshPublicJobSurfaces()
+  if (editsContent) after(() => warmTranslation('job', data))
 
   return NextResponse.json(data)
 }

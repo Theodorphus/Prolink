@@ -2,7 +2,9 @@ import type { MetadataRoute } from 'next'
 import { createPublicClient } from '@/lib/supabase/public'
 import { SITE_URL } from '@/lib/site'
 import { LANDING_CATEGORIES } from '@/lib/category-content'
-const SHARD = 9000
+import { LOCALES, localePath } from '@/i18n/config'
+// Varje rad blir två adresser (sv och en), och en sitemap får innehålla högst 50 000.
+const SHARD = 8000
 const tables = ['jobs', 'services', 'users'] as const
 function rows(table: typeof tables[number], head = false) {
   // Tjänster från den som bytt till uppdragsgivare går inte att kontakta och
@@ -26,8 +28,17 @@ export async function sitemapEntries(id: string): Promise<MetadataRoute.Sitemap>
   // Kategorilandningssidorna är statiska och ska indexeras. De är sidorna som
   // kan ranka på det en köpare faktiskt söker efter, så de hör hemma i kartan.
   const landingPaths = LANDING_CATEGORIES.map(category => `/hitta/${category}`)
+  // Varje adress finns på båda språken, och varje post pekar ut sin motsvarighet
+  // så att sökmotorerna visar rätt språk.
+  const urlFor = (code: typeof LOCALES[number], path: string) => SITE_URL + (path === '' ? (code === 'en' ? '/en' : '') : localePath(code, path))
+  const both = (path: string, extra: Partial<MetadataRoute.Sitemap[number]> = {}): MetadataRoute.Sitemap =>
+    LOCALES.map(locale => ({
+      url: urlFor(locale, path),
+      alternates: { languages: Object.fromEntries(LOCALES.map(code => [code, urlFor(code, path)])) },
+      ...extra,
+    }))
   const entries: MetadataRoute.Sitemap = shard === 0
-    ? [...staticPaths, ...landingPaths].map(path => ({ url: SITE_URL + path, changeFrequency: 'weekly' as const, priority: path.startsWith('/hitta/') ? 0.8 : undefined }))
+    ? [...staticPaths, ...landingPaths].flatMap(path => both(path, { changeFrequency: 'weekly' as const, priority: path.startsWith('/hitta/') ? 0.8 : undefined }))
     : []
   for (const table of tables) {
     // Fetch <= 500 rows per call, below Supabase's usual server row cap.
@@ -35,7 +46,7 @@ export async function sitemapEntries(id: string): Promise<MetadataRoute.Sitemap>
       const { data, error } = await rows(table).range(offset, offset + 499)
       if (error) throw new Error('Sitemap unavailable')
       // Urvalet är en dynamisk sträng, så Supabase kan inte härleda radtypen.
-      for (const row of (data ?? []) as unknown as { id: string; created_at: string | null }[]) entries.push({ url: `${SITE_URL}/${table === 'users' ? 'profile' : table}/${row.id}`, lastModified: row.created_at ? new Date(row.created_at) : undefined })
+      for (const row of (data ?? []) as unknown as { id: string; created_at: string | null }[]) entries.push(...both(`/${table === 'users' ? 'profile' : table}/${row.id}`, { lastModified: row.created_at ? new Date(row.created_at) : undefined }))
       if ((data?.length ?? 0) < 500) break
     }
   }

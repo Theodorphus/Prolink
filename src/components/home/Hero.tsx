@@ -1,7 +1,9 @@
-import Link from 'next/link'
+import Link from '@/components/i18n/Link'
 import HeroIllustration from '@/components/home/HeroIllustration'
+import { getT } from '@/i18n/server'
 
-export default function Hero() {
+export default async function Hero() {
+  const t = await getT()
   return (
     <section className="relative overflow-hidden border-b border-white/10 text-white">
       {/* Mörk botten med mesh-gradienter. Gradienterna ligger i separata lager
@@ -30,18 +32,17 @@ export default function Hero() {
         <div>
           <p className="reveal glass inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-white/85">
             <span className="h-1.5 w-1.5 rounded-full bg-teal-300" aria-hidden />
-            Svenska specialister · På distans
+            {t('Svenska specialister · På distans')}
           </p>
 
           {/* 48–64px på desktop, nedskalad på mobil så ingressen och båda
               knapparna ryms ovanför vecket. */}
           <h1 className="reveal reveal-1 mt-7 max-w-[16ch] text-[2.75rem] font-extrabold leading-[1.04] tracking-[-0.042em] sm:text-[3.5rem] lg:text-[4rem]">
-            Hitta rätt frilansare för ditt företag
+            {t('Hitta rätt frilansare för ditt företag')}
           </h1>
 
           <p className="reveal reveal-2 mt-6 max-w-xl text-lg font-medium leading-8 text-slate-300">
-            Snabbt, enkelt och kostnadsfritt. Beskriv vad ni behöver och få offerter från svenska
-            specialister inom IT, ekonomi, juridik och marknadsföring.
+            {t('Snabbt, enkelt och kostnadsfritt. Beskriv vad ni behöver och få offerter från svenska specialister inom IT, ekonomi, juridik och marknadsföring.')}
           </p>
 
           <div className="reveal reveal-3 mt-9 flex flex-col gap-3 sm:flex-row">
@@ -50,7 +51,7 @@ export default function Hero() {
               className="group inline-flex items-center justify-center gap-2 rounded-xl px-7 py-4 text-sm font-bold text-white transition-all duration-200 hover:-translate-y-0.5"
               style={{ background: 'var(--accent)', boxShadow: 'var(--shadow-accent)' }}
             >
-              Publicera uppdrag
+              {t('Publicera uppdrag')}
               <span className="transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden>
                 →
               </span>
@@ -59,12 +60,12 @@ export default function Hero() {
               href="/services"
               className="glass inline-flex items-center justify-center rounded-xl px-7 py-4 text-sm font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/[0.14]"
             >
-              Utforska tjänster
+              {t('Utforska tjänster')}
             </Link>
           </div>
 
           <ul className="reveal reveal-4 mt-9 flex flex-wrap gap-x-7 gap-y-2.5 text-sm font-semibold text-slate-400">
-            {['Kostnadsfritt att publicera', 'Direktkontakt utan mellanhand', 'Alla offerter på ett ställe'].map(item => (
+            {[t('Kostnadsfritt att publicera'), t('Direktkontakt utan mellanhand'), t('Alla offerter på ett ställe')].map(item => (
               <li key={item} className="flex items-center gap-2">
                 <svg className="h-4 w-4 shrink-0 text-teal-400" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -75,11 +76,11 @@ export default function Hero() {
           </ul>
 
           <p className="reveal reveal-5 mt-8 border-t border-white/10 pt-6 text-sm text-slate-400">
-            Frilansare?{' '}
+            {t('Frilansare?')}{' '}
             {/* Förhämtas inte: proxyn omdirigerar inloggade från /register,
                 vilket annars gav en förhämtningsloop (se Footer). */}
             <Link href="/register" prefetch={false} className="font-semibold text-indigo-300 underline-offset-4 transition hover:text-indigo-200 hover:underline">
-              Skapa en profil och hitta nya kunder
+              {t('Skapa en profil och hitta nya kunder')}
             </Link>
           </p>
         </div>
@@ -92,7 +93,7 @@ export default function Hero() {
       {/* Kategoriremsa: visar bredden på plattformen utan att påstå volym. */}
       <div className="relative border-t border-white/10 bg-white/[0.03] py-4 backdrop-blur">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-8 gap-y-2 px-4 text-[11px] font-bold uppercase tracking-[0.18em] text-white/40">
-          {['Webbutveckling', 'Design', 'Marknadsföring', 'Ekonomi', 'Juridik', 'IT & support'].map(item => (
+          {[t('Webbutveckling'), t('Design'), t('Marknadsföring'), t('Ekonomi'), t('Juridik'), t('IT & support')].map(item => (
             <span key={item}>{item}</span>
           ))}
         </div>

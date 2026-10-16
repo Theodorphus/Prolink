@@ -1,9 +1,10 @@
 'use client'
 
 import Image from 'next/image'
-import Link from 'next/link'
+import Link from '@/components/i18n/Link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { useLocalePath, useT } from '@/i18n/client'
 import MobileMenu from './MobileMenu'
 import { useNavUser, type NavUser } from './useNavUser'
 import { useUnreadCount } from './useUnreadCount'
@@ -14,11 +15,12 @@ interface NavLink {
 }
 
 export function UnreadBadge({ count }: { count: number }) {
+  const t = useT()
   if (!count) return null
   return (
     <span className="min-w-5 rounded-full bg-blue-600 px-1.5 py-0.5 text-center text-xs font-bold leading-none text-white">
       {count > 9 ? '9+' : count}
-      <span className="sr-only"> olästa</span>
+      <span className="sr-only"> {t('olästa')}</span>
     </span>
   )
 }
@@ -42,18 +44,20 @@ export default function NavAuth({ links }: { links: NavLink[] }) {
   const user = useNavUser()
   const unread = useUnreadCount(user?.id)
   const router = useRouter()
+  const t = useT()
+  const localePath = useLocalePath()
 
   // Utloggningen sker i webbläsaren så att useNavUser får SIGNED_OUT direkt.
   // En serveraction rensade cookies utan att den här komponenten märkte det,
   // och navigeringen ligger kvar monterad mellan sidbyten.
   async function signOut() {
     try { await createClient().auth.signOut() } finally {
-      router.push('/login')
+      router.push(localePath('/login'))
       router.refresh()
     }
   }
 
-  const mobileLinks = user ? [...links, { href: '/messages', label: 'Meddelanden', badge: unread }] : links
+  const mobileLinks = user ? [...links, { href: '/messages', label: t('Meddelanden'), badge: unread }] : links
 
   return (
     <>
@@ -67,37 +71,37 @@ export default function NavAuth({ links }: { links: NavLink[] }) {
               href="/messages"
               className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors px-3 py-1.5"
             >
-              Meddelanden
+              {t('Meddelanden')}
               <UnreadBadge count={unread} />
             </Link>
             <Link
               href="/jobs/create"
               className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors px-3 py-1.5"
             >
-              + Publicera uppdrag
+              {t('+ Publicera uppdrag')}
             </Link>
             <Link
               href={`/profile/${user.id}`}
               className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors pl-2 pr-3 py-1.5 rounded-lg hover:bg-gray-100"
             >
               <NavAvatar user={user} size={28} />
-              <span>{user.name?.split(' ')[0] || 'Profil'}</span>
+              <span>{user.name?.split(' ')[0] || t('Profil')}</span>
             </Link>
             <button
               type="button"
               onClick={signOut}
               className="text-sm font-medium text-gray-400 hover:text-gray-900 transition-colors px-2 py-1.5"
             >
-              Logga ut
+              {t('Logga ut')}
             </button>
           </>
         ) : (
           <>
             <Link href="/login" prefetch={false} className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors px-3 py-1.5">
-              Logga in
+              {t('Logga in')}
             </Link>
             <Link href="/register" prefetch={false} className="nav-cta inline-flex items-center text-sm font-medium bg-gray-900 text-white hover:bg-gray-700 transition-colors px-4 py-2 rounded-lg">
-              Kom igång
+              {t('Kom igång')}
             </Link>
           </>
         )}

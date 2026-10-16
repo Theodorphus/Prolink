@@ -5,6 +5,7 @@ import {
   optionalText,
   uuidValue,
 } from '@/lib/validation'
+import { msg } from '@/i18n/msg.mjs'
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
@@ -20,10 +21,10 @@ export async function POST(request: NextRequest) {
       throw new InputValidationError('Betyg måste vara ett heltal mellan 1 och 5.')
     }
     input = {
-      offerId: uuidValue(body.offer_id, 'Offert'),
-      revieweeId: uuidValue(body.reviewee_id, 'Mottagare'),
+      offerId: uuidValue(body.offer_id, msg('Offert')),
+      revieweeId: uuidValue(body.reviewee_id, msg('Mottagare')),
       rating,
-      comment: optionalText(body.comment, 'Omdöme', 2000),
+      comment: optionalText(body.comment, msg('Omdöme'), 2000),
     }
   } catch (error) {
     return NextResponse.json(
