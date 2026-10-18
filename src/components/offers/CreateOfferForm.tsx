@@ -19,15 +19,35 @@ export default function CreateOfferForm({ jobId, edit }: { jobId: string; edit?:
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [priceType, setPriceType] = useState<'fixed' | 'hourly'>(defaults?.price_type ?? 'fixed')
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<'price' | 'timeline' | 'description', string>>>({})
+
+  /** Samma gränser som servern (parseOfferContent), men synliga vid fältet i stället för en webbläsarbubbla som är lätt att missa. */
+  function validate(form: FormData) {
+    const errors: typeof fieldErrors = {}
+    const price = Number(form.get('price'))
+    if (!Number.isFinite(price) || price < 1) errors.price = t('Ange ett pris på minst 1 kr.')
+    if (String(form.get('timeline') ?? '').trim().length < 2) errors.timeline = t('Ange en leveranstid på minst 2 tecken.')
+    if (String(form.get('description') ?? '').trim().length < 10) errors.description = t('Beskriv offerten med minst 10 tecken.')
+    return errors
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     if (loading) return
-    setLoading(true)
     setError('')
 
+    const formEl = e.currentTarget
+    const form = new FormData(formEl)
+    const errors = validate(form)
+    setFieldErrors(errors)
+    const firstInvalid = (['price', 'timeline', 'description'] as const).find((name) => errors[name])
+    if (firstInvalid) {
+      formEl.querySelector<HTMLElement>(`[name="${firstInvalid}"]`)?.focus()
+      return
+    }
+
+    setLoading(true)
     try {
-    const form = new FormData(e.currentTarget)
 
     const res = await fetch(edit ? `/api/offers/${edit.offerId}` : '/api/offers', {
       method: edit ? 'PATCH' : 'POST',
@@ -53,9 +73,9 @@ export default function CreateOfferForm({ jobId, edit }: { jobId: string; edit?:
   return (
     <Card>
       <CardBody>
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} noValidate className="space-y-5">
           {error && (
-            <div className="bg-red-50 text-red-700 border border-red-200 rounded-lg px-4 py-3 text-sm">{error}</div>
+            <div role="alert" className="bg-red-50 text-red-700 border border-red-200 rounded-lg px-4 py-3 text-sm">{error}</div>
           )}
 
           {/* Pristyp */}
@@ -89,6 +109,7 @@ export default function CreateOfferForm({ jobId, edit }: { jobId: string; edit?:
             min="1"
             required
             defaultValue={defaults?.price}
+            error={fieldErrors.price}
             placeholder={priceType === 'fixed' ? t('T.ex. 12000') : t('T.ex. 850')}
           />
 
@@ -97,6 +118,7 @@ export default function CreateOfferForm({ jobId, edit }: { jobId: string; edit?:
             name="timeline" minLength={2} maxLength={120}
             required
             defaultValue={defaults?.timeline}
+            error={fieldErrors.timeline}
             placeholder={t('T.ex. 10 arbetsdagar, 2 veckor')}
           />
 
@@ -106,6 +128,7 @@ export default function CreateOfferForm({ jobId, edit }: { jobId: string; edit?:
             required
             rows={6}
             defaultValue={defaults?.description}
+            error={fieldErrors.description}
             placeholder={t('Beskriv vad du ska leverera, hur du tänker lösa uppdraget och varför du är rätt person...')}
           />
 

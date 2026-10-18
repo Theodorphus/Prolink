@@ -219,5 +219,8 @@
   "Leverantören har markerat arbetet som klart.": "The provider has marked the work as done.",
   "Bekräfta när du är nöjd med leveransen. Uppdraget stängs och leverantören kan fakturera dig.": "Confirm when you are satisfied with the delivery. The job is closed and the provider can invoice you.",
   "✓ Bekräfta och stäng uppdraget": "✓ Confirm and close the job",
-  "Kunde inte skicka. Kontrollera anslutningen och försök igen.": "Could not send. Check your connection and try again."
+  "Kunde inte skicka. Kontrollera anslutningen och försök igen.": "Could not send. Check your connection and try again.",
+  "Ange ett pris på minst 1 kr.": "Enter a price of at least SEK 1.",
+  "Ange en leveranstid på minst 2 tecken.": "Enter a delivery time of at least 2 characters.",
+  "Beskriv offerten med minst 10 tecken.": "Describe the quote in at least 10 characters."
 }
