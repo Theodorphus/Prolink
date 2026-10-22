@@ -6,9 +6,16 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+// Alla belopp lagras i SEK. På engelska visas de i euro, omräknade med en fast
+// ungefärlig kurs (inga live-kurser), så priset är en riktlinje och inte exakt.
+export const EUR_PER_SEK = 0.09
+
 export function formatCurrency(amount: number, locale: Locale = DEFAULT_LOCALE): string {
   // Ett ogiltigt värde renderade tidigare den synliga texten "NaN kr".
   if (!Number.isFinite(amount)) return ''
+  if (locale === 'en') {
+    return new Intl.NumberFormat(intlLocale(locale), { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(amount * EUR_PER_SEK)
+  }
   return new Intl.NumberFormat(intlLocale(locale), { style: 'currency', currency: 'SEK', maximumFractionDigits: 0 }).format(amount)
 }
 

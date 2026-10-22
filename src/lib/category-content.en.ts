@@ -2,7 +2,7 @@ import type { CategoryContent } from '@/lib/category-content'
 
 // Den engelska versionen av det redaktionella innehållet i category-content.ts.
 // Strukturen och nycklarna är desamma; ändrar du en text där, ändra den här.
-// Prisspannen anges i SEK eftersom de speglar svenska marknadsnivåer.
+// Prisspannen anges i euro, omräknade från svenska marknadsnivåer med samma fasta kurs som formatCurrency (EUR_PER_SEK i utils.ts).
 export const CONTENT_EN: Record<string, CategoryContent> = {
   webbutveckling: {
     heading: 'Find a web developer for your business',
@@ -18,15 +18,15 @@ export const CONTENT_EN: Record<string, CategoryContent> = {
       'Ongoing maintenance, updates and security fixes',
     ],
     priceGuide: [
-      { label: 'Simple website, a few pages', range: 'SEK 15,000–40,000' },
-      { label: 'Website with booking or login', range: 'SEK 40,000–120,000' },
-      { label: 'Web shop', range: 'SEK 50,000–200,000' },
-      { label: 'Ongoing maintenance', range: 'SEK 1,000–5,000/month' },
+      { label: 'Simple website, a few pages', range: '€1,350–3,600' },
+      { label: 'Website with booking or login', range: '€3,600–10,800' },
+      { label: 'Web shop', range: '€4,500–18,000' },
+      { label: 'Ongoing maintenance', range: '€90–450/month' },
     ],
     faq: [
       {
         q: 'What does it cost to build a website?',
-        a: 'It depends on the scope. A simple site with a few subpages usually lands between SEK 15,000 and 40,000, while a site with booking, login or e-commerce costs more. The safest way to get a realistic price is to describe the need and compare several quotes.',
+        a: 'It depends on the scope. A simple site with a few subpages usually lands between €1,350 and €3,600 while a site with booking, login or e-commerce costs more. The safest way to get a realistic price is to describe the need and compare several quotes.',
       },
       {
         q: 'How long does a web project take?',
@@ -52,15 +52,15 @@ export const CONTENT_EN: Record<string, CategoryContent> = {
       'Interface design ahead of a web project',
     ],
     priceGuide: [
-      { label: 'Logo', range: 'SEK 5,000–25,000' },
-      { label: 'Brand identity', range: 'SEK 15,000–60,000' },
-      { label: 'Printed material, each', range: 'SEK 2,000–10,000' },
-      { label: 'Design system for the web', range: 'SEK 25,000–80,000' },
+      { label: 'Logo', range: '€450–2,250' },
+      { label: 'Brand identity', range: '€1,350–5,400' },
+      { label: 'Printed material, each', range: '€180–900' },
+      { label: 'Design system for the web', range: '€2,250–7,200' },
     ],
     faq: [
       {
         q: 'What does a logo cost?',
-        a: 'Often between SEK 5,000 and 25,000. The difference lies in how many proposals are produced, how much research is included and whether you also get a brand identity with colours and typefaces.',
+        a: 'Often between €450 and €2,250. The difference lies in how many proposals are produced, how much research is included and whether you also get a brand identity with colours and typefaces.',
       },
       {
         q: 'Do I own the design afterwards?',
@@ -86,10 +86,10 @@ export const CONTENT_EN: Record<string, CategoryContent> = {
       'Analysis and follow-up of results',
     ],
     priceGuide: [
-      { label: 'SEO review, one-off', range: 'SEK 8,000–30,000' },
-      { label: 'Ongoing SEO', range: 'SEK 5,000–25,000/month' },
-      { label: 'Ad management', range: 'SEK 3,000–15,000/month' },
-      { label: 'Social media, ongoing', range: 'SEK 5,000–20,000/month' },
+      { label: 'SEO review, one-off', range: '€720–2,700' },
+      { label: 'Ongoing SEO', range: '€450–2,250/month' },
+      { label: 'Ad management', range: '€270–1,350/month' },
+      { label: 'Social media, ongoing', range: '€450–1,800/month' },
     ],
     faq: [
       {
@@ -120,15 +120,15 @@ export const CONTENT_EN: Record<string, CategoryContent> = {
       'Advice ahead of starting a company or expanding',
     ],
     priceGuide: [
-      { label: 'Ongoing bookkeeping, smaller company', range: 'SEK 800–3,000/month' },
-      { label: 'Payroll, per employee', range: 'SEK 150–400/month' },
-      { label: 'Year-end accounts and annual report', range: 'SEK 8,000–25,000' },
-      { label: 'Tax return, sole trader', range: 'SEK 3,000–8,000' },
+      { label: 'Ongoing bookkeeping, smaller company', range: '€72–270/month' },
+      { label: 'Payroll, per employee', range: '€14–36/month' },
+      { label: 'Year-end accounts and annual report', range: '€720–2,250' },
+      { label: 'Tax return, sole trader', range: '€270–720' },
     ],
     faq: [
       {
         q: 'What does a bookkeeper cost for a small business?',
-        a: 'For a smaller limited company with a limited number of vouchers, ongoing bookkeeping is often between SEK 800 and 3,000 a month. The price depends on the number of transactions and whether payroll is included.',
+        a: 'For a smaller limited company with a limited number of vouchers, ongoing bookkeeping is often between €72 and €270 a month. The price depends on the number of transactions and whether payroll is included.',
       },
       {
         q: 'Does the consultant need to be authorised?',
@@ -154,15 +154,15 @@ export const CONTENT_EN: Record<string, CategoryContent> = {
       'Shareholders’ agreements and company matters',
     ],
     priceGuide: [
-      { label: 'Review of an existing contract', range: 'SEK 3,000–12,000' },
-      { label: 'New contract from scratch', range: 'SEK 8,000–30,000' },
-      { label: 'General terms', range: 'SEK 5,000–20,000' },
-      { label: 'Ongoing advice', range: 'SEK 1,500–3,500/hour' },
+      { label: 'Review of an existing contract', range: '€270–1,100' },
+      { label: 'New contract from scratch', range: '€720–2,700' },
+      { label: 'General terms', range: '€450–1,800' },
+      { label: 'Ongoing advice', range: '€135–315/hour' },
     ],
     faq: [
       {
         q: 'What does it cost to have a contract reviewed?',
-        a: 'A review of an existing contract with written comments is often between SEK 3,000 and 12,000, depending on the length and complexity of the contract.',
+        a: 'A review of an existing contract with written comments is often between €270 and €1,100 depending on the length and complexity of the contract.',
       },
       {
         q: 'Is a contract template enough?',
@@ -188,15 +188,15 @@ export const CONTENT_EN: Record<string, CategoryContent> = {
       'Proofreading of existing material',
     ],
     priceGuide: [
-      { label: 'Web copy, per page', range: 'SEK 1,500–6,000' },
-      { label: 'Article, 800–1,200 words', range: 'SEK 2,500–8,000' },
-      { label: 'Translation, per word', range: 'SEK 1.50–3.50' },
-      { label: 'Proofreading, per hour', range: 'SEK 600–1,200' },
+      { label: 'Web copy, per page', range: '€135–540' },
+      { label: 'Article, 800–1,200 words', range: '€225–720' },
+      { label: 'Translation, per word', range: '€0.14–0.32' },
+      { label: 'Proofreading, per hour', range: '€54–110' },
     ],
     faq: [
       {
         q: 'What does web copy cost?',
-        a: 'Often between SEK 1,500 and 6,000 per page depending on how much research is needed and whether the text should be optimised for search. Many writers prefer a fixed price per assignment to being paid per word.',
+        a: 'Often between €135 and €540 per page depending on how much research is needed and whether the text should be optimised for search. Many writers prefer a fixed price per assignment to being paid per word.',
       },
       {
         q: 'What is the difference between copywriting and translation?',
@@ -222,15 +222,15 @@ export const CONTENT_EN: Record<string, CategoryContent> = {
       'Editing of existing material',
     ],
     priceGuide: [
-      { label: 'Half-day shoot', range: 'SEK 5,000–12,000' },
-      { label: 'Full-day shoot', range: 'SEK 10,000–25,000' },
-      { label: 'Product photo, per image', range: 'SEK 200–800' },
-      { label: 'Short company film', range: 'SEK 20,000–80,000' },
+      { label: 'Half-day shoot', range: '€450–1,100' },
+      { label: 'Full-day shoot', range: '€900–2,250' },
+      { label: 'Product photo, per image', range: '€18–72' },
+      { label: 'Short company film', range: '€1,800–7,200' },
     ],
     faq: [
       {
         q: 'What does a photographer cost per day?',
-        a: 'A full day is often between SEK 10,000 and 25,000 including post-processing. Check how many finished images are included, as it varies a lot between photographers.',
+        a: 'A full day is often between €900 and €2,250 including post-processing. Check how many finished images are included, as it varies a lot between photographers.',
       },
       {
         q: 'Can we use the images however we like?',
@@ -256,15 +256,15 @@ export const CONTENT_EN: Record<string, CategoryContent> = {
       'Moving to Microsoft 365 or Google Workspace',
     ],
     priceGuide: [
-      { label: 'Support agreement, per user', range: 'SEK 300–900/month' },
-      { label: 'Hourly support', range: 'SEK 900–1,600/hour' },
-      { label: 'Workstation setup', range: 'SEK 2,000–6,000' },
-      { label: 'Security review', range: 'SEK 10,000–40,000' },
+      { label: 'Support agreement, per user', range: '€27–81/month' },
+      { label: 'Hourly support', range: '€81–145/hour' },
+      { label: 'Workstation setup', range: '€180–540' },
+      { label: 'Security review', range: '€900–3,600' },
     ],
     faq: [
       {
         q: 'What does IT support cost for a small office?',
-        a: 'A support agreement is often between SEK 300 and 900 per user per month. Hourly help costs more per occasion but can be more reasonable if the need is rare.',
+        a: 'A support agreement is often between €27 and €81 per user per month. Hourly help costs more per occasion but can be more reasonable if the need is rare.',
       },
       {
         q: 'How quickly do we get help when something breaks?',
@@ -290,15 +290,15 @@ export const CONTENT_EN: Record<string, CategoryContent> = {
       'Getting systems and routines in order',
     ],
     priceGuide: [
-      { label: 'Administrative help, per hour', range: 'SEK 400–900' },
-      { label: 'Customer service, ongoing', range: 'SEK 5,000–20,000/month' },
-      { label: 'Project management, per hour', range: 'SEK 800–1,500' },
-      { label: 'Defined investigation assignment', range: 'SEK 10,000–50,000' },
+      { label: 'Administrative help, per hour', range: '€36–81' },
+      { label: 'Customer service, ongoing', range: '€450–1,800/month' },
+      { label: 'Project management, per hour', range: '€72–135' },
+      { label: 'Defined investigation assignment', range: '€900–4,500' },
     ],
     faq: [
       {
         q: 'What does administrative help cost?',
-        a: 'Often between SEK 400 and 900 an hour depending on how specialised the task is. Many consultants offer a monthly arrangement with a set number of hours, which is cheaper per hour.',
+        a: 'Often between €36 and €81 an hour depending on how specialised the task is. Many consultants offer a monthly arrangement with a set number of hours, which is cheaper per hour.',
       },
       {
         q: 'Is it worth it compared with hiring?',
