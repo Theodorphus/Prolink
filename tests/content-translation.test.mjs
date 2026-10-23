@@ -36,14 +36,30 @@ function reset() {
   process.env.ANTHROPIC_API_KEY = 'test-key'
 }
 
-const translateAll = items => items.map(item => ({ id: item.id, title: `EN ${item.title}`, description: `EN ${item.description}` }))
+const translateAll = items => items.map(item => ({ id: item.id, lang: 'sv', title: `EN ${item.title}`, description: `EN ${item.description}` }))
 
-test('svenska besökare får originaltexten och inget API-anrop görs', { skip }, async () => {
+test('en svensk annons visas orörd för svenska besökare, och översättningen sparas som orörd', { skip }, async () => {
   reset()
-  const calls = mockAnthropic(translateAll)
+  const calls = mockAnthropic(items => items.map(item => ({ id: item.id, lang: 'sv', title: item.title, description: item.description })))
   const rows = [job('1')]
   assert.deepEqual(await loaded.translateListings('job', rows, 'sv'), rows)
-  assert.equal(calls.length, 0)
+  assert.equal(calls.length, 1)
+  assert.deepEqual(await loaded.translateListings('job', rows, 'sv'), rows)
+  assert.equal(calls.length, 1, 'andra visningen ska komma ur cachen')
+})
+
+test('en rysk annons översätts till sidans språk, svenska som engelska', { skip }, async () => {
+  reset()
+  const russian = job('1', 'Монтаж фото та відео', 'Монтаж фото та відео')
+  const calls = mockAnthropic(items => items.map(item => ({ id: item.id, lang: 'uk', title: `T ${item.title}`, description: `T ${item.description}` })))
+  const sv = await loaded.translateListings('job', [russian], 'sv')
+  assert.equal(sv[0].title, 'T Монтаж фото та відео')
+  assert.equal(sv[0].autoTranslated, true)
+  const en = await loaded.translateListings('job', [russian], 'en')
+  assert.equal(en[0].autoTranslated, true)
+  assert.equal(calls.length, 2, 'ett anrop per språk')
+  assert.deepEqual(globalThis.__fakeDb.rows.map(row => row.lang).sort(), ['en', 'sv'])
+  assert.equal(globalThis.__fakeDb.rows[0].source_lang, 'uk')
 })
 
 test('utan API-nyckel visas originaltexten', { skip }, async () => {
@@ -117,5 +133,5 @@ test('rubriker ur cachen kräver inga API-anrop', { skip }, async () => {
   assert.equal(titles.get('1'), 'EN Bygga hemsida åt frisör')
   assert.equal(titles.has('2'), false)
   assert.equal(calls.length, 1)
-  assert.equal((await loaded.cachedTitles('job', ['1'], 'sv')).size, 0)
+  assert.equal((await loaded.cachedTitles('job', ['1'], 'sv')).size, 0, 'svenska är ett eget språk i cachen')
 })

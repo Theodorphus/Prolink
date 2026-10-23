@@ -187,11 +187,11 @@ export default async function JobPage(props: { params: Promise<{ id: string }>; 
                 <h2 className="page-heading text-lg">{t('Om uppdraget')}</h2>
                 {shown.autoTranslated && (
                   <p className="mt-2 text-xs font-medium text-slate-500">
-                    {t('Automatiskt översatt från svenska.')}{' '}
+                    {t('Automatiskt översatt.')}{' '}
                     <Link href={`/jobs/${job.id}?original=1`} className="font-semibold underline underline-offset-2">{t('Visa originalet')}</Link>
                   </p>
                 )}
-                {original === '1' && locale === 'en' && (
+                {original === '1' && (
                   <p className="mt-2 text-xs font-medium text-slate-500">
                     {t('Visar originaltexten.')}{' '}
                     <Link href={`/jobs/${job.id}`} className="font-semibold underline underline-offset-2">{t('Visa översättningen')}</Link>
