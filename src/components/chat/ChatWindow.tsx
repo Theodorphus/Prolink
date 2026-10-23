@@ -5,7 +5,7 @@ import { notifyUnreadChanged } from '@/components/layout/useUnreadCount'
 import { createClient } from '@/lib/supabase/client'
 import ChatMessage from './ChatMessage'
 import ChatInput from './ChatInput'
-import { useT } from '@/i18n/client'
+import { useLocale, useT } from '@/i18n/client'
 import { msg } from '@/i18n/msg.mjs'
 import type { MessageWithSender } from '@/types/database'
 
@@ -17,6 +17,7 @@ export default function ChatWindow({ offerId, currentUserId, initialMessages }: 
 
 function Conversation({ offerId, currentUserId, initialMessages }: { offerId: string; currentUserId: string; initialMessages: MessageWithSender[] }) {
   const t = useT()
+  const locale = useLocale()
   const [messages, setMessages] = useState(initialMessages)
   const [supabase] = useState(createClient)
   const userId = currentUserId
@@ -24,6 +25,11 @@ function Conversation({ offerId, currentUserId, initialMessages }: { offerId: st
   const [error, setError] = useState('')
   const [older, setOlder] = useState(initialMessages.length === 50)
   const [loadingOlder, setLoadingOlder] = useState(false)
+  const [translations, setTranslations] = useState<Record<string, { content: string; same: boolean }>>({})
+  const [translating, setTranslating] = useState<Set<string>>(new Set())
+  const [auto, setAuto] = useState(false)
+  // Meddelanden som redan begärts, så att ett misslyckande inte upprepas vid varje uppdatering.
+  const requested = useRef(new Set<string>())
   const [readThrough, setReadThrough] = useState(initialMessages.at(-1))
   const cursor = useRef(initialMessages.at(-1))
   const refreshing = useRef(false)
@@ -38,6 +44,52 @@ function Conversation({ offerId, currentUserId, initialMessages }: { offerId: st
       return [...byId.values()].sort((a, b) => a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id))
     })
   }, [])
+
+  const autoKey = `prolink:chat-auto-translate:${offerId}`
+  useEffect(() => {
+    try { setAuto(localStorage.getItem(autoKey) === '1') } catch { /* Utan lagring får man slå på det igen. */ }
+  }, [autoKey])
+
+  function toggleAuto(on: boolean) {
+    setAuto(on)
+    try { localStorage.setItem(autoKey, on ? '1' : '0') } catch { /* Valet gäller då bara tills sidan laddas om. */ }
+  }
+
+  const translate = useCallback(async (ids: string[]) => {
+    const wanted = ids.filter(id => !requested.current.has(id))
+    if (wanted.length === 0) return
+    wanted.forEach(id => requested.current.add(id))
+    setTranslating(previous => new Set([...previous, ...wanted]))
+    try {
+      for (let start = 0; start < wanted.length; start += 50) {
+        const res = await fetch(`/api/messages/${offerId}/translate`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids: wanted.slice(start, start + 50), lang: locale }),
+        })
+        if (!res.ok) throw new Error()
+        const data: { translations: Record<string, { content: string; same: boolean }> } = await res.json()
+        setTranslations(previous => ({ ...previous, ...data.translations }))
+      }
+      setError('')
+    } catch {
+      wanted.forEach(id => requested.current.delete(id))
+      setError(msg('Kunde inte översätta meddelandet. Försök igen.'))
+    } finally {
+      setTranslating(previous => new Set([...previous].filter(id => !wanted.includes(id))))
+    }
+  }, [offerId, locale])
+
+  // Vid "översätt automatiskt" översätts varje inkommande meddelande när det dyker upp.
+  // Ett misslyckat försök provas inte om förrän man klickar på knappen.
+  const autoAttempted = useRef(new Set<string>())
+  useEffect(() => {
+    if (!auto) return
+    const ids = messages
+      .filter(message => message.sender_id !== userId && message.content.trim() && !autoAttempted.current.has(message.id) && !(message.id in translations))
+      .map(message => message.id)
+    ids.forEach(id => autoAttempted.current.add(id))
+    if (ids.length) void translate(ids)
+  }, [auto, messages, translations, translate, userId])
 
   useEffect(() => {
     const element = list.current
@@ -149,12 +201,18 @@ function Conversation({ offerId, currentUserId, initialMessages }: { offerId: st
   }
 
   return <div className="flex flex-col flex-1 min-h-0">
-    <p role="status" className="mb-2 text-xs text-slate-500">{t(connection)}</p>
+    <div className="mb-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+      <p role="status" className="text-xs text-slate-500">{t(connection)}</p>
+      <label className="flex items-center gap-1.5 text-xs text-slate-600">
+        <input type="checkbox" checked={auto} onChange={event => toggleAuto(event.target.checked)} />
+        {t('Översätt inkommande meddelanden automatiskt')}
+      </label>
+    </div>
     {error && <p role="alert" className="text-sm text-red-700">{t(error)}</p>}
     <div ref={list} onScroll={() => { const el = list.current; if (el) stickToBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80 }} role="log" aria-label={t('Meddelanden')} aria-live="polite" className="flex-1 overflow-y-auto space-y-4 pr-1">
       {older && <button type="button" disabled={loadingOlder} onClick={loadOlder} className="text-sm underline">{loadingOlder ? t('Hämtar…') : t('Visa äldre meddelanden')}</button>}
       {messages.length === 0 && <p className="py-12 text-center text-slate-500">{t('Inga meddelanden ännu. Har du frågor om offerten kan du skriva här.')}</p>}
-      {messages.map(message => <ChatMessage key={message.id} message={message} isOwn={message.sender_id === userId} />)}
+      {messages.map(message => <ChatMessage key={message.id} message={message} isOwn={message.sender_id === userId} translation={translations[message.id]} translating={translating.has(message.id)} auto={auto} onTranslate={() => { void translate([message.id]) }} />)}
     </div>
     <div className="mt-4 border-t border-gray-200 pt-4"><ChatInput onSend={handleSend} offerId={offerId} /></div>
   </div>

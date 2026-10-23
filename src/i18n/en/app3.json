@@ -213,5 +213,13 @@
   "Din verifieringsansökan kunde inte godkännas": "Your verification application could not be approved",
   "Vi kunde inte verifiera ditt företag den här gången.": "We could not verify your company this time.",
   "Anteckning från oss:": "A note from us:",
-  "Kontrollera uppgifterna och skicka in en ny ansökan från din profil. Hör av dig om du undrar över något.": "Check the details and submit a new application from your profile. Get in touch if you have any questions."
+  "Kontrollera uppgifterna och skicka in en ny ansökan från din profil. Hör av dig om du undrar över något.": "Check the details and submit a new application from your profile. Get in touch if you have any questions.",
+  "Visar originalet.": "Showing the original.",
+  "Meddelandet är redan på ditt språk.": "This message is already in your language.",
+  "Översätter…": "Translating…",
+  "Översätt": "Translate",
+  "Översätt inkommande meddelanden automatiskt": "Translate incoming messages automatically",
+  "Kunde inte översätta meddelandet. Försök igen.": "Could not translate the message. Please try again.",
+  "Översättning är inte tillgänglig just nu.": "Translation is not available right now.",
+  "Ogiltigt språk.": "Invalid language."
 }

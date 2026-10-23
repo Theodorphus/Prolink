@@ -9,6 +9,11 @@ import { useLocale, useT } from '@/i18n/client'
 interface ChatMessageProps {
   message: MessageWithSender
   isOwn: boolean
+  /** Översättning till läsarens språk. same = meddelandet var redan på det språket. */
+  translation?: { content: string; same: boolean }
+  translating?: boolean
+  auto?: boolean
+  onTranslate?: () => void
 }
 
 function safeLegacyAttachmentUrl(value: string | null): string | null {
@@ -26,12 +31,14 @@ function safeLegacyAttachmentUrl(value: string | null): string | null {
   }
 }
 
-export default function ChatMessage({ message, isOwn }: ChatMessageProps) {
+export default function ChatMessage({ message, isOwn, translation, translating, auto, onTranslate }: ChatMessageProps) {
   const t = useT()
   const locale = useLocale()
   const [attachmentError, setAttachmentError] = useState('')
   const [attachmentUrl, setAttachmentUrl] = useState<string | null>(null)
   const [loadingAttachment, setLoadingAttachment] = useState(false)
+  const [showOriginal, setShowOriginal] = useState(false)
+  const translated = translation && !translation.same && !isOwn
   const legacyAttachmentUrl = safeLegacyAttachmentUrl(message.attachment_url)
 
   async function openPrivateAttachment() {
@@ -79,7 +86,7 @@ export default function ChatMessage({ message, isOwn }: ChatMessageProps) {
               : 'bg-white border border-gray-200 text-gray-800 rounded-tl-sm'
           }`}
         >
-          <p className="whitespace-pre-wrap break-words">{message.content}</p>
+          <p className="whitespace-pre-wrap break-words">{translated && !showOriginal ? translation.content : message.content}</p>
 
           {message.attachment_path && (
             <button
@@ -111,6 +118,24 @@ export default function ChatMessage({ message, isOwn }: ChatMessageProps) {
           {attachmentUrl && <a href={attachmentUrl} target="_blank" rel="noopener noreferrer" className="mt-2 block text-xs underline">{t('Öppna bilaga i ny flik')}</a>}
           {attachmentError && <p role="alert" className={`mt-1 text-xs ${isOwn ? 'text-red-100' : 'text-red-700'}`}>{attachmentError}</p>}
         </div>
+        {!isOwn && message.content.trim() && (
+          <p className="text-xs text-gray-500 mx-1">
+            {translated ? (
+              <>
+                {showOriginal ? t('Visar originalet.') : t('Automatiskt översatt.')}{' '}
+                <button type="button" onClick={() => setShowOriginal(value => !value)} className="font-semibold underline underline-offset-2">
+                  {showOriginal ? t('Visa översättningen') : t('Visa originalet')}
+                </button>
+              </>
+            ) : translation ? (
+              !auto && t('Meddelandet är redan på ditt språk.')
+            ) : onTranslate && !auto && (
+              <button type="button" disabled={translating} onClick={onTranslate} className="font-semibold underline underline-offset-2">
+                {translating ? t('Översätter…') : t('Översätt')}
+              </button>
+            )}
+          </p>
+        )}
         <p className="text-xs text-gray-400 mx-1">{formatDateTime(message.created_at, locale)}</p>
       </div>
     </div>

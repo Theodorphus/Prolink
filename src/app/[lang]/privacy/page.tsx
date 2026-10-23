@@ -65,7 +65,7 @@ export default async function PrivacyPage() {
             <li><strong>{t('Vercel Inc.')}</strong>{' '}{t('— drift av webbplatsen och besöksstatistik utan cookies (USA, standardavtalsklausuler).')}</li>
             <li><strong>{t('Resend Inc.')}</strong>{' '}{t('— e-postutskick (USA, standardavtalsklausuler).')}</li>
             <li><strong>{t('Google LLC')}</strong>{' '}{t('— inloggning med Google-konto, bara om du väljer det (USA, standardavtalsklausuler).')}</li>
-            <li><strong>{t('Anthropic PBC')}</strong>{' '}{t('— maskinöversättning av uppdrag och tjänstebeskrivningar när webbplatsen visas på engelska. Bara annonsens titel och beskrivning skickas, aldrig namn eller kontaktuppgifter (USA, standardavtalsklausuler).')}</li>
+            <li><strong>{t('Anthropic PBC')}</strong>{' '}{t('— maskinöversättning. Uppdrag och tjänstebeskrivningar översätts till det språk du läser webbplatsen på, och ett chattmeddelande översätts bara när mottagaren ber om det eller slår på automatisk översättning. Bara själva texten skickas, aldrig namn eller kontaktuppgifter (USA, standardavtalsklausuler).')}</li>
           </ul>
           <p className="text-sm mt-3">{t('Vi säljer aldrig dina personuppgifter till tredje part.')}</p>
         </section>

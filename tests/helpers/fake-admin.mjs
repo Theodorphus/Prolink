@@ -21,9 +21,10 @@ export function createAdminClient() {
           }
           return query
         },
-        async upsert(rows) {
+        async upsert(rows, options = {}) {
+          const keys = options.onConflict?.split(',') ?? ['entity_type', 'entity_id', 'lang']
           for (const row of rows) {
-            const index = db().rows.findIndex(existing => existing.__table === table && existing.entity_type === row.entity_type && existing.entity_id === row.entity_id && existing.lang === row.lang)
+            const index = db().rows.findIndex(existing => existing.__table === table && keys.every(key => existing[key] === row[key]))
             const next = { ...row, __table: table }
             if (index === -1) db().rows.push(next)
             else db().rows[index] = next
