@@ -14,6 +14,9 @@ const nextConfig = {
     ],
   },
   turbopack: {},
+  experimental: {
+    agentUpgrade: 'security',
+  },
 
   // Produktionen levererade bara HSTS (från Vercel). Offertsidorna har
   // ettklicksknappar för att acceptera, avvisa och slutföra, så skydd mot
