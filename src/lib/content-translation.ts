@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { createHash } from 'node:crypto'
+import { after } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { Locale } from '@/i18n/config'
 
@@ -178,12 +179,18 @@ function chunk(items: Translatable[]): Translatable[][] {
  * Översätter en lista annonser till sidans språk. Annonser som redan är på
  * sidans språk returneras orörda. Raderna behåller alla övriga fält; bara title
  * och description byts.
+ *
+ * Saknas översättningen väntar sidan på den. Det gäller inte svenska listor:
+ * nästan alla annonser är redan på svenska, så där översätts det som saknas efter
+ * att svaret skickats och visas på nästa visning. Annars skulle första besökaren
+ * få vänta på ett anrop (upp till tidsgränsen) för varje lista. Med
+ * background: false väntar man alltid.
  */
 export async function translateListings<T extends Translatable>(
   type: EntityType,
   rows: T[],
   locale: Locale,
-  options: { original?: boolean } = {},
+  options: { original?: boolean; background?: boolean } = {},
 ): Promise<Translated<T>[]> {
   if (options.original || rows.length === 0 || !translationAvailable()) return rows
 
@@ -199,8 +206,8 @@ export async function translateListings<T extends Translatable>(
     } else missing.push(row)
   }
 
-  const fresh: { item: Translatable; answer: Answer }[] = []
-  if (missing.length > 0) {
+  const fill = async () => {
+    const fresh: { item: Translatable; answer: Answer }[] = []
     const batches = chunk(missing.slice(0, MAX_ITEMS_PER_RENDER))
     const answers = await Promise.all(batches.map(batch => translateChunk(batch, locale)))
     for (const [index, batch] of batches.entries()) {
@@ -212,6 +219,11 @@ export async function translateListings<T extends Translatable>(
       }
     }
     await writeCache(type, locale, fresh)
+  }
+  if (missing.length > 0) {
+    if (options.background ?? locale === 'sv') {
+      try { after(fill) } catch { await fill() } // utanför en förfrågan (t.ex. i tester) väntar vi
+    } else await fill()
   }
 
   return rows.map(row => {
@@ -227,7 +239,7 @@ export async function translateListing<T extends Translatable>(
   locale: Locale,
   options: { original?: boolean } = {},
 ): Promise<Translated<T>> {
-  return (await translateListings(type, [row], locale, options))[0]
+  return (await translateListings(type, [row], locale, { ...options, background: false }))[0]
 }
 
 /**
@@ -235,7 +247,7 @@ export async function translateListing<T extends Translatable>(
  * så att första engelska besökaren slipper vänta. Anropas via after().
  */
 export async function warmTranslation(type: EntityType, row: Translatable): Promise<void> {
-  await Promise.all(LOCALES.map(locale => translateListings(type, [row], locale)))
+  await Promise.all(LOCALES.map(locale => translateListings(type, [row], locale, { background: false })))
 }
 
 /**
