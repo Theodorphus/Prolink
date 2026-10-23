@@ -46,3 +46,7 @@ next-env.d.ts
 /public/cta-bg.png
 /public/Herovid2_opt.mp4
 /public/ChatGPT Image Apr 29, 2026, 07_15_43 PM.png
+
+# Claude Code, lokalt
+.claude/settings.local.json
+.claude/worktrees/
