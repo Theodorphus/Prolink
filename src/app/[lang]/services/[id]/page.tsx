@@ -1,3 +1,4 @@
+import LinkifiedText from '@/components/ui/LinkifiedText'
 import type { Metadata } from 'next'
 import { isUuid } from '@/lib/validation'
 import { notFound } from 'next/navigation'
@@ -164,9 +165,7 @@ export default async function ServicePage(props: { params: Promise<{ id: string 
                 <Link href={`/services/${service.id}`} className="font-semibold underline underline-offset-2">{t('Visa översättningen')}</Link>
               </p>
             )}
-            <div className="mt-3 whitespace-pre-wrap text-base leading-8 text-slate-700">
-              {shown.description}
-            </div>
+            <LinkifiedText text={shown.description} className="mt-3 whitespace-pre-wrap text-base leading-8 text-slate-700" />
           </section>
 
           {reviews && reviews.length > 0 && (

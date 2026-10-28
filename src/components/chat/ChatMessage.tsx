@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { formatDateTime } from '@/lib/utils'
+import LinkifiedText from '@/components/ui/LinkifiedText'
 import { createClient } from '@/lib/supabase/client'
 import type { MessageWithSender } from '@/types/database'
 import { useLocale, useT } from '@/i18n/client'
@@ -86,7 +87,11 @@ export default function ChatMessage({ message, isOwn, translation, translating, 
               : 'bg-white border border-gray-200 text-gray-800 rounded-tl-sm'
           }`}
         >
-          <p className="whitespace-pre-wrap break-words">{translated && !showOriginal ? translation.content : message.content}</p>
+          <LinkifiedText
+            text={translated && !showOriginal ? translation.content : message.content}
+            className="whitespace-pre-wrap break-words"
+            linkClassName={isOwn ? 'text-white underline underline-offset-2 break-all' : undefined}
+          />
 
           {message.attachment_path && (
             <button

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Card, CardBody, CardFooter } from '@/components/ui/Card'
 import { StatusBadge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
+import LinkifiedText from '@/components/ui/LinkifiedText'
 import { formatCurrency } from '@/lib/utils'
 import { useLocale, useT } from '@/i18n/client'
 
@@ -69,7 +70,7 @@ export default function OfferCard({ offer, isOwner, currentUserId }: OfferCardPr
           </div>
         </div>
 
-        <p className="text-sm text-gray-700 mb-2 whitespace-pre-wrap">{offer.description}</p>
+        <LinkifiedText text={offer.description} className="text-sm text-gray-700 mb-2 whitespace-pre-wrap" />
         <p className="text-xs text-gray-400">{t('Tidsestimat')}: {offer.timeline}</p>
       </CardBody>
 

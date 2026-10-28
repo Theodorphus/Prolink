@@ -3,6 +3,7 @@ import Link from '@/components/i18n/Link'
 import { createClient, getUser } from '@/lib/supabase/server'
 import { Card, CardBody, CardHeader } from '@/components/ui/Card'
 import { StatusBadge } from '@/components/ui/Badge'
+import LinkifiedText from '@/components/ui/LinkifiedText'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import AcceptRejectButtons from '@/components/offers/AcceptRejectButtons'
 import MarkDeliveredButton from '@/components/offers/MarkDeliveredButton'
@@ -112,7 +113,7 @@ export default async function OfferPage(
               </div>
               <div>
                 <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-1">{t('Beskrivning')}</p>
-                <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{offer.description}</p>
+                <LinkifiedText text={offer.description} className="text-gray-700 whitespace-pre-wrap leading-relaxed" />
               </div>
               <p className="text-xs text-gray-400">
                 {t('Skickad')} {formatDate(offer.created_at, locale)}
