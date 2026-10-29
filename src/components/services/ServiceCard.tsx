@@ -17,6 +17,8 @@ export interface ServiceCardService {
     avatar_url?: string | null
     verified?: boolean
     reference_count?: number
+    review_count?: number
+    average_rating?: number | null
   } | null
 }
 
@@ -31,10 +33,13 @@ export interface ServiceCardService {
 export default async function ServiceCard({
   service,
   showProvider = true,
+  headingLevel = 3,
 }: {
   service: ServiceCardService
   showProvider?: boolean
+  headingLevel?: 2 | 3
 }) {
+  const Heading = `h${headingLevel}` as 'h2' | 'h3'
   const locale = await getLocale()
   const t = await getT()
   return (
@@ -46,9 +51,9 @@ export default async function ServiceCard({
           </span>
         )}
 
-        <h3 className="line-clamp-2 text-base font-bold leading-snug tracking-[-0.02em] text-slate-900 transition-colors group-hover:text-blue-700">
+        <Heading className="line-clamp-2 text-base font-bold leading-snug tracking-[-0.02em] text-slate-900 transition-colors group-hover:text-blue-700">
           {service.title}
-        </h3>
+        </Heading>
 
         <p className="line-clamp-3 flex-1 text-sm leading-6 text-slate-600">{service.description}</p>
 
@@ -68,7 +73,15 @@ export default async function ServiceCard({
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-medium text-slate-600">{service.provider.name}</p>
+              <p className="truncate text-xs font-medium text-slate-600">
+                {service.provider.name}
+                {!!service.provider.review_count && service.provider.average_rating != null && (
+                  <span className="ml-1.5 font-semibold text-slate-800">
+                    <span aria-hidden="true">★</span> {service.provider.average_rating.toLocaleString(locale, { minimumFractionDigits: 1 })} ({service.provider.review_count})
+                    <span className="sr-only">{t('i betyg')}</span>
+                  </span>
+                )}
+              </p>
               {(service.provider.verified || !!service.provider.reference_count) && (
                 <p className="truncate text-xs font-semibold text-emerald-700">
                   {[
@@ -87,7 +100,7 @@ export default async function ServiceCard({
             <p className="text-lg font-black tracking-[-0.02em] text-slate-900">
               {formatCurrency(service.price, locale)}
             </p>
-            <p className="text-xs font-medium text-slate-400">{t('från')}</p>
+            <p className="text-xs font-medium text-slate-500">{t('från')}</p>
           </div>
           <span className="shrink-0 rounded-full bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-600 ring-1 ring-inset ring-slate-200">
             {service.delivery_time}

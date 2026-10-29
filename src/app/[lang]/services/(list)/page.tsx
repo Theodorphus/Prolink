@@ -10,7 +10,7 @@ import { pageMetadata } from '@/lib/seo'
 import { capPerProvider, MAX_SERVICES_PER_PROVIDER } from '@/lib/service-limits.mjs'
 import { getLocale, getT } from '@/i18n/server'
 import { translateListings } from '@/lib/content-translation'
-import { withProviderTrust } from '@/lib/provider-trust'
+import { providerTrustMap, withProviderTrust } from '@/lib/provider-trust'
 
 export async function generateMetadata() {
   const t = await getT()
@@ -23,7 +23,7 @@ export async function generateMetadata() {
 }
 
 interface Props {
-  searchParams: Promise<{ page?: string; q?: string; sort?: string; max_price?: string; category?: string }>
+  searchParams: Promise<{ page?: string; q?: string; sort?: string; max_price?: string; category?: string; verified?: string }>
 }
 
 export default async function ServicesPage(props: Props) {
@@ -32,7 +32,7 @@ export default async function ServicesPage(props: Props) {
   const t = await getT()
   const page = pageNumber(searchParams.page)
   const supabase = await createClient()
-  const { q, sort = 'newest', max_price, category } = searchParams
+  const { q, sort = 'newest', max_price, category, verified } = searchParams
 
   const { data: { user } } = await getUser()
   const { data: profile } = user
@@ -93,7 +93,18 @@ export default async function ServicesPage(props: Props) {
     matches.push(...rows)
     if (rows.length < 1000) break
   }
-  const { visible, hidden, lastVisible } = capPerProvider(matches, MAX_SERVICES_PER_PROVIDER)
+  // Förtroendefiltren kan inte uttryckas i databasfrågan, så de tillämpas på
+  // urvalet här. Sorteringen är stabil, så lika många referenser behåller
+  // ordningen nyast först.
+  let candidates = matches
+  if (verified === '1' || sort === 'references') {
+    const trust = await providerTrustMap([...new Set(matches.map(match => match.provider_id))])
+    if (verified === '1') candidates = candidates.filter(match => trust.get(match.provider_id)?.verified)
+    if (sort === 'references') {
+      candidates = [...candidates].sort((a, b) => (trust.get(b.provider_id)?.reference_count ?? 0) - (trust.get(a.provider_id)?.reference_count ?? 0))
+    }
+  }
+  const { visible, hidden, lastVisible } = capPerProvider(candidates, MAX_SERVICES_PER_PROVIDER)
   const pageIds = visible.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map(service => service.id)
   const { data: pageRows, error } = pageIds.length
     ? await supabase.from('services').select('*, provider:users!inner(id, name, avatar_url)').in('id', pageIds)
@@ -101,7 +112,7 @@ export default async function ServicesPage(props: Props) {
   if (error) throw new Error('Listan kunde inte hämtas. Försök igen.')
   const byId = new Map((pageRows ?? []).map(service => [service.id, { ...service, provider: Array.isArray(service.provider) ? service.provider[0] : service.provider }]))
   const services = await withProviderTrust(await translateListings('service', pageIds.flatMap(id => byId.get(id) ?? []), locale))
-  const count = matches.length
+  const count = candidates.length
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
@@ -129,7 +140,7 @@ export default async function ServicesPage(props: Props) {
 
       <div className="mt-7 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {services.flatMap((service) => {
-          const card = <ServiceCard key={service.id} service={service} />
+          const card = <ServiceCard key={service.id} service={service} headingLevel={2} />
           const more = hidden.get(service.provider_id)
           if (!more || lastVisible.get(service.provider_id) !== service.id) return [card]
           return [card, (

@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import { useLocale, useT } from '@/i18n/client'
+import { useLocale } from '@/i18n/client'
 import { splitLocale } from '@/i18n/config'
 
 /**
@@ -11,7 +11,6 @@ import { splitLocale } from '@/i18n/config'
  */
 export default function LanguageSwitcher({ className = '' }: { className?: string }) {
   const locale = useLocale()
-  const t = useT()
   const { path } = splitLocale(usePathname())
   const target = locale === 'sv' ? 'en' : 'sv'
   const href = target === 'sv' ? `/sv${path === '/' ? '' : path}` : `/en${path === '/' ? '' : path}`
@@ -21,7 +20,6 @@ export default function LanguageSwitcher({ className = '' }: { className?: strin
       href={href}
       hrefLang={target}
       lang={target}
-      aria-label={target === 'en' ? t('Byt språk till engelska') : t('Byt språk till svenska')}
       className={className}
     >
       {locale === 'sv' ? 'English' : 'Svenska'}

@@ -125,6 +125,24 @@ export default async function ServicePage(props: { params: Promise<{ id: string 
       areaServed: { '@type': 'Country', name: locale === 'en' ? 'Sweden' : 'Sverige' },
       provider: { '@type': 'Person', name: provider.name, url: absoluteUrl(localePath(locale, `/profile/${provider.id}`)) },
       offers: { '@type': 'Offer', price: service.price, priceCurrency: 'SEK', url: absoluteUrl(localePath(locale, `/services/${service.id}`)) },
+      // Omdömena gäller leverantören, inte just den här tjänsten, men de är
+      // det köparen har att gå på och de visas på sidan, så de märks upp.
+      ...(reviewCount > 0 && avgRating != null ? {
+        aggregateRating: {
+          '@type': 'AggregateRating',
+          ratingValue: Number(avgRating.toFixed(1)),
+          reviewCount,
+          bestRating: 5,
+          worstRating: 1,
+        },
+        review: (reviews ?? []).map(review => ({
+          '@type': 'Review',
+          reviewRating: { '@type': 'Rating', ratingValue: review.rating, bestRating: 5, worstRating: 1 },
+          author: { '@type': 'Person', name: (Array.isArray(review.reviewer) ? review.reviewer[0] : review.reviewer)?.name ?? t('Prolink-kund') },
+          datePublished: review.created_at,
+          ...(review.comment ? { reviewBody: review.comment } : {}),
+        })),
+      } : {}),
     },
   ]
 
