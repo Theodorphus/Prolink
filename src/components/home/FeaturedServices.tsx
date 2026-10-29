@@ -5,6 +5,7 @@ import { createPublicClient } from '@/lib/supabase/public'
 import { FEATURED_SERVICE_COUNT, onePerProvider } from '@/lib/service-limits.mjs'
 import { getLocale, getT } from '@/i18n/server'
 import { translateListings } from '@/lib/content-translation'
+import { withProviderTrust } from '@/lib/provider-trust'
 // Startsidan ska visa bredden av frilansare, inte en enda persons katalog:
 // den senaste tjänsten från var och en av de senast aktiva frilansarna. Ett
 // större urval hämtas så att det räcker även när någon publicerat många i rad.
@@ -20,6 +21,6 @@ export default async function FeaturedServices() {
   try { data = await featuredServices() }
   catch { return <p className="px-4 py-8 text-center">{t('Tjänsterna kunde inte hämtas.')} <Link className="underline" href="/services">{t('Försök igen')}</Link></p> }
   if (!data?.length) return null
-  const services = await translateListings('service', data, locale)
+  const services = await withProviderTrust(await translateListings('service', data, locale))
   return <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6"><div className="mb-6 flex items-center justify-between gap-4"><h2 className="page-heading text-2xl">{t('Tjänster att börja med')}</h2><Link className="text-sm font-semibold underline" href="/services">{t('Alla tjänster')}</Link></div><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{services.map(service => <ServiceCard key={service.id} service={service} />)}</div></section>
 }

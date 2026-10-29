@@ -15,6 +15,8 @@ export interface ServiceCardService {
     id?: string
     name: string
     avatar_url?: string | null
+    verified?: boolean
+    reference_count?: number
   } | null
 }
 
@@ -65,9 +67,18 @@ export default async function ServiceCard({
                 service.provider.name?.[0]?.toUpperCase()
               )}
             </div>
-            <span className="flex-1 truncate text-xs font-medium text-slate-600">
-              {service.provider.name}
-            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-medium text-slate-600">{service.provider.name}</p>
+              {(service.provider.verified || !!service.provider.reference_count) && (
+                <p className="truncate text-xs font-semibold text-emerald-700">
+                  {[
+                    service.provider.verified && t('✓ Verifierat företag'),
+                    !!service.provider.reference_count &&
+                      `${service.provider.reference_count} ${service.provider.reference_count === 1 ? t('referens') : t('referenser')}`,
+                  ].filter(Boolean).join(' · ')}
+                </p>
+              )}
+            </div>
           </div>
         )}
 

@@ -10,6 +10,7 @@ import { pageMetadata } from '@/lib/seo'
 import { capPerProvider, MAX_SERVICES_PER_PROVIDER } from '@/lib/service-limits.mjs'
 import { getLocale, getT } from '@/i18n/server'
 import { translateListings } from '@/lib/content-translation'
+import { withProviderTrust } from '@/lib/provider-trust'
 
 export async function generateMetadata() {
   const t = await getT()
@@ -99,7 +100,7 @@ export default async function ServicesPage(props: Props) {
     : { data: [], error: null }
   if (error) throw new Error('Listan kunde inte hämtas. Försök igen.')
   const byId = new Map((pageRows ?? []).map(service => [service.id, { ...service, provider: Array.isArray(service.provider) ? service.provider[0] : service.provider }]))
-  const services = await translateListings('service', pageIds.flatMap(id => byId.get(id) ?? []), locale)
+  const services = await withProviderTrust(await translateListings('service', pageIds.flatMap(id => byId.get(id) ?? []), locale))
   const count = matches.length
 
   return (

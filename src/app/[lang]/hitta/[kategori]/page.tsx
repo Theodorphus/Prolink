@@ -7,6 +7,7 @@ import { getCategoryContent, LANDING_CATEGORIES } from '@/lib/category-content'
 import { PUBLIC_JOB_FIELDS } from '@/lib/jobs'
 import JobCard, { type JobCardJob } from '@/components/jobs/JobCard'
 import ServiceCard, { type ServiceCardService } from '@/components/services/ServiceCard'
+import { withProviderTrust } from '@/lib/provider-trust'
 import JsonLd from '@/components/seo/JsonLd'
 import { breadcrumbList, pageMetadata } from '@/lib/seo'
 import { getLocale, getT } from '@/i18n/server'
@@ -86,10 +87,10 @@ export default async function CategoryLandingPage(props: {
     ...job,
     customer: Array.isArray(job.customer) ? job.customer[0] ?? null : job.customer,
   })) as JobCardJob[], locale)
-  const openServices = await translateListings('service', (services ?? []).map(service => ({
+  const openServices = await withProviderTrust(await translateListings('service', (services ?? []).map(service => ({
     ...service,
     provider: Array.isArray(service.provider) ? service.provider[0] : service.provider,
-  })) as ServiceCardService[], locale)
+  })) as ServiceCardService[], locale))
 
   // FAQPage-märkning ger sidan chans till utökade sökresultat. Frågorna och
   // svaren är samma som renderas nedan; Google kräver att de stämmer överens.
