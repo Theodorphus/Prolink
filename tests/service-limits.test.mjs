@@ -16,3 +16,10 @@ test('the service list caps each provider and reports what was hidden', () => {
   assert.equal(hidden.has('b'), false)
   assert.equal(lastVisible.get('a'), 'a3')
 })
+
+test('the cap can differ per provider, so premium providers show more services', () => {
+  const { visible, hidden } = capPerProvider(rows, providerId => providerId === 'a' ? 10 : 1)
+  assert.deepEqual(visible.map(row => row.id), ['a1', 'a2', 'b1', 'a3', 'a4', 'c1', 'a5'])
+  assert.equal(hidden.get('b'), 1)
+  assert.equal(hidden.has('a'), false)
+})

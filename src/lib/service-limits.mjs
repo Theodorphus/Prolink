@@ -4,6 +4,9 @@
 
 export const FEATURED_SERVICE_COUNT = 6
 export const MAX_SERVICES_PER_PROVIDER = 3
+// Premiumfrilansare visas med fler tjänster. Samma tak som databasen sätter
+// på hur många tjänster en frilansare får ha (migration 027).
+export const MAX_SERVICES_PER_PREMIUM_PROVIDER = 10
 
 export function onePerProvider(services, limit) {
   const seen = new Set()
@@ -21,6 +24,7 @@ export function onePerProvider(services, limit) {
 // hidden: antal dolda tjänster per frilansare.
 // lastVisible: id på frilansarens sista synliga tjänst, där hänvisningen till
 // profilen placeras.
+// max är antingen ett tal eller en funktion som ger taket för en frilansare.
 export function capPerProvider(services, max) {
   const shown = new Map()
   const hidden = new Map()
@@ -28,7 +32,8 @@ export function capPerProvider(services, max) {
   const visible = []
   for (const service of services) {
     const count = shown.get(service.provider_id) ?? 0
-    if (count < max) {
+    const limit = typeof max === 'function' ? max(service.provider_id) : max
+    if (count < limit) {
       shown.set(service.provider_id, count + 1)
       lastVisible.set(service.provider_id, service.id)
       visible.push(service)

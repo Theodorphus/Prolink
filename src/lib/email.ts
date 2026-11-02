@@ -58,14 +58,15 @@ export async function sendQueuedNotification(item: { id: string; kind: string; t
   const admin = item.kind === 'admin_verification'
   const welcome = item.kind === 'welcome'
   const verification = item.kind === 'verification_result'
+  const premium = item.kind === 'premium'
   const validPath = reference ? /^\/referens\/[A-Za-z0-9_-]{32,}$/
     : admin ? /^\/admin$/
     : welcome ? /^\/(profile\/[0-9a-f-]+|jobs\/create)$/i
-    : verification ? /^\/profile\/[0-9a-f-]+$/i
+    : verification || premium ? /^\/profile\/[0-9a-f-]+$/i
     : /^\/(jobs|offers|messages)\/[0-9a-f-]+$/i
   if (!validPath.test(item.path)) throw new Error('Invalid notification path')
   // Mottagaren av en referensförfrågan har inget konto och inga inställningar.
-  const action = reference ? t('Lämna ditt omdöme') : admin ? t('Öppna adminpanelen') : welcome ? t('Kom igång') : verification ? t('Se din profil') : t('Öppna i Prolink')
+  const action = reference ? t('Lämna ditt omdöme') : admin ? t('Öppna adminpanelen') : welcome ? t('Kom igång') : verification || premium ? t('Se din profil') : t('Öppna i Prolink')
   const footer = reference
     ? t('Du får det här mejlet för att en frilansare angett dig som tidigare kund. Känner du inte igen det kan du ignorera mejlet.')
     : admin
@@ -74,7 +75,9 @@ export async function sendQueuedNotification(item: { id: string; kind: string; t
         ? t('Du får det här mejlet för att du skapade ett konto på Prolink.')
         : verification
           ? t('Du får det här mejlet för att du ansökt om företagsverifiering på Prolink.')
-          : t('Ändra mejlnotiser i din profil.')
+          : premium
+            ? t('Du får det här mejlet om din Premium-prenumeration på Prolink.')
+            : t('Ändra mejlnotiser i din profil.')
   const result = await resend.emails.send({
     // Svar går till en adress som läses, eftersom avsändaren är en noreply-adress.
     from: FROM, replyTo: CONTACT_EMAIL, to: item.to, subject: safeSubjectValue(subject),

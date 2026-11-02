@@ -7,10 +7,11 @@ import ServiceFilters from '@/components/services/ServiceFilters'
 import ServiceCard from '@/components/services/ServiceCard'
 import { searchTerm } from '@/lib/validation'
 import { pageMetadata } from '@/lib/seo'
-import { capPerProvider, MAX_SERVICES_PER_PROVIDER } from '@/lib/service-limits.mjs'
+import { capPerProvider, MAX_SERVICES_PER_PROVIDER, MAX_SERVICES_PER_PREMIUM_PROVIDER } from '@/lib/service-limits.mjs'
 import { getLocale, getT } from '@/i18n/server'
 import { translateListings } from '@/lib/content-translation'
 import { providerTrustMap, withProviderTrust } from '@/lib/provider-trust'
+import { premiumProviderIds } from '@/lib/premium'
 
 export async function generateMetadata() {
   const t = await getT()
@@ -104,7 +105,14 @@ export default async function ServicesPage(props: Props) {
       candidates = [...candidates].sort((a, b) => (trust.get(b.provider_id)?.reference_count ?? 0) - (trust.get(a.provider_id)?.reference_count ?? 0))
     }
   }
-  const { visible, hidden, lastVisible } = capPerProvider(candidates, MAX_SERVICES_PER_PROVIDER)
+  // Premiumfrilansare visas med fler tjänster, och i den nyast-först-ordning
+  // som är standard hamnar de först. Vid sortering på pris eller referenser
+  // ändras ingen ordning, eftersom den ordningen är det besökaren bett om.
+  const premium = await premiumProviderIds([...new Set(candidates.map(match => match.provider_id))])
+  if (sort === 'newest' && premium.size > 0) {
+    candidates = [...candidates.filter(match => premium.has(match.provider_id)), ...candidates.filter(match => !premium.has(match.provider_id))]
+  }
+  const { visible, hidden, lastVisible } = capPerProvider(candidates, providerId => premium.has(providerId) ? MAX_SERVICES_PER_PREMIUM_PROVIDER : MAX_SERVICES_PER_PROVIDER)
   const pageIds = visible.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map(service => service.id)
   const { data: pageRows, error } = pageIds.length
     ? await supabase.from('services').select('*, provider:users!inner(id, name, avatar_url)').in('id', pageIds)

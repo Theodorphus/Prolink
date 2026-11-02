@@ -25,6 +25,9 @@ import ProfileCompleteness from '@/components/profile/ProfileCompleteness'
 import { getLocale, getT } from '@/i18n/server'
 import { localePath } from '@/i18n/config'
 import { translateListings } from '@/lib/content-translation'
+import PremiumPanel, { type PremiumStatus } from '@/components/profile/PremiumPanel'
+import { premiumConfigured } from '@/lib/stripe'
+import { subscriptionActive } from '@/lib/premium'
 
 export async function generateMetadata(props: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const params = await props.params
@@ -55,7 +58,7 @@ export async function generateMetadata(props: { params: Promise<{ id: string }> 
   }
 }
 
-export default async function ProfilePage(props: { params: Promise<{ id: string }>; searchParams: Promise<{ page?: string }> }) {
+export default async function ProfilePage(props: { params: Promise<{ id: string }>; searchParams: Promise<{ page?: string; premium?: string }> }) {
   const searchParams = await props.searchParams
   const page = pageNumber(searchParams.page)
   const params = await props.params
@@ -115,6 +118,18 @@ export default async function ProfilePage(props: { params: Promise<{ id: string 
   ])
 
   if (jobError || reviewError || serviceError) throw new Error('Profilens innehåll kunde inte hämtas.')
+  // Premium-rutten visas bara för frilansaren själv, och bara när betalningar är på.
+  let premiumStatus: PremiumStatus | null = null
+  if (isOwn && isProvider && premiumConfigured()) {
+    const { data: subscription } = await supabase.from('premium_subscriptions')
+      .select('status, current_period_end, cancel_at_period_end').eq('user_id', params.id).maybeSingle()
+    premiumStatus = {
+      active: subscriptionActive(subscription),
+      cancelAtPeriodEnd: subscription?.cancel_at_period_end ?? false,
+      periodEnd: subscription?.current_period_end ?? null,
+      hasCustomer: Boolean(subscription),
+    }
+  }
   const { data: summary, error: summaryError } = await supabase.rpc('review_summary', { p_user_id: params.id }).single()
   if (summaryError) throw new Error('Omdömen kunde inte hämtas.')
   const avgRating = (summary as { average: number | null }).average
@@ -303,6 +318,8 @@ export default async function ProfilePage(props: { params: Promise<{ id: string 
         <div className="space-y-8 lg:col-span-2">
 
           {completeness && <ProfileCompleteness percent={completeness.percent} missing={completeness.missing} />}
+
+          {premiumStatus && <PremiumPanel status={premiumStatus} justSubscribed={searchParams.premium === 'ok'} />}
 
           {isOwn && (
             <div id="redigera" className="scroll-mt-24">

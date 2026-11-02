@@ -119,5 +119,13 @@
   "Påminnelse: lämna ett omdöme": "Reminder: leave a review",
   "Offerten har uppdaterats": "The quote has been updated",
   "Välkommen till Prolink": "Welcome to Prolink",
-  "Välkommen": "Welcome"
+  "Välkommen": "Welcome",
+  "Premium är inte tillgängligt just nu.": "Premium is not available right now.",
+  "Premium är till för frilansare.": "Premium is for freelancers.",
+  "Du har redan Premium.": "You already have Premium.",
+  "Du har ingen prenumeration.": "You do not have a subscription.",
+  "Ogiltig signatur.": "Invalid signature.",
+  "Kunde inte behandlas.": "Could not be processed.",
+  "Prenumerationen förnyas varje månad tills du säger upp den. Du kan avsluta när som helst under Hantera prenumeration på din profil.": "The subscription renews every month until you cancel it. You can cancel at any time under Manage subscription on your profile.",
+  "Tjänsten kunde inte tas bort.": "The service could not be removed."
 }

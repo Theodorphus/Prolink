@@ -33,6 +33,13 @@ export async function GET(request: NextRequest) {
         const { data: preferences, error: preferencesError } = await admin.from('user_private_profiles').select('email_jobs, email_messages, locale').eq('user_id', item.recipient_id).maybeSingle()
         if (preferencesError) throw preferencesError
         let disabled = (item.kind === 'job' && preferences?.email_jobs === false) || (item.kind === 'message' && preferences?.email_messages === false)
+        // Uppdragsmejl till gratiskonton väntar ett dygn. Då kan uppdraget redan
+        // vara stängt, och ett mejl om det vore bara irriterande.
+        if (!disabled && item.kind === 'job') {
+          const { data: job, error: jobError } = await admin.from('jobs').select('status, archived_at').eq('id', String(item.path).split('/').pop()!).maybeSingle()
+          if (jobError) throw jobError
+          disabled = !job || job.status !== 'open' || job.archived_at !== null
+        }
         // Omdömesmejl är meningslösa om omdömet redan är lämnat.
         if (!disabled && (item.kind === 'review_request' || item.kind === 'reminder_review')) {
           const { count, error: reviewError } = await admin.from('reviews').select('id', { count: 'exact', head: true })

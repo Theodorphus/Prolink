@@ -242,7 +242,7 @@ test('real PostgreSQL migration replay and marketplace authorization', async t =
 
   await t.test('a provider can have at most ten services', async () => {
     // A fresh provider: earlier tests already filled the other providers' lists.
-    const fresh = '55555555-5555-4555-8555-555555555555'
+    const fresh = 'a5555555-5555-4555-8555-555555555555'
     await db.query(`insert into auth.users values ($1, '{"name":"Fresh","role":"provider"}')`, [fresh])
     await db.query('delete from write_quotas')
     const insert = title => as(fresh, `insert into services(provider_id,title,description,price,delivery_time,category) values ($1,$2,'En tillräckligt lång beskrivning',1000,'5 dagar','design')`, [fresh, title])
@@ -329,6 +329,26 @@ test('real PostgreSQL migration replay and marketplace authorization', async t =
     await as(editor, `update jobs set status='closed' where id=$1`, [closed])
     assert.equal((await db.query('select edited_at from jobs where id=$1', [closed])).rows[0].edited_at, null)
     await assert.rejects(as(editor, `update jobs set title='Too late' where id=$1`, [closed]), { code: '23514' })
+  })
+
+  await t.test('premium providers get new-assignment mail now, everyone else a day later', async () => {
+    const buyer = 'b5555555-5555-4555-8555-555555555555'
+    const premium = 'b6666666-6666-4666-8666-666666666666'
+    const free = 'b7777777-7777-4777-8777-777777777777'
+    await db.query(`insert into auth.users values ($1, '{"name":"Buyer","role":"customer"}'), ($2, '{"name":"Premium","role":"provider"}'), ($3, '{"name":"Free","role":"provider"}')`, [buyer, premium, free])
+    await db.query(`insert into premium_subscriptions(user_id, stripe_customer_id, status, current_period_end) values ($1, 'cus_test', 'active', now() + interval '10 days')`, [premium])
+    const id = (await as(buyer, `insert into jobs(customer_id,title,description,category) values ($1,'Premium timing','A sufficiently long description','design') returning id`, [buyer])).rows[0].id
+    const hours = async user => Number((await db.query(`select extract(epoch from (available_at - now())) / 3600 as h from notification_outbox where recipient_id=$1 and dedupe_key=$2`, [user, `job:${id}:${user}`])).rows[0].h)
+    assert.ok(await hours(premium) < 0.1)
+    assert.ok(await hours(free) > 23)
+    // Ett utgånget abonnemang ger inga förmåner.
+    await db.query(`update premium_subscriptions set current_period_end = now() - interval '1 day' where user_id=$1`, [premium])
+    assert.equal((await db.query(`select count(*)::int as n from premium_user_ids(array[$1::uuid])`, [premium])).rows[0].n, 0)
+    // Ägaren läser sin egen rad men ingen annans, och kan inte skriva.
+    await db.query(`update premium_subscriptions set current_period_end = now() + interval '10 days' where user_id=$1`, [premium])
+    assert.equal((await as(premium, `select count(*)::int as n from premium_subscriptions`)).rows[0].n, 1)
+    assert.equal((await as(free, `select count(*)::int as n from premium_subscriptions`)).rows[0].n, 0)
+    await assert.rejects(as(free, `insert into premium_subscriptions(user_id, stripe_customer_id, status, current_period_end) values ($1,'cus_x','active', now() + interval '1 year')`, [free]), { code: '42501' })
   })
 
 })
