@@ -1,4 +1,5 @@
 import LinkifiedText from '@/components/ui/LinkifiedText'
+import DeleteServiceButton from '@/components/services/DeleteServiceButton'
 import type { Metadata } from 'next'
 import { isUuid } from '@/lib/validation'
 import { notFound } from 'next/navigation'
@@ -242,6 +243,7 @@ export default async function ServicePage(props: { params: Promise<{ id: string 
                       {t('Redigera tjänst')}
                     </Link>
                   )}
+                  {isActiveProvider && <DeleteServiceButton serviceId={service.id} profileId={provider.id} />}
                 </div>
               ) : !isActiveProvider ? (
                 <p className="rounded-xl bg-slate-50 p-3 text-center text-sm font-semibold text-slate-600">
