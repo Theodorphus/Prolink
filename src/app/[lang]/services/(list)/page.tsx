@@ -143,18 +143,18 @@ export default async function ServicesPage(props: Props) {
           const card = <ServiceCard key={service.id} service={service} headingLevel={2} />
           const more = hidden.get(service.provider_id)
           if (!more || lastVisible.get(service.provider_id) !== service.id) return [card]
-          return [card, (
-            <Link
-              key={`${service.provider_id}-fler`}
-              href={`/profile/${service.provider_id}#tjanster`}
-              className="surface surface-interactive flex flex-col items-center justify-center gap-1.5 p-6 text-center"
-            >
-              <span className="text-2xl font-black tracking-[-0.02em] text-slate-900">+{more}</span>
-              <span className="text-sm font-semibold text-slate-700">
-                {more === 1 ? t('tjänst till') : t('tjänster till')} {t('från')} {service.provider?.name ?? t('frilansaren')}
-              </span>
-              <span className="text-sm font-semibold text-blue-700">{t('Se alla på profilen →')}</span>
-            </Link>
+          // Länken ligger under kortet i stället för som ett eget rutnätskort,
+          // så att den inte tar en hel ruta i listan.
+          return [(
+            <div key={service.id} className="flex h-full flex-col gap-2">
+              <div className="min-h-0 flex-1">{card}</div>
+              <Link
+                href={`/profile/${service.provider_id}#tjanster`}
+                className="px-2 text-sm font-semibold text-blue-700 hover:underline"
+              >
+                +{more} {more === 1 ? t('tjänst till') : t('tjänster till')} {t('från')} {service.provider?.name ?? t('frilansaren')} →
+              </Link>
+            </div>
           )]
         })}
 
