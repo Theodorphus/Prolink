@@ -351,4 +351,31 @@ test('real PostgreSQL migration replay and marketplace authorization', async t =
     await assert.rejects(as(free, `insert into premium_subscriptions(user_id, stripe_customer_id, status, current_period_end) values ($1,'cus_x','active', now() + interval '1 year')`, [free]), { code: '42501' })
   })
 
+  await t.test('a boosted request sorts first, boosting is idempotent and only the server can boost', async () => {
+    const owner = 'b8888888-8888-4888-8888-888888888888'
+    const other = 'b9999999-9999-4999-8999-999999999999'
+    await db.query(`insert into auth.users values ($1, '{"name":"Owner","role":"customer"}'), ($2, '{"name":"Other","role":"customer"}')`, [owner, other])
+    const insert = `insert into jobs(customer_id,title,description,category) values ($1,$2,'A sufficiently long description','design') returning id`
+    const first = (await as(owner, insert, [owner, 'First'])).rows[0].id
+    const second = (await as(other, insert, [other, 'Second'])).rows[0].id
+    // Användare kan inte lyfta själva.
+    await assert.rejects(as(owner, `update jobs set boosted_at=now(), boosted_until=now() + interval '7 days' where id=$1`, [first]), { code: '42501' })
+    await assert.rejects(as(owner, `select apply_job_boost('cs_x', $1, $2, 7)`, [first, owner]), { code: '42501' })
+    // En betalning lyfter en gång, och bara för uppdragets ägare.
+    assert.equal((await db.query(`select apply_job_boost('cs_1', $1, $2, 7) as ok`, [first, owner])).rows[0].ok, true)
+    assert.equal((await db.query(`select apply_job_boost('cs_1', $1, $2, 7) as ok`, [first, owner])).rows[0].ok, false)
+    assert.equal((await db.query(`select apply_job_boost('cs_2', $1, $2, 7) as ok`, [second, owner])).rows[0].ok, false)
+    // Det senast lyfta uppdraget ligger överst.
+    assert.equal((await db.query(`select apply_job_boost('cs_3', $1, $2, 7) as ok`, [second, other])).rows[0].ok, true)
+    const order = async () => (await db.query(`select title from jobs where title in ('First','Second') order by boosted_at desc nulls last, created_at desc`)).rows.map(row => row.title)
+    assert.deepEqual(await order(), ['Second', 'First'])
+    // Ett utgånget lyft nollställs.
+    await db.query(`update jobs set boosted_until = now() - interval '1 minute' where id=$1`, [second])
+    assert.equal((await db.query(`select expire_job_boosts() as n`)).rows[0].n, 1)
+    assert.deepEqual(await order(), ['First', 'Second'])
+    // Ett stängt uppdrag kan inte lyftas.
+    await as(owner, `update jobs set status='closed' where id=$1`, [first])
+    assert.equal((await db.query(`select apply_job_boost('cs_4', $1, $2, 7) as ok`, [first, owner])).rows[0].ok, false)
+  })
+
 })

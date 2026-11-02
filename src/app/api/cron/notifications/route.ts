@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendQueuedNotification } from '@/lib/email'
 import { welcomeContent } from '@/lib/notification-content'
+import { premiumConfigured } from '@/lib/stripe'
 import { isLocale, type Locale } from '@/i18n/config'
 import { createT } from '@/i18n/translate'
 import { messagesFor } from '@/i18n/messages'
@@ -15,6 +16,9 @@ export async function GET(request: NextRequest) {
   // Ett fel får inte stoppa utskicket av det som redan ligger i kön.
   const { error: reminderError } = await admin.rpc('queue_offer_reminders')
   if (reminderError) console.error('[e-post] Påminnelser kunde inte köas:', reminderError.message)
+  // Utgångna lyft nollställs här, så att listorna kan sortera på boosted_at.
+  const { error: boostError } = await admin.rpc('expire_job_boosts')
+  if (boostError) console.error('[lyft] Utgångna lyft kunde inte nollställas:', boostError.message)
   const { data: items, error } = await admin.rpc('claim_notifications')
   if (error) return NextResponse.json({ error: 'Kön kunde inte läsas' }, { status: 503 })
   let sent = 0
@@ -69,7 +73,7 @@ export async function GET(request: NextRequest) {
         if (!disabled && item.kind === 'welcome') {
           const { data: profile, error: profileError } = await admin.from('users').select('role, name').eq('id', item.recipient_id).maybeSingle()
           if (profileError) throw profileError
-          message = { ...item, ...welcomeContent({ id: item.recipient_id, role: profile?.role ?? null, name: profile?.name ?? null }, createT(locale, messagesFor(locale))) }
+          message = { ...item, ...welcomeContent({ id: item.recipient_id, role: profile?.role ?? null, name: profile?.name ?? null }, createT(locale, messagesFor(locale)), premiumConfigured()) }
         }
         if (!disabled) await sendQueuedNotification({ ...message, to: data.user.email, locale })
       }

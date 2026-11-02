@@ -254,5 +254,14 @@
   "Vi kunde inte dra betalningen för Prolink Premium. Uppdatera ditt kort under Hantera prenumeration på din profil så att Premium fortsätter. Stripe försöker dra kortet igen automatiskt.": "We could not charge the payment for Prolink Premium. Update your card under Manage subscription on your profile so that Premium continues. Stripe will automatically try the card again.",
   "Din Premium har avslutats": "Your Premium has ended",
   "Din Prolink Premium har upphört och kontot är nu gratis. Din profil och dina tjänster finns kvar. Du kan starta Premium igen när du vill, på din profil.": "Your Prolink Premium has ended and the account is now free. Your profile and services remain. You can start Premium again whenever you like, on your profile.",
-  "Du får det här mejlet om din Premium-prenumeration på Prolink.": "You are receiving this email about your Premium subscription on Prolink."
+  "Du får det här mejlet om din Premium-prenumeration på Prolink.": "You are receiving this email about your Premium subscription on Prolink.",
+  "Vill du synas lite mer finns Prolink Premium. Det är ett tillval som du hittar högt upp på din profil, och du behöver det inte för att komma igång.": "If you want a bit more visibility, there is Prolink Premium. It is an option you will find near the top of your profile, and you do not need it to get started.",
+  "Utvalt": "Featured",
+  "Få fler offerter": "Get more quotes",
+  "Uppdraget är lyft till {date}.": "The assignment is boosted until {date}.",
+  "Tack! Det kan dröja en minut innan lyftet syns.": "Thank you! It may take a minute before the boost shows.",
+  "Lyft uppdraget så visas det överst i listan i {days} dagar, eller tills någon annan lyfter sitt.": "Boost the assignment and it appears at the top of the list for {days} days, or until someone else boosts theirs.",
+  "Lyft igen för {price}": "Boost again for {price}",
+  "Lyft uppdraget för {price}": "Boost the assignment for {price}",
+  "Lyft uppdraget i {days} dagar": "Boost the assignment for {days} days"
 }

@@ -127,5 +127,8 @@
   "Ogiltig signatur.": "Invalid signature.",
   "Kunde inte behandlas.": "Could not be processed.",
   "Prenumerationen förnyas varje månad tills du säger upp den. Du kan avsluta när som helst under Hantera prenumeration på din profil.": "The subscription renews every month until you cancel it. You can cancel at any time under Manage subscription on your profile.",
-  "Tjänsten kunde inte tas bort.": "The service could not be removed."
+  "Tjänsten kunde inte tas bort.": "The service could not be removed.",
+  "Lyft är inte tillgängligt just nu.": "Boosting is not available right now.",
+  "Uppdraget hittades inte.": "The assignment was not found.",
+  "Bara öppna uppdrag kan lyftas.": "Only open assignments can be boosted."
 }

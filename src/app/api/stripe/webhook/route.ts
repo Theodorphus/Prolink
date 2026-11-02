@@ -7,11 +7,27 @@ import { premiumEmailContent } from '@/lib/premium-notifications'
 import { isLocale, type Locale } from '@/i18n/config'
 import { createT } from '@/i18n/translate'
 import { messagesFor } from '@/i18n/messages'
+import { refreshPublicJobSurfaces } from '@/lib/revalidate'
+import { JOB_BOOST_DAYS } from '@/lib/job-boost.mjs'
 
 // Stripe talar om när en prenumeration skapas, ändras eller upphör. Varje
 // händelse läses om från Stripe i stället för att tolkas, så att händelser
 // som kommer i fel ordning ändå ger rätt slutläge.
 const HANDLED = new Set(['customer.subscription.created', 'customer.subscription.updated', 'customer.subscription.deleted'])
+const CHECKOUT_PAID = new Set(['checkout.session.completed', 'checkout.session.async_payment_succeeded'])
+
+// Betalt lyft av ett uppdrag. Funktionen i databasen är idempotent per
+// Stripe-session, så att en omskickad händelse inte lyfter uppdraget igen.
+async function applyJobBoost(session: Stripe.Checkout.Session) {
+  const { kind, job_id: jobId, user_id: userId } = session.metadata ?? {}
+  if (kind !== 'job_boost' || session.payment_status !== 'paid' || !jobId || !userId) return
+  const { data: applied, error } = await createAdminClient().rpc('apply_job_boost', {
+    p_session_id: session.id, p_job_id: jobId, p_customer_id: userId, p_days: JOB_BOOST_DAYS,
+  })
+  if (error) throw error
+  if (applied) refreshPublicJobSurfaces()
+  else console.warn(`[lyft] Betalningen ${session.id} lyfte inget uppdrag (redan lyft, stängt eller fel ägare).`)
+}
 
 export async function POST(request: NextRequest) {
   const secret = process.env.STRIPE_WEBHOOK_SECRET
@@ -24,6 +40,16 @@ export async function POST(request: NextRequest) {
     event = stripe.webhooks.constructEvent(await request.text(), signature, secret)
   } catch {
     return NextResponse.json({ error: 'Ogiltig signatur.' }, { status: 400 })
+  }
+  if (CHECKOUT_PAID.has(event.type)) {
+    try {
+      await applyJobBoost(event.data.object as Stripe.Checkout.Session)
+      return NextResponse.json({ received: true })
+    } catch (error) {
+      // 500 gör att Stripe provar igen.
+      console.error('[lyft] Betalningen kunde inte registreras:', error instanceof Error ? error.message : error)
+      return NextResponse.json({ error: 'Kunde inte behandlas.' }, { status: 500 })
+    }
   }
   if (!HANDLED.has(event.type)) return NextResponse.json({ received: true })
 

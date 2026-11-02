@@ -3,6 +3,7 @@ import { formatCurrency, formatDate } from '@/lib/utils'
 import { getCategoryLabel } from '@/lib/categories'
 import CategoryThumb from '@/components/ui/CategoryThumb'
 import { getLocale, getT } from '@/i18n/server'
+import { isBoosted } from '@/lib/jobs'
 
 export interface JobCardJob {
   id: string
@@ -14,6 +15,7 @@ export interface JobCardJob {
   location: string | null
   work_type: string | null
   created_at: string
+  boosted_until?: string | null
   customer?: { name: string } | null
   /** Antal inkomna offerter. Utelämnas när siffran inte kan hämtas säkert. */
   offerCount?: number | null
@@ -44,6 +46,11 @@ export default async function JobCard({
           ? t('Hybrid')
           : null
 
+  const boosted = isBoosted(job)
+  const featured = boosted ? (
+    <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800 ring-1 ring-inset ring-amber-200">{t('Utvalt')}</span>
+  ) : null
+
   const budget = job.budget ? formatCurrency(job.budget, locale) : t('Öppen budget')
 
   if (variant === 'row') {
@@ -62,6 +69,7 @@ export default async function JobCard({
               <p className="mb-4 line-clamp-2 text-sm leading-6 text-slate-600">{job.description}</p>
 
               <div className="flex flex-wrap items-center gap-2">
+                {featured}
                 {job.category && (
                   <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 ring-1 ring-inset ring-blue-100">
                     {getCategoryLabel(job.category, t)}
@@ -119,6 +127,8 @@ export default async function JobCard({
             {budget}
           </span>
         </div>
+
+        {featured && <div className="mt-4">{featured}</div>}
 
         {job.category && (
           <p className="mt-5 text-xs font-bold uppercase tracking-wider text-blue-700">

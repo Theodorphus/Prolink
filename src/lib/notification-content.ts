@@ -3,14 +3,19 @@
 // översätts med mottagarens språk.
 import type { TFunction } from '@/i18n/translate'
 
-/** Välkomstmejlet, anpassat efter kontots roll. */
-export function welcomeContent(user: { id: string; role: string | null; name: string | null }, t: TFunction) {
+/**
+ * Välkomstmejlet, anpassat efter kontots roll. Premium nämns bara för
+ * frilansare, och bara när betalningar är påslagna.
+ */
+export function welcomeContent(user: { id: string; role: string | null; name: string | null }, t: TFunction, premium = false) {
   const first = user.name?.trim().split(/\s+/)[0]
   const greeting = first ? t('Hej {name}!', { name: first }) : t('Hej!')
   if (user.role === 'provider') {
     return {
       subject: t('Välkommen till Prolink – så kommer du igång'),
-      body: `${greeting} ${t('Roligt att du är här. Tre steg gör att kunder hittar och väljer dig:')}\n\n${t('1. Fyll i din profil. Bild, presentation och kompetenser gör att kunder vågar höra av sig.')}\n${t('2. Lägg upp din första tjänst, så syns du när kunder bläddrar.')}\n${t('3. Be en tidigare kund om en referens. Ett omdöme från en riktig kund väger tungt.')}\n\n${t('Du får också mejl när det kommer nya uppdrag i dina kategorier. Vilka du vill ha väljer du i din profil.')}`,
+      body: `${greeting} ${t('Roligt att du är här. Tre steg gör att kunder hittar och väljer dig:')}\n\n${t('1. Fyll i din profil. Bild, presentation och kompetenser gör att kunder vågar höra av sig.')}\n${t('2. Lägg upp din första tjänst, så syns du när kunder bläddrar.')}\n${t('3. Be en tidigare kund om en referens. Ett omdöme från en riktig kund väger tungt.')}\n\n${t('Du får också mejl när det kommer nya uppdrag i dina kategorier. Vilka du vill ha väljer du i din profil.')}${premium ? `
+
+${t('Vill du synas lite mer finns Prolink Premium. Det är ett tillval som du hittar högt upp på din profil, och du behöver det inte för att komma igång.')}` : ''}`,
       path: `/profile/${user.id}`,
     }
   }

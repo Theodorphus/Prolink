@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation'
 import { createPublicClient } from '@/lib/supabase/public'
 import { CATEGORIES, getCategoryLabel } from '@/lib/categories'
 import { getCategoryContent, LANDING_CATEGORIES } from '@/lib/category-content'
-import { PUBLIC_JOB_FIELDS } from '@/lib/jobs'
+import { PUBLIC_JOB_FIELDS, boostedFirst } from '@/lib/jobs'
 import JobCard, { type JobCardJob } from '@/components/jobs/JobCard'
 import ServiceCard, { type ServiceCardService } from '@/components/services/ServiceCard'
 import { withProviderTrust } from '@/lib/provider-trust'
@@ -66,11 +66,11 @@ export default async function CategoryLandingPage(props: {
   const supabase = createPublicClient()
 
   const [{ data: jobs }, { data: services }] = await Promise.all([
-    supabase
+    boostedFirst(supabase
       .from('jobs')
       .select(`${PUBLIC_JOB_FIELDS}, customer:users!jobs_customer_id_fkey(name)`)
       .eq('status', 'open')
-      .eq('category', kategori)
+      .eq('category', kategori))
       .order('created_at', { ascending: false })
       .limit(4),
     supabase

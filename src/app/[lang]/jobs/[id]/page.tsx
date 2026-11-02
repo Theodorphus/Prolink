@@ -15,6 +15,10 @@ import { localePath } from '@/i18n/config'
 import CategoryThumb from '@/components/ui/CategoryThumb'
 import CloseJobButton from '@/components/jobs/CloseJobButton'
 import DeleteJobButton from '@/components/jobs/DeleteJobButton'
+import BoostJobButton from '@/components/jobs/BoostJobButton'
+import { isBoosted } from '@/lib/jobs'
+import { paymentsConfigured } from '@/lib/stripe'
+import { JOB_BOOST_DAYS, JOB_BOOST_PRICE_SEK } from '@/lib/job-boost.mjs'
 import { getLocale, getT } from '@/i18n/server'
 import { translateListing } from '@/lib/content-translation'
 
@@ -44,9 +48,9 @@ export async function generateMetadata(props: { params: Promise<{ id: string }> 
   }
 }
 
-export default async function JobPage(props: { params: Promise<{ id: string }>; searchParams: Promise<{ original?: string }> }) {
+export default async function JobPage(props: { params: Promise<{ id: string }>; searchParams: Promise<{ original?: string; boost?: string }> }) {
   const { id } = await props.params
-  const { original } = await props.searchParams
+  const { original, boost } = await props.searchParams
   if (!isUuid(id)) notFound()
   const locale = await getLocale()
   const t = await getT()
@@ -57,7 +61,7 @@ export default async function JobPage(props: { params: Promise<{ id: string }>; 
   // Literalen behålls här eftersom .single() förlorar typinferensen med en mall-literal.
   const { data: job, error: detailError } = await supabase
     .from('jobs')
-    .select('id, customer_id, title, description, budget, status, archived_at, created_at, edited_at, category, location, work_type, customer:users!jobs_customer_id_fkey(id, name, bio, avatar_url, created_at)')
+    .select('id, customer_id, title, description, budget, status, archived_at, created_at, edited_at, category, location, work_type, boosted_until, customer:users!jobs_customer_id_fkey(id, name, bio, avatar_url, created_at)')
     .eq('id', id)
     .single()
 
@@ -70,6 +74,8 @@ export default async function JobPage(props: { params: Promise<{ id: string }>; 
   const customer = Array.isArray(job.customer) ? job.customer[0] : job.customer
 
   const isOwner = user?.id === job.customer_id
+  // Lyftet debiteras alltid i kronor, så priset visas i kronor även på engelska.
+  const boostPrice = new Intl.NumberFormat(locale === 'en' ? 'en-GB' : 'sv-SE', { style: 'currency', currency: 'SEK', maximumFractionDigits: 0 }).format(JOB_BOOST_PRICE_SEK)
 
   // Rollfrågan och ägarens offertlista är oberoende av varandra och kördes
   // tidigare i följd. Den egna offerten behöver rollen först, så den hämtas
@@ -286,6 +292,27 @@ export default async function JobPage(props: { params: Promise<{ id: string }>; 
                           </Link>
                           <CloseJobButton jobId={job.id} />
                         </>
+                      )}
+                      {job.status === 'open' && paymentsConfigured() && (
+                        <div className="space-y-2 rounded-xl border border-blue-100 bg-blue-50/50 p-4">
+                          <p className="text-sm font-bold text-slate-900">{t('Få fler offerter')}</p>
+                          {isBoosted(job) && job.boosted_until ? (
+                            <p className="text-xs font-semibold text-emerald-700">
+                              {t('Uppdraget är lyft till {date}.', { date: formatDate(job.boosted_until, locale) })}
+                            </p>
+                          ) : boost === 'ok' ? (
+                            <p role="status" className="text-xs font-semibold text-emerald-700">
+                              {t('Tack! Det kan dröja en minut innan lyftet syns.')}
+                            </p>
+                          ) : null}
+                          <p className="text-xs leading-5 text-slate-600">
+                            {t('Lyft uppdraget så visas det överst i listan i {days} dagar, eller tills någon annan lyfter sitt.', { days: JOB_BOOST_DAYS })}
+                          </p>
+                          <BoostJobButton
+                            jobId={job.id}
+                            label={isBoosted(job) ? t('Lyft igen för {price}', { price: boostPrice }) : t('Lyft uppdraget för {price}', { price: boostPrice })}
+                          />
+                        </div>
                       )}
                       <DeleteJobButton jobId={job.id} />
                     </>

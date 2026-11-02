@@ -3,7 +3,7 @@ import { pageNumber, PAGE_SIZE } from '@/lib/pagination'
 import Link from '@/components/i18n/Link'
 import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
-import { PUBLIC_JOB_FIELDS } from '@/lib/jobs'
+import { PUBLIC_JOB_FIELDS, boostedFirst } from '@/lib/jobs'
 import JobFilters from '@/components/jobs/JobFilters'
 import JobCard from '@/components/jobs/JobCard'
 import { searchTerm } from '@/lib/validation'
@@ -43,9 +43,11 @@ export default async function JobsPage(props: Props) {
   if (category) query = query.eq('category', category)
   if (worktype) query = query.eq('work_type', worktype)
 
+  // Lyfta uppdrag ligger överst i standardsorteringen. Vid "äldst först" är
+  // ordningen den besökaren bett om och lyften ändrar den inte.
   query = sort === 'oldest'
     ? query.order('created_at', { ascending: true })
-    : query.order('created_at', { ascending: false })
+    : boostedFirst(query).order('created_at', { ascending: false })
 
   const { data: jobs, count, error } = await query.order('id', { ascending: false }).range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1)
   if (error) throw new Error('Listan kunde inte hämtas. Försök igen.')
