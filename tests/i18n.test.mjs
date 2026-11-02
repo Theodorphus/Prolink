@@ -40,7 +40,7 @@ test('ämnesrader från SQL-triggrarna har en översättning', async () => {
   for (const name of await readdir(dir)) {
     const sql = await readFile(new URL(name, dir), 'utf8')
     // values (..., 'kind', 'Rubrik', ...) och select ..., 'kind', 'Rubrik', ...
-    for (const match of sql.matchAll(/'(?:job|inquiry|offer|accepted|rejected|completed|message|reminder_confirm|reminder_review|offer_edited|welcome)',\s*'([A-ZÅÄÖ][^']*)'/g)) subjects.add(match[1])
+    for (const match of sql.matchAll(/'(?:job|inquiry|offer|accepted|rejected|completed|message|reminder_confirm|reminder_review|reminder_offers|offer_edited|welcome)',\s*'([A-ZÅÄÖ][^']*)'/g)) subjects.add(match[1])
     if (/then 'Nytt uppdrag' else 'Ny förfrågan till dig'/.test(sql)) { subjects.add('Nytt uppdrag'); subjects.add('Ny förfrågan till dig') }
   }
   assert.ok(subjects.size >= 8, 'Hittade förvånansvärt få rubriker i migrationerna')

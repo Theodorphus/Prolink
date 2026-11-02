@@ -39,3 +39,18 @@ export function verificationResultContent(decision: 'verified' | 'rejected', not
     body: `${t('Vi kunde inte verifiera ditt företag den här gången.')}${note ? `\n\n${t('Anteckning från oss:')} ${note}` : ''}\n\n${t('Kontrollera uppgifterna och skicka in en ny ansökan från din profil. Hör av dig om du undrar över något.')}`,
   }
 }
+
+/**
+ * Påminnelsen till en kund vars offerter ligger obesvarade. Antalet räknas när
+ * mejlet skickas, så att texten stämmer med läget då.
+ */
+export function pendingOffersContent(title: string, count: number, t: TFunction) {
+  return {
+    subject: t('Påminnelse: offerter väntar på svar'),
+    body: `${count === 1
+      ? t('Du har en offert på "{title}" som väntar på svar.', { title })
+      : t('Du har {count} offerter på "{title}" som väntar på svar.', { count, title })}
+
+${t('Frilansarna har lagt tid på sina offerter. Ett kort besked räcker, både ett ja, ett nej eller en fråga. Har du redan hittat någon kan du stänga uppdraget, så slipper fler vänta.')}`,
+  }
+}

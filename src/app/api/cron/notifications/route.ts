@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendQueuedNotification } from '@/lib/email'
-import { welcomeContent } from '@/lib/notification-content'
+import { welcomeContent, pendingOffersContent } from '@/lib/notification-content'
 import { premiumConfigured } from '@/lib/stripe'
 import { isLocale, type Locale } from '@/i18n/config'
 import { createT } from '@/i18n/translate'
@@ -44,6 +44,18 @@ export async function GET(request: NextRequest) {
           if (jobError) throw jobError
           disabled = !job || job.status !== 'open' || job.archived_at !== null
         }
+        // Påminnelsen om obesvarade offerter är meningslös om uppdraget stängts
+        // eller alla offerter fått svar sedan den köades.
+        let pendingOffers: { title: string; count: number } | null = null
+        if (!disabled && item.kind === 'reminder_offers') {
+          const jobId = String(item.path).split('/').pop()!
+          const { data: job, error: jobError } = await admin.from('jobs').select('title, status, archived_at').eq('id', jobId).maybeSingle()
+          if (jobError) throw jobError
+          const { count, error: countError } = await admin.from('offers').select('id', { count: 'exact', head: true }).eq('job_id', jobId).eq('status', 'pending')
+          if (countError) throw countError
+          disabled = !job || job.status !== 'open' || job.archived_at !== null || !count
+          if (job && count) pendingOffers = { title: job.title, count }
+        }
         // Omdömesmejl är meningslösa om omdömet redan är lämnat.
         if (!disabled && (item.kind === 'review_request' || item.kind === 'reminder_review')) {
           const { count, error: reviewError } = await admin.from('reviews').select('id', { count: 'exact', head: true })
@@ -74,6 +86,9 @@ export async function GET(request: NextRequest) {
           const { data: profile, error: profileError } = await admin.from('users').select('role, name').eq('id', item.recipient_id).maybeSingle()
           if (profileError) throw profileError
           message = { ...item, ...welcomeContent({ id: item.recipient_id, role: profile?.role ?? null, name: profile?.name ?? null }, createT(locale, messagesFor(locale)), premiumConfigured()) }
+        }
+        if (!disabled && pendingOffers) {
+          message = { ...item, ...pendingOffersContent(pendingOffers.title, pendingOffers.count, createT(locale, messagesFor(locale))) }
         }
         if (!disabled) await sendQueuedNotification({ ...message, to: data.user.email, locale })
       }

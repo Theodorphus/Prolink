@@ -378,4 +378,37 @@ test('real PostgreSQL migration replay and marketplace authorization', async t =
     assert.equal((await db.query(`select apply_job_boost('cs_4', $1, $2, 7) as ok`, [first, owner])).rows[0].ok, false)
   })
 
+  await t.test('customers get at most two reminders about unanswered quotes, and only while they are still waiting', async () => {
+    const buyer = 'c1111111-1111-4111-8111-111111111111'
+    const seller = 'c2222222-2222-4222-8222-222222222222'
+    await db.query(`insert into auth.users values ($1, '{"name":"Buyer","role":"customer"}'), ($2, '{"name":"Seller","role":"provider"}')`, [buyer, seller])
+    const jobId = (await as(buyer, `insert into jobs(customer_id,title,description,category) values ($1,'Reminder job','A sufficiently long description','design') returning id`, [buyer])).rows[0].id
+    const offerId = (await as(seller, `insert into offers(job_id,provider_id,price,timeline,description) values ($1,$2,100,'Two days','A sufficiently long offer') returning id`, [jobId, seller])).rows[0].id
+    const reminders = async () => (await db.query(`select dedupe_key, recipient_id from notification_outbox where kind='reminder_offers' and dedupe_key like $1 order by dedupe_key`, [`reminder_offers:${jobId}:%`])).rows
+    const run = async () => { await db.query('select queue_offer_reminders()') }
+    // Färsk offert: ingen påminnelse.
+    await run()
+    assert.equal((await reminders()).length, 0)
+    // Efter tre dagar: en påminnelse till kunden, och bara en hur ofta funktionen än körs.
+    await db.query(`update offers set created_at = now() - interval '4 days' where id=$1`, [offerId])
+    await run(); await run()
+    assert.deepEqual((await reminders()).map(row => [row.dedupe_key, row.recipient_id]), [[`reminder_offers:${jobId}:1`, buyer]])
+    // Den andra kommer först när offerten är en vecka gammal och den första är fyra dagar.
+    await db.query(`update offers set created_at = now() - interval '8 days' where id=$1`, [offerId])
+    await run()
+    assert.equal((await reminders()).length, 1)
+    await db.query(`update notification_outbox set created_at = now() - interval '5 days' where dedupe_key = $1`, [`reminder_offers:${jobId}:1`])
+    await run(); await run()
+    assert.equal((await reminders()).length, 2)
+    // Aldrig fler än två, och inget för ett övergivet uppdrag eller när offerten fått svar.
+    await db.query(`update offers set created_at = now() - interval '30 days' where id=$1`, [offerId])
+    await db.query(`delete from notification_outbox where dedupe_key like $1`, [`reminder_offers:${jobId}:%`])
+    await run()
+    assert.equal((await reminders()).length, 0)
+    await db.query(`update offers set created_at = now() - interval '4 days' where id=$1`, [offerId])
+    await as(buyer, `select transition_offer($1,'accepted')`, [offerId])
+    await run()
+    assert.equal((await reminders()).length, 0)
+  })
+
 })
