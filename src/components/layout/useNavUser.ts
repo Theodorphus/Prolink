@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { hasSessionCookie, lazyClient } from '@/lib/supabase/lazy-client'
 
 export interface NavUser {
   id: string
@@ -31,16 +31,17 @@ export function notifyProfileChanged() {
  * Inloggning och registrering sker i serveractioner som sätter cookies utan
  * att webbläsarklienten märker det, så sessionen läses om vid varje
  * sidbyte. getSession läser bara cookien lokalt; namn och profilbild hämtas
- * bara när användaren byts eller profilen har sparats.
+ * bara när användaren byts eller profilen har sparats. Utan sessionscookie
+ * är besökaren utloggad, och Supabase-klienten laddas då inte alls.
  */
 export function useNavUser(): NavUser | null | undefined {
   const pathname = usePathname()
   const [user, setUser] = useState<NavUser | null | undefined>(undefined)
-  const [supabase] = useState(createClient)
   const cached = useRef<NavUser | null>(null)
 
   useEffect(() => {
     let active = true
+    let unsubscribe: (() => void) | undefined
 
     async function sync(userId: string | undefined) {
       if (!userId) {
@@ -52,15 +53,27 @@ export function useNavUser(): NavUser | null | undefined {
         if (active) setUser(cached.current)
         return
       }
+      const supabase = await lazyClient()
       const { data } = await supabase.from('users').select('name, avatar_url').eq('id', userId).maybeSingle()
       cached.current = { id: userId, name: data?.name ?? '', avatarUrl: data?.avatar_url ?? null }
       if (active) setUser(cached.current)
     }
 
+    async function read() {
+      if (!hasSessionCookie()) return sync(undefined)
+      const supabase = await lazyClient()
+      if (!active) return
+      if (!unsubscribe) {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+          void sync(session?.user.id)
+        })
+        unsubscribe = () => subscription.unsubscribe()
+      }
+      const { data } = await supabase.auth.getSession()
+      await sync(data.session?.user.id)
+    }
     function load() {
-      supabase.auth.getSession()
-        .then(({ data }) => sync(data.session?.user.id))
-        .catch(() => { if (active) setUser(null) })
+      read().catch(() => { if (active) setUser(null) })
     }
     function reload() {
       cached.current = null
@@ -70,16 +83,12 @@ export function useNavUser(): NavUser | null | undefined {
     load()
     window.addEventListener(PROFILE_CHANGED, reload)
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      void sync(session?.user.id)
-    })
-
     return () => {
       active = false
       window.removeEventListener(PROFILE_CHANGED, reload)
-      subscription.unsubscribe()
+      unsubscribe?.()
     }
-  }, [supabase, pathname])
+  }, [pathname])
 
   return user
 }
