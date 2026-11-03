@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from '@/components/i18n/Link'
 import { COMPANY, CONTACT_EMAIL } from '@/lib/site'
 import { getT } from '@/i18n/server'
@@ -28,8 +29,8 @@ export default async function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
 
           <div className="col-span-2 md:col-span-1">
-            <Link href="/" className="text-lg font-black tracking-[-0.03em] text-slate-900">
-              Prolink
+            <Link href="/" className="inline-block">
+              <Image src="/brand/prolink-logo.png" alt="Prolink" width={593} height={160} className="h-7 w-auto" />
             </Link>
             <p className="mt-3 text-sm text-gray-600 leading-relaxed max-w-xs font-medium">
               {t('Marknadsplatsen där småföretag och frilansare hittar varandra.')}

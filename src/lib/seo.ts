@@ -3,7 +3,7 @@ import { absoluteUrl } from '@/lib/site'
 import { LOCALES, localePath, ogLocale, type Locale } from '@/i18n/config'
 
 export const DEFAULT_OG_IMAGE = {
-  url: '/og-prolink.jpg',
+  url: '/og-prolink-2.jpg',
   width: 1200,
   height: 630,
   alt: 'Prolink – hitta rätt frilansare för ditt företag',

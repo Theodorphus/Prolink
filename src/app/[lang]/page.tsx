@@ -39,7 +39,7 @@ const organization = (locale: 'sv' | 'en') => ({
       '@id': `${SITE_URL}/#organization`,
       name: 'Prolink',
       url: SITE_URL,
-      logo: `${SITE_URL}/apple-touch-icon.png`,
+      logo: `${SITE_URL}/brand/prolink-icon-512.png`,
       email: CONTACT_EMAIL,
     },
     {

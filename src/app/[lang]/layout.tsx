@@ -30,7 +30,10 @@ export async function generateMetadata(): Promise<Metadata> {
     title: { default: 'Prolink', template: '%s | Prolink' },
     description: t('Hitta frilansare, tjänster och uppdrag inom webb, design, marknadsföring, redovisning och IT.'),
     icons: {
-      icon: [{ url: '/favicon-32.png', sizes: '32x32', type: 'image/png' }],
+      icon: [
+        { url: '/favicon-32.png', sizes: '32x32', type: 'image/png' },
+        { url: '/brand/prolink-icon-192.png', sizes: '192x192', type: 'image/png' },
+      ],
       apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
     },
     // Bara standardvärden för sidor utan egen metadata (inloggning, 404).

@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from '@/components/i18n/Link'
 import NavAuth from './NavAuth'
 import LanguageSwitcher from './LanguageSwitcher'
@@ -19,8 +20,8 @@ export default async function Navbar() {
         <div className="flex items-center justify-between h-16">
 
           <div className="flex items-center gap-10">
-            <Link href="/" className="text-lg font-bold text-gray-900 tracking-tight">
-              Prolink
+            <Link href="/" className="shrink-0">
+              <Image src="/brand/prolink-logo.png" alt="Prolink" width={593} height={160} priority className="h-7 w-auto" />
             </Link>
             <nav className="hidden md:flex items-center gap-8">
               {NAV_LINKS.map(({ href, label }) => (
