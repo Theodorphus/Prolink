@@ -31,10 +31,11 @@ export async function generateMetadata(): Promise<Metadata> {
     description: t('Hitta frilansare, tjänster och uppdrag inom webb, design, marknadsföring, redovisning och IT.'),
     icons: {
       icon: [
-        { url: '/favicon-32.png', sizes: '32x32', type: 'image/png' },
-        { url: '/brand/prolink-icon-192.png', sizes: '192x192', type: 'image/png' },
+        // ?v= tvingar webbläsare att hämta om ikonen, som de annars cachar länge.
+        { url: '/favicon-32.png?v=2', sizes: '32x32', type: 'image/png' },
+        { url: '/brand/prolink-icon-192.png?v=2', sizes: '192x192', type: 'image/png' },
       ],
-      apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+      apple: [{ url: '/apple-touch-icon.png?v=2', sizes: '180x180', type: 'image/png' }],
     },
     // Bara standardvärden för sidor utan egen metadata (inloggning, 404).
     // og:url sätts inte här: den ärvdes av varje sida som saknade egen
