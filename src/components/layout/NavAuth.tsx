@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from '@/components/i18n/Link'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { lazyClient } from '@/lib/supabase/lazy-client'
 import { useLocalePath, useT } from '@/i18n/client'
 import MobileMenu from './MobileMenu'
 import { useNavUser, type NavUser } from './useNavUser'
@@ -51,7 +51,7 @@ export default function NavAuth({ links }: { links: NavLink[] }) {
   // En serveraction rensade cookies utan att den här komponenten märkte det,
   // och navigeringen ligger kvar monterad mellan sidbyten.
   async function signOut() {
-    try { await createClient().auth.signOut() } finally {
+    try { await (await lazyClient()).auth.signOut() } finally {
       router.push(localePath('/login'))
       router.refresh()
     }
@@ -90,7 +90,7 @@ export default function NavAuth({ links }: { links: NavLink[] }) {
             <button
               type="button"
               onClick={signOut}
-              className="text-sm font-medium text-gray-400 hover:text-gray-900 transition-colors px-2 py-1.5"
+              className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors px-2 py-1.5"
             >
               {t('Logga ut')}
             </button>

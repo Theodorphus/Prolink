@@ -102,20 +102,20 @@ export default async function OfferPage(
                 <h2 className="font-semibold text-gray-900">{t('Offertdetaljer')}</h2>
                 <div className="text-right">
                   <p className="text-2xl font-bold text-blue-600">{formatCurrency(offer.price, locale)}</p>
-                  <p className="text-xs text-gray-400">{offer.price_type === 'fixed' ? t('Fast pris') : t('Per timme')}</p>
+                  <p className="text-xs text-gray-500">{offer.price_type === 'fixed' ? t('Fast pris') : t('Per timme')}</p>
                 </div>
               </div>
             </CardHeader>
             <CardBody className="space-y-4">
               <div>
-                <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-1">{t('Tidsestimat')}</p>
+                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide mb-1">{t('Tidsestimat')}</p>
                 <p className="text-gray-700">{offer.timeline}</p>
               </div>
               <div>
-                <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-1">{t('Beskrivning')}</p>
+                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide mb-1">{t('Beskrivning')}</p>
                 <LinkifiedText text={offer.description} className="text-gray-700 whitespace-pre-wrap leading-relaxed" />
               </div>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-gray-500">
                 {t('Skickad')} {formatDate(offer.created_at, locale)}
                 {offer.edited_at && ` · ${t('Redigerad')} ${formatDate(offer.edited_at, locale)}`}
               </p>
@@ -190,7 +190,7 @@ export default async function OfferPage(
                 <div>
                   <p className="font-medium text-gray-900">{provider.name}</p>
                   {provider.hourly_rate && (
-                    <p className="text-xs text-gray-400">{formatCurrency(provider.hourly_rate, locale)}/h</p>
+                    <p className="text-xs text-gray-500">{formatCurrency(provider.hourly_rate, locale)}/h</p>
                   )}
                 </div>
               </Link>
@@ -221,7 +221,7 @@ export default async function OfferPage(
                 <p className="text-sm text-blue-600 mt-1">{t('Budget')}: {formatCurrency(job.budget, locale)}</p>
               )}
               {customerName && (
-                <p className="text-xs text-gray-400 mt-2">{t('Kund')}: {customerName}</p>
+                <p className="text-xs text-gray-500 mt-2">{t('Kund')}: {customerName}</p>
               )}
             </CardBody>
           </Card>

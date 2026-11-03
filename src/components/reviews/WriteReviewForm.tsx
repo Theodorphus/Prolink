@@ -76,7 +76,7 @@ export default function WriteReviewForm({ offerId, revieweeId, revieweeName }: W
             <StarRating value={rating} onChange={setRating} size="lg" />
           </div>
           <div className="space-y-1.5">
-            <label htmlFor="review-comment" className="block text-sm font-medium text-gray-700">{t('Omdöme')} <span className="text-gray-400 font-normal">({t('valfritt')})</span></label>
+            <label htmlFor="review-comment" className="block text-sm font-medium text-gray-700">{t('Omdöme')} <span className="text-gray-500 font-normal">({t('valfritt')})</span></label>
             <textarea id="review-comment" maxLength={2000}
               value={comment}
               onChange={e => setComment(e.target.value)}

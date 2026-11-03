@@ -62,7 +62,7 @@ export default function ReferenceForm({ token, providerName, providerId }: { tok
         <StarRating value={rating} onChange={setRating} size="lg" />
       </div>
       <div>
-        <label htmlFor="reference-comment" className="mb-1.5 block text-sm font-bold text-slate-700">{t('Ditt omdöme')} <span className="font-normal text-slate-400">({t('valfritt')})</span></label>
+        <label htmlFor="reference-comment" className="mb-1.5 block text-sm font-bold text-slate-700">{t('Ditt omdöme')} <span className="font-normal text-slate-500">({t('valfritt')})</span></label>
         <textarea id="reference-comment" name="comment" rows={5} maxLength={2000} className={`${fieldClass} resize-y`} placeholder={t('Vad hjälpte {name} dig med, och hur gick det?', { name: providerName })} />
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
@@ -71,7 +71,7 @@ export default function ReferenceForm({ token, providerName, providerId }: { tok
           <input id="reference-name" name="client_name" required maxLength={100} autoComplete="name" className={fieldClass} />
         </div>
         <div>
-          <label htmlFor="reference-company" className="mb-1.5 block text-sm font-bold text-slate-700">{t('Företag')} <span className="font-normal text-slate-400">({t('valfritt')})</span></label>
+          <label htmlFor="reference-company" className="mb-1.5 block text-sm font-bold text-slate-700">{t('Företag')} <span className="font-normal text-slate-500">({t('valfritt')})</span></label>
           <input id="reference-company" name="client_company" maxLength={120} autoComplete="organization" className={fieldClass} />
         </div>
       </div>

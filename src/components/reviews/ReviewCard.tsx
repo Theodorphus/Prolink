@@ -26,7 +26,7 @@ export default function ReviewCard({ review }: { review: ReviewWithReviewer }) {
             <Link href={`/profile/${review.reviewer.id}`} className="text-sm font-semibold text-gray-900 hover:text-blue-600">
               {review.reviewer.name}
             </Link>
-            <span className="text-xs text-gray-400 shrink-0">{formatDate(review.created_at, locale)}</span>
+            <span className="text-xs text-gray-500 shrink-0">{formatDate(review.created_at, locale)}</span>
           </div>
           <StarRating value={review.rating} readonly size="sm" />
           {review.comment && (

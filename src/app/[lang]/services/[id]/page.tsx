@@ -276,7 +276,7 @@ export default async function ServicePage(props: { params: Promise<{ id: string 
 
           <Card>
             <CardBody className="space-y-4">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">{t('Leverantör')}</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{t('Leverantör')}</p>
 
               <Link href={`/profile/${provider.id}`} className="group flex items-center gap-3">
                 <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-xl font-black text-blue-700">

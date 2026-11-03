@@ -61,7 +61,7 @@ export default function OfferCard({ offer, isOwner, currentUserId }: OfferCardPr
               <Link href={`/profile/${offer.provider_id}`} className="font-medium text-gray-900 hover:text-blue-600 text-sm">
                 {offer.provider?.name}
               </Link>
-              <p className="text-xs text-gray-400">{offer.price_type === 'hourly' ? t('Timpris') : t('Fast pris')}</p>
+              <p className="text-xs text-gray-500">{offer.price_type === 'hourly' ? t('Timpris') : t('Fast pris')}</p>
             </div>
           </div>
           <div className="text-right">
@@ -71,7 +71,7 @@ export default function OfferCard({ offer, isOwner, currentUserId }: OfferCardPr
         </div>
 
         <LinkifiedText text={offer.description} className="text-sm text-gray-700 mb-2 whitespace-pre-wrap" />
-        <p className="text-xs text-gray-400">{t('Tidsestimat')}: {offer.timeline}</p>
+        <p className="text-xs text-gray-500">{t('Tidsestimat')}: {offer.timeline}</p>
       </CardBody>
 
       {(isOwner || isOwnOffer) && (

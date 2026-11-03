@@ -280,5 +280,6 @@
   "Läs mer": "Read more",
   "Ditt uppdrag har stängts": "Your job has been closed",
   "Ditt uppdrag \"{title}\" har varit öppet i 60 dagar och har nu stängts automatiskt, så att flödet bara visar aktuella uppdrag.": "Your job \"{title}\" has been open for 60 days and has now been closed automatically, so that the feed only shows current jobs.",
-  "Offerter du redan fått finns kvar på uppdraget. Behöver du fortfarande hjälp kan du publicera uppdraget igen.": "Quotes you have already received remain on the job. If you still need help, you can publish the job again."
+  "Offerter du redan fått finns kvar på uppdraget. Behöver du fortfarande hjälp kan du publicera uppdraget igen.": "Quotes you have already received remain on the job. If you still need help, you can publish the job again.",
+  "Öppna uppdrag": "Open jobs"
 }

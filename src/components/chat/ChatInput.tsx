@@ -130,7 +130,7 @@ export default function ChatInput({ onSend, offerId }: ChatInputProps) {
       </div>
       {file && <p className="text-sm">{file.name} <button type="button" disabled={sending} onClick={() => { setFile(null); uploaded.current = undefined; requestId.current = null; if (fileRef.current) fileRef.current.value = '' }}>{t('Ta bort bilaga')}</button></p>}
       <input disabled={sending} onChange={e => { setFile(e.target.files?.[0] ?? null); uploaded.current = undefined; requestId.current = null }} ref={fileRef} type="file" className="hidden" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
-      <p id="chatt-tips" className="hidden text-xs text-gray-400 [@media(pointer:fine)]:block">{t('Enter skickar, Shift+Enter ger ny rad.')}</p>
+      <p id="chatt-tips" className="hidden text-xs text-gray-500 [@media(pointer:fine)]:block">{t('Enter skickar, Shift+Enter ger ny rad.')}</p>
       {uploading && <p className="text-xs text-blue-500">{t('Laddar upp fil…')}</p>}
     </form>
   )

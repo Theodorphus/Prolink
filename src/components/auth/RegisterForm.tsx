@@ -73,7 +73,7 @@ export default function RegisterForm({ action, redirect }: RegisterFormProps) {
                 className="sr-only"
               />
               <span className="font-medium text-gray-900">{t(label)}</span>
-              <span className="text-xs text-gray-500">{t(desc)}</span>
+              <span className="text-xs text-gray-600">{t(desc)}</span>
             </label>
           ))}
         </div>
@@ -83,7 +83,7 @@ export default function RegisterForm({ action, redirect }: RegisterFormProps) {
 
       <div className="flex items-center gap-3">
         <div className="flex-1 h-px bg-gray-200" />
-        <span className="text-xs text-gray-400">{t('eller med e-post')}</span>
+        <span className="text-xs text-gray-500">{t('eller med e-post')}</span>
         <div className="flex-1 h-px bg-gray-200" />
       </div>
 

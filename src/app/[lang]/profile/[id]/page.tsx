@@ -492,7 +492,7 @@ export default async function ProfilePage(props: { params: Promise<{ id: string 
                       <p className="text-sm font-semibold text-gray-900">
                         {reference.client_name}{reference.client_company ? `, ${reference.client_company}` : ''}
                       </p>
-                      <span className="shrink-0 text-xs text-gray-400">{formatDate(reference.submitted_at, locale)}</span>
+                      <span className="shrink-0 text-xs text-gray-500">{formatDate(reference.submitted_at, locale)}</span>
                     </div>
                     <StarRating value={reference.rating} readonly size="sm" />
                     <p className="mt-1 text-xs font-medium text-slate-500">{t('Extern kund · verifierad via e-post')}</p>

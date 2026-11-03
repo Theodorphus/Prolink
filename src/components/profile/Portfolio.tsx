@@ -130,12 +130,12 @@ export default function Portfolio({ userId, items, editable, name }: { userId: s
             <input id="portfolio-title" name="title" required minLength={2} maxLength={100} defaultValue={editing?.title} placeholder={t('T.ex. Ny webbplats för Salong Lugn')} className={fieldClass} />
           </div>
           <div className="space-y-1.5">
-            <label htmlFor="portfolio-description" className="block text-sm font-medium text-gray-700">{t('Vad gjorde du?')} <span className="font-normal text-gray-400">({t('valfritt')})</span></label>
+            <label htmlFor="portfolio-description" className="block text-sm font-medium text-gray-700">{t('Vad gjorde du?')} <span className="font-normal text-gray-500">({t('valfritt')})</span></label>
             <textarea id="portfolio-description" name="description" rows={3} maxLength={500} defaultValue={editing?.description ?? ''} placeholder={t('Uppdraget, din del och resultatet i ett par meningar.')} className={`${fieldClass} resize-none`} />
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <label htmlFor="portfolio-image" className="block text-sm font-medium text-gray-700">{editing?.image_url ? t('Byt bild') : t('Bild')} <span className="font-normal text-gray-400">({t('JPG, PNG, WebP, max 2 MB')})</span></label>
+              <label htmlFor="portfolio-image" className="block text-sm font-medium text-gray-700">{editing?.image_url ? t('Byt bild') : t('Bild')} <span className="font-normal text-gray-500">({t('JPG, PNG, WebP, max 2 MB')})</span></label>
               <input id="portfolio-image" name="image" type="file" accept="image/jpeg,image/png,image/webp" className="block w-full text-sm" />
               {editing?.image_url && (
                 <label className="flex items-center gap-2 text-xs text-slate-600">
@@ -144,7 +144,7 @@ export default function Portfolio({ userId, items, editable, name }: { userId: s
               )}
             </div>
             <div className="space-y-1.5">
-              <label htmlFor="portfolio-url" className="block text-sm font-medium text-gray-700">{t('Länk')} <span className="font-normal text-gray-400">({t('valfritt')})</span></label>
+              <label htmlFor="portfolio-url" className="block text-sm font-medium text-gray-700">{t('Länk')} <span className="font-normal text-gray-500">({t('valfritt')})</span></label>
               <input id="portfolio-url" name="url" inputMode="url" defaultValue={editing?.url ?? ''} placeholder="kundensida.se" className={fieldClass} />
             </div>
           </div>
@@ -174,7 +174,7 @@ export default function Portfolio({ userId, items, editable, name }: { userId: s
                   {editable && (
                     <span className="flex shrink-0 gap-3">
                       <button type="button" onClick={() => { setAdding(false); setEditing(item); setError('') }} className="text-xs font-semibold text-slate-500 hover:text-blue-700">{t('Redigera')}</button>
-                      <button type="button" onClick={() => remove(item)} className="text-xs font-semibold text-slate-400 hover:text-red-700">{t('Ta bort')}</button>
+                      <button type="button" onClick={() => remove(item)} className="text-xs font-semibold text-slate-500 hover:text-red-700">{t('Ta bort')}</button>
                     </span>
                   )}
                 </div>

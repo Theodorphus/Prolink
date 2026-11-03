@@ -90,19 +90,19 @@ export default async function FaqPage() {
     <div className="max-w-3xl mx-auto px-4 py-16">
       <div className="mb-12">
         <h1 className="text-4xl font-bold text-gray-900 tracking-tight mb-3">{t('Vanliga frågor')}</h1>
-        <p className="text-gray-500 text-lg">{t('Hittar du inte svaret? Mejla oss på')} <a href={`mailto:${CONTACT_EMAIL}`} className="text-blue-600 hover:underline">{CONTACT_EMAIL}</a></p>
+        <p className="text-gray-500 text-lg">{t('Hittar du inte svaret? Mejla oss på')} <a href={`mailto:${CONTACT_EMAIL}`} className="font-medium text-blue-700 underline underline-offset-4">{CONTACT_EMAIL}</a></p>
       </div>
 
       <div className="space-y-12">
         {faqs.map(({ category, items }) => (
           <div key={category}>
-            <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-5">{t(category)}</h2>
+            <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-5">{t(category)}</h2>
             <div className="space-y-1">
               {items.map(({ q, a }) => (
                 <details key={q} className="group border border-gray-100 rounded-xl overflow-hidden">
                   <summary className="flex items-center justify-between gap-4 px-5 py-4 cursor-pointer font-medium text-gray-900 hover:bg-gray-50 transition-colors list-none">
                     {t(q)}
-                    <svg className="w-4 h-4 text-gray-400 shrink-0 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-gray-500 shrink-0 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </summary>

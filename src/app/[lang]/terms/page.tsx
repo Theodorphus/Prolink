@@ -19,7 +19,7 @@ export default async function TermsPage() {
     <div className="max-w-3xl mx-auto px-4 py-16">
       <div className="mb-10">
         <h1 className="text-4xl font-bold text-gray-900 tracking-tight mb-3">{t('Användarvillkor')}</h1>
-        <p className="text-gray-400 text-sm">{t('Senast uppdaterad: september 2026')}</p>
+        <p className="text-gray-500 text-sm">{t('Senast uppdaterad: september 2026')}</p>
         {locale === 'en' && <p className="mt-3 rounded-lg bg-slate-50 px-4 py-3 text-sm text-slate-600">{t('Den här sidan är en översättning av den svenska originalversionen. Vid avvikelser gäller den svenska versionen.')}</p>}
       </div>
 
@@ -73,7 +73,7 @@ export default async function TermsPage() {
 
         <section>
           <h2 className="text-xl font-bold text-gray-900 mb-3">{t('8. Uppsägning')}</h2>
-          <p>{t('Vi förbehåller oss rätten att stänga av eller ta bort konton som bryter mot dessa villkor. Du kan när som helst begära radering av ditt konto via')}{' '}<a href={`mailto:${CONTACT_EMAIL}`} className="text-blue-600 hover:underline">{CONTACT_EMAIL}</a>.</p>
+          <p>{t('Vi förbehåller oss rätten att stänga av eller ta bort konton som bryter mot dessa villkor. Du kan när som helst begära radering av ditt konto via')}{' '}<a href={`mailto:${CONTACT_EMAIL}`} className="text-blue-700 underline underline-offset-2">{CONTACT_EMAIL}</a>.</p>
         </section>
 
         <section>
@@ -84,7 +84,7 @@ export default async function TermsPage() {
         <section id="foretagsuppgifter" className="scroll-mt-24">
           <h2 className="text-xl font-bold text-gray-900 mb-3">{t('10. Kontakt')}</h2>
           <p>{t('Prolink drivs av {name}, org.nr {orgNumber}, momsreg.nr {vatNumber}, {address}.', { name: COMPANY.name, orgNumber: COMPANY.orgNumber, vatNumber: COMPANY.vatNumber, address: COMPANY.address })}</p>
-          <p className="mt-3">{t('Frågor om dessa villkor skickas till')}{' '}<a href={`mailto:${CONTACT_EMAIL}`} className="text-blue-600 hover:underline">{CONTACT_EMAIL}</a>.</p>
+          <p className="mt-3">{t('Frågor om dessa villkor skickas till')}{' '}<a href={`mailto:${CONTACT_EMAIL}`} className="text-blue-700 underline underline-offset-2">{CONTACT_EMAIL}</a>.</p>
         </section>
 
       </div>

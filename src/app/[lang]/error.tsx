@@ -27,7 +27,7 @@ export default function Error({
         {t('Felet är tillfälligt i de flesta fall. Försök igen, eller gå tillbaka till startsidan.')}
       </p>
       {error.digest && (
-        <p className="mt-3 text-xs text-slate-400">{t('Referens')}: {error.digest}</p>
+        <p className="mt-3 text-xs text-slate-500">{t('Referens')}: {error.digest}</p>
       )}
       <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
         <button

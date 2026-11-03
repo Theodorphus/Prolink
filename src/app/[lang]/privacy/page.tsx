@@ -19,7 +19,7 @@ export default async function PrivacyPage() {
     <div className="max-w-3xl mx-auto px-4 py-16">
       <div className="mb-10">
         <h1 className="text-4xl font-bold text-gray-900 tracking-tight mb-3">{t('Integritetspolicy')}</h1>
-        <p className="text-gray-400 text-sm">{t('Senast uppdaterad: september 2026')}</p>
+        <p className="text-gray-500 text-sm">{t('Senast uppdaterad: september 2026')}</p>
         {locale === 'en' && <p className="mt-3 rounded-lg bg-slate-50 px-4 py-3 text-sm text-slate-600">{t('Den här sidan är en översättning av den svenska originalversionen. Vid avvikelser gäller den svenska versionen.')}</p>}
       </div>
 
@@ -32,7 +32,7 @@ export default async function PrivacyPage() {
             {COMPANY.name}<br />
             {t('Org.nr')} {COMPANY.orgNumber}<br />
             {COMPANY.address}<br />
-            {t('E-post:')}{' '}<a href={`mailto:${CONTACT_EMAIL}`} className="text-blue-600 hover:underline">{CONTACT_EMAIL}</a>
+            {t('E-post:')}{' '}<a href={`mailto:${CONTACT_EMAIL}`} className="text-blue-700 underline underline-offset-2">{CONTACT_EMAIL}</a>
           </p>
         </section>
 
@@ -85,7 +85,7 @@ export default async function PrivacyPage() {
             <li><strong>{t('Rätt till dataportabilitet')}</strong>{' '}{t('— du kan begära dina uppgifter i ett maskinläsbart format.')}</li>
             <li><strong>{t('Rätt att invända')}</strong>{' '}{t('— du kan invända mot behandling baserad på berättigat intresse.')}</li>
           </ul>
-          <p className="text-sm mt-3">{t('Kontakta oss på')}{' '}<a href={`mailto:${CONTACT_EMAIL}`} className="text-blue-600 hover:underline">{CONTACT_EMAIL}</a>{' '}{t('för att utöva dina rättigheter. Du har också rätt att lämna klagomål till')}{' '}<a href="https://www.imy.se" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{t('Integritetsskyddsmyndigheten (IMY)')}</a>.</p>
+          <p className="text-sm mt-3">{t('Kontakta oss på')}{' '}<a href={`mailto:${CONTACT_EMAIL}`} className="text-blue-700 underline underline-offset-2">{CONTACT_EMAIL}</a>{' '}{t('för att utöva dina rättigheter. Du har också rätt att lämna klagomål till')}{' '}<a href="https://www.imy.se" target="_blank" rel="noopener noreferrer" className="text-blue-700 underline underline-offset-2">{t('Integritetsskyddsmyndigheten (IMY)')}</a>.</p>
         </section>
 
         <section>

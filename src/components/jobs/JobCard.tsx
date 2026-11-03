@@ -106,7 +106,7 @@ export default async function JobCard({
               {job.budget ? (
                 <>
                   <p className="text-lg font-black tracking-[-0.02em] text-slate-900">{budget}</p>
-                  <p className="mt-0.5 text-xs font-medium text-slate-400">{t('budget')}</p>
+                  <p className="mt-0.5 text-xs font-medium text-slate-500">{t('budget')}</p>
                 </>
               ) : (
                 <span className="inline-flex rounded-lg bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-600 ring-1 ring-inset ring-slate-200">

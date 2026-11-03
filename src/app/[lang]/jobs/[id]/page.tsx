@@ -185,25 +185,25 @@ export default async function JobPage(props: { params: Promise<{ id: string }>; 
                   att budget, arbetsform och plats går att skanna. */}
               <dl className="mt-7 grid grid-cols-2 gap-x-6 gap-y-5 border-y border-slate-100 py-5 sm:grid-cols-4">
                 <div>
-                  <dt className="text-xs font-semibold uppercase tracking-wider text-slate-400">{t('Budget')}</dt>
+                  <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">{t('Budget')}</dt>
                   <dd className="mt-1 font-black text-slate-900">
                     {job.budget ? formatCurrency(job.budget, locale) : t('Öppen')}
                   </dd>
                 </div>
                 {workType && (
                   <div>
-                    <dt className="text-xs font-semibold uppercase tracking-wider text-slate-400">{t('Arbetsform')}</dt>
+                    <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">{t('Arbetsform')}</dt>
                     <dd className="mt-1 font-semibold text-slate-800">{workType}</dd>
                   </div>
                 )}
                 {job.location && (
                   <div>
-                    <dt className="text-xs font-semibold uppercase tracking-wider text-slate-400">{t('Plats')}</dt>
+                    <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">{t('Plats')}</dt>
                     <dd className="mt-1 font-semibold text-slate-800">{job.location}</dd>
                   </div>
                 )}
                 <div>
-                  <dt className="text-xs font-semibold uppercase tracking-wider text-slate-400">{t('Publicerat')}</dt>
+                  <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">{t('Publicerat')}</dt>
                   <dd className="mt-1 font-semibold text-slate-800">{formatDate(job.created_at, locale)}</dd>
                   {/* Leverantörer som redan lämnat offert ska se att villkoren kan ha ändrats. */}
                   {job.edited_at && (
@@ -418,7 +418,7 @@ export default async function JobPage(props: { params: Promise<{ id: string }>; 
             {customer && (
               <Card>
                 <CardBody className="space-y-3">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
                     {t('Publicerat av')}
                   </p>
                   <Link href={`/profile/${customer.id}`} className="group flex items-center gap-3">

@@ -58,7 +58,7 @@ export default function SwitchRoleButton({ currentRole, userId }: SwitchRoleButt
               {newRole === 'provider' ? t('Byt till frilansare?') : t('Byt till uppdragsgivare?')}
             </h3>
             <p className="text-sm text-gray-600 mb-1">{newRoleDesc}</p>
-            <p className="text-xs text-gray-400 mb-6">
+            <p className="text-xs text-gray-500 mb-6">
               {t('Din befintliga data behålls. Du kan byta tillbaka när som helst.')}
             </p>
             {error && <p className="text-xs text-red-600 mb-4">{error}</p>}

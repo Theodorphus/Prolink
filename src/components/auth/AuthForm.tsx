@@ -45,7 +45,7 @@ export default function AuthForm({ action, submitLabel, redirect, next }: AuthFo
 
       <div className="flex items-center gap-3">
         <div className="flex-1 h-px bg-gray-200" />
-        <span className="text-xs text-gray-400">{t('eller med e-post')}</span>
+        <span className="text-xs text-gray-500">{t('eller med e-post')}</span>
         <div className="flex-1 h-px bg-gray-200" />
       </div>
 

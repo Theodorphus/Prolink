@@ -75,6 +75,9 @@ export default async function JobsPage(props: Props) {
         <JobFilters />
       </Suspense>
 
+      {/* Korten har h3. Utan en h2 emellan hoppade rubrikordningen från h1,
+          vilket skärmläsare använder för att navigera. */}
+      <h2 className="sr-only">{t('Öppna uppdrag')}</h2>
       <div className="mt-7 space-y-3.5">
         {shown.map((job) => (
           <JobCard key={job.id} job={{ ...job, customer: Array.isArray(job.customer) ? job.customer[0] : job.customer }} variant="row" />

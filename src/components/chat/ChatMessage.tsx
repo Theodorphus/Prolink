@@ -78,7 +78,7 @@ export default function ChatMessage({ message, isOwn, translation, translating, 
       {/* Bubble */}
       <div className={`max-w-[75%] ${isOwn ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
         {!isOwn && (
-          <p className="text-xs text-gray-400 ml-1">{message.sender?.name}</p>
+          <p className="text-xs text-gray-500 ml-1">{message.sender?.name}</p>
         )}
         <div
           className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
@@ -141,7 +141,7 @@ export default function ChatMessage({ message, isOwn, translation, translating, 
             )}
           </p>
         )}
-        <p className="text-xs text-gray-400 mx-1">{formatDateTime(message.created_at, locale)}</p>
+        <p className="text-xs text-gray-500 mx-1">{formatDateTime(message.created_at, locale)}</p>
       </div>
     </div>
   )
