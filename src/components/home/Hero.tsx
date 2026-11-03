@@ -90,14 +90,24 @@ export default async function Hero() {
         </div>
       </div>
 
-      {/* Kategoriremsa: visar bredden på plattformen utan att påstå volym. */}
-      <div className="relative border-t border-white/10 bg-white/[0.03] py-4 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-8 gap-y-2 px-4 text-[11px] font-bold uppercase tracking-[0.18em] text-white/40">
-          {[t('Webbutveckling'), t('Design'), t('Marknadsföring'), t('Ekonomi'), t('Juridik'), t('IT & support')].map(item => (
-            <span key={item}>{item}</span>
+      {/* Kategoriremsa: visar bredden på plattformen utan att påstå volym, och
+          leder till respektive kategorisida. */}
+      <nav aria-label={t('Kategorier')} className="relative border-t border-white/10 bg-white/[0.03] py-4 backdrop-blur">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-8 gap-y-2 px-4 text-[11px] font-bold uppercase tracking-[0.18em] text-white/50">
+          {[
+            { href: '/hitta/webbutveckling', label: t('Webbutveckling') },
+            { href: '/hitta/design', label: t('Design') },
+            { href: '/hitta/marknadsforing', label: t('Marknadsföring') },
+            { href: '/hitta/redovisning', label: t('Ekonomi') },
+            { href: '/hitta/juridik', label: t('Juridik') },
+            { href: '/hitta/it-support', label: t('IT & support') },
+          ].map(({ href, label }) => (
+            <Link key={href} href={href} className="transition-colors hover:text-white">
+              {label}
+            </Link>
           ))}
         </div>
-      </div>
+      </nav>
     </section>
   )
 }

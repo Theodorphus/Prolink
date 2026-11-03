@@ -304,6 +304,15 @@
   backdrop-filter: blur(18px);
 }
 
+.nav-header .nav-logo-light,
+[data-transparent='true'] .nav-header .nav-logo-dark {
+  display: none;
+}
+
+[data-transparent='true'] .nav-header .nav-logo-light {
+  display: block;
+}
+
 [data-transparent='true'] .nav-header a,
 [data-transparent='true'] .nav-header button,
 [data-transparent='true'] .nav-header span {

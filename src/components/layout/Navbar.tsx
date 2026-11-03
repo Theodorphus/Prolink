@@ -21,7 +21,9 @@ export default async function Navbar() {
 
           <div className="flex items-center gap-10">
             <Link href="/" className="shrink-0">
-              <Image src="/brand/prolink-logo.png" alt="Prolink" width={593} height={160} priority className="h-7 w-auto" />
+              <Image src="/brand/prolink-logo.png" alt="Prolink" width={593} height={160} priority className="nav-logo-dark block h-7 w-auto" />
+              {/* Över den mörka hjälten på startsidan syns bara den ljusa varianten. */}
+              <Image src="/brand/prolink-logo-light.png" alt="Prolink" width={593} height={160} className="nav-logo-light block h-7 w-auto" />
             </Link>
             <nav className="hidden md:flex items-center gap-8">
               {NAV_LINKS.map(({ href, label }) => (
