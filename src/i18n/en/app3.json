@@ -269,5 +269,11 @@
   "Du har {count} offerter på \"{title}\" som väntar på svar.": "You have {count} quotes on \"{title}\" that are waiting for a reply.",
   "Frilansarna har lagt tid på sina offerter. Ett kort besked räcker, både ett ja, ett nej eller en fråga. Har du redan hittat någon kan du stänga uppdraget, så slipper fler vänta.": "The freelancers have put time into their quotes. A short reply is enough, whether it is a yes, a no or a question. If you have already found someone, you can close the assignment so that others do not have to wait.",
   "Se offerterna": "See the quotes",
-  "Du får det här mejlet för att du har offerter som väntar på svar på Prolink.": "You are receiving this email because you have quotes waiting for a reply on Prolink."
+  "Du får det här mejlet för att du har offerter som väntar på svar på Prolink.": "You are receiving this email because you have quotes waiting for a reply on Prolink.",
+  "Cookies för annonsmätning": "Cookies for ad measurement",
+  "Vi använder Google Ads för att mäta vilka annonser som leder till nya användare. Det kräver cookies som du får välja bort. Nödvändiga cookies för inloggning och språk används alltid.": "We use Google Ads to measure which ads bring in new users. This requires cookies that you can decline. Necessary cookies for sign-in and language are always used.",
+  "Läs mer i integritetspolicyn": "Read more in the privacy policy",
+  "Godkänn": "Accept",
+  "Neka": "Decline",
+  "Cookie-inställningar": "Cookie settings"
 }

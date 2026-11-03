@@ -65,6 +65,7 @@ export default async function PrivacyPage() {
             <li><strong>{t('Vercel Inc.')}</strong>{' '}{t('— drift av webbplatsen och besöksstatistik utan cookies (USA, standardavtalsklausuler).')}</li>
             <li><strong>{t('Resend Inc.')}</strong>{' '}{t('— e-postutskick (USA, standardavtalsklausuler).')}</li>
             <li><strong>{t('Google LLC')}</strong>{' '}{t('— inloggning med Google-konto, bara om du väljer det (USA, standardavtalsklausuler).')}</li>
+            <li><strong>{t('Google Ireland Ltd / Google LLC (Google Ads)')}</strong>{' '}{t('— mätning av annonsresultat, bara om du godkänner annonscookies. Google kan få din IP-adress och information om vilka sidor du besökt, och om du registrerat dig eller publicerat ett uppdrag. Vi skickar aldrig namn, e-postadress eller innehållet i uppdrag (USA, standardavtalsklausuler).')}</li>
             <li><strong>{t('Anthropic PBC')}</strong>{' '}{t('— maskinöversättning. Uppdrag och tjänstebeskrivningar översätts till det språk du läser webbplatsen på, och ett chattmeddelande översätts bara när mottagaren ber om det eller slår på automatisk översättning. Bara själva texten skickas, aldrig namn eller kontaktuppgifter (USA, standardavtalsklausuler).')}</li>
           </ul>
           <p className="text-sm mt-3">{t('Vi säljer aldrig dina personuppgifter till tredje part.')}</p>
@@ -89,7 +90,8 @@ export default async function PrivacyPage() {
 
         <section>
           <h2 className="text-xl font-bold text-gray-900 mb-3">{t('7. Cookies')}</h2>
-          <p className="text-sm">{t('Vi använder nödvändiga cookies för inloggningssessioner (via Supabase) och en cookie som minns vilket språk du valt. Vi använder inga spårningscookies eller annonscookies.')}</p>
+          <p className="text-sm">{t('Vi använder nödvändiga cookies för inloggningssessioner (via Supabase) och en cookie som minns vilket språk du valt. Dessa kräver inget samtycke.')}</p>
+          <p className="text-sm mt-3">{t('Om du godkänner det i cookie-rutan använder vi också Google Ads-cookies för att mäta vilka annonser som leder till registreringar och publicerade uppdrag. Utan ditt godkännande laddas ingen Google-tagg och inga annonscookies sätts. Du kan när som helst ändra ditt val via Cookie-inställningar längst ned på sidan, och ditt val sparas i din webbläsare.')}</p>
         </section>
 
         <section>

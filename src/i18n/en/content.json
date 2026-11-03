@@ -85,7 +85,6 @@
   "för att utöva dina rättigheter. Du har också rätt att lämna klagomål till": "to exercise your rights. You also have the right to lodge a complaint with",
   "Integritetsskyddsmyndigheten (IMY)": "the Swedish Authority for Privacy Protection (IMY)",
   "7. Cookies": "7. Cookies",
-  "Vi använder nödvändiga cookies för inloggningssessioner (via Supabase) och en cookie som minns vilket språk du valt. Vi använder inga spårningscookies eller annonscookies.": "We use necessary cookies for sign-in sessions (via Supabase) and a cookie that remembers the language you have chosen. We use no tracking cookies or advertising cookies.",
   "8. Ändringar": "8. Changes",
   "Vi kan komma att uppdatera denna policy. Vid väsentliga ändringar meddelar vi dig via e-post eller ett meddelande på plattformen.": "We may update this policy. In the event of material changes we will notify you by email or with a message on the platform.",
   "Användarvillkor": "Terms of use",
@@ -117,5 +116,9 @@
   "Dessa villkor regleras av svensk lag. Tvister ska i första hand lösas genom förhandling. Om parterna inte kan komma överens ska tvisten avgöras av svensk allmän domstol med Göteborgs tingsrätt som första instans.": "These terms are governed by Swedish law. Disputes shall in the first instance be resolved through negotiation. If the parties cannot agree, the dispute shall be settled by a Swedish general court with the Gothenburg District Court as the court of first instance.",
   "10. Kontakt": "10. Contact",
   "Prolink drivs av {name}, org.nr {orgNumber}, momsreg.nr {vatNumber}, {address}.": "Prolink is operated by {name}, org. no. {orgNumber}, VAT no. {vatNumber}, {address}.",
-  "Frågor om dessa villkor skickas till": "Questions about these terms can be sent to"
+  "Frågor om dessa villkor skickas till": "Questions about these terms can be sent to",
+  "Vi använder nödvändiga cookies för inloggningssessioner (via Supabase) och en cookie som minns vilket språk du valt. Dessa kräver inget samtycke.": "We use necessary cookies for sign-in sessions (via Supabase) and a cookie that remembers the language you have chosen. These do not require consent.",
+  "Om du godkänner det i cookie-rutan använder vi också Google Ads-cookies för att mäta vilka annonser som leder till registreringar och publicerade uppdrag. Utan ditt godkännande laddas ingen Google-tagg och inga annonscookies sätts. Du kan när som helst ändra ditt val via Cookie-inställningar längst ned på sidan, och ditt val sparas i din webbläsare.": "If you accept in the cookie banner, we also use Google Ads cookies to measure which ads lead to sign-ups and published jobs. Without your consent no Google tag is loaded and no advertising cookies are set. You can change your choice at any time through Cookie settings at the bottom of the page, and your choice is stored in your browser.",
+  "Google Ireland Ltd / Google LLC (Google Ads)": "Google Ireland Ltd / Google LLC (Google Ads)",
+  "— mätning av annonsresultat, bara om du godkänner annonscookies. Google kan få din IP-adress och information om vilka sidor du besökt, och om du registrerat dig eller publicerat ett uppdrag. Vi skickar aldrig namn, e-postadress eller innehållet i uppdrag (USA, standardavtalsklausuler).": "– measurement of ad performance, only if you accept advertising cookies. Google may receive your IP address and information about which pages you visited, and whether you signed up or published a job. We never send names, email addresses or the content of jobs (USA, standard contractual clauses)."
 }

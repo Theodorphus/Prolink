@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/Input'
 import GoogleAuthButton from '@/components/auth/GoogleAuthButton'
 import { useLocale, useLocalePath, useT } from '@/i18n/client'
 import { msg } from '@/i18n/msg.mjs'
+import { trackConversion } from '@/lib/consent'
 
 import type { ActionState } from '@/types/auth'
 
@@ -41,6 +42,7 @@ export default function RegisterForm({ action, redirect }: RegisterFormProps) {
 
   useEffect(() => {
     if (state && 'success' in state) {
+      trackConversion('signup')
       router.push(localePath(state.redirectTo))
       router.refresh()
     }

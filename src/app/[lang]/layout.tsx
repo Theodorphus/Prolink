@@ -5,6 +5,7 @@ import Navbar from '@/components/layout/Navbar'
 import NavbarWrapper from '@/components/layout/NavbarWrapper'
 import Footer from '@/components/layout/Footer'
 import { Analytics } from "@vercel/analytics/react"
+import ConsentBanner from '@/components/analytics/ConsentBanner'
 import { SITE_URL } from '@/lib/site'
 import { DEFAULT_OG_IMAGE } from '@/lib/seo'
 import { LOCALES, htmlLang, ogLocale } from '@/i18n/config'
@@ -73,6 +74,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <main id="innehall" className="flex-1">{children}</main>
           <Footer />
           <Analytics />
+          <ConsentBanner />
         </LocaleProvider>
       </body>
     </html>

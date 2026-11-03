@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import JobFields from './JobFields'
 import { useLocalePath, useT } from '@/i18n/client'
+import { trackConversion } from '@/lib/consent'
 
 // Utkastet sparas i webbläsaren så att en utloggad köpare kan skriva klart,
 // skapa konto (även via bekräftelsemejlet) och komma tillbaka till samma text.
@@ -93,6 +94,7 @@ export default function CreateJobForm({ target, initialCategory, signedIn }: { t
       return
     }
     clearDraft(draftKey)
+    trackConversion('job')
     router.push(localePath(`/jobs/${data.id}`))
     } catch {
       setError(t('Kunde inte spara. Kontrollera anslutningen och försök igen.'))

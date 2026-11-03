@@ -2,6 +2,7 @@ import Link from '@/components/i18n/Link'
 import { COMPANY, CONTACT_EMAIL } from '@/lib/site'
 import { getT } from '@/i18n/server'
 import LanguageSwitcher from './LanguageSwitcher'
+import CookieSettingsButton from '@/components/analytics/CookieSettingsButton'
 
 export default async function Footer() {
   const t = await getT()
@@ -94,6 +95,7 @@ export default async function Footer() {
           </div>
           <p className="flex items-center gap-4 text-xs text-gray-600 font-medium">
             <LanguageSwitcher className="font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 transition-colors hover:decoration-slate-900" />
+            <CookieSettingsButton className="font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 transition-colors hover:decoration-slate-900" />
             <span>
             {t('Skapad av')}{' '}
             <a
