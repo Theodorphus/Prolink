@@ -20,6 +20,8 @@ export interface Translatable {
   id: string
   title: string
   description: string
+  /** Tjänsternas leveranstid. Fritext, så den översätts med (migration 037). */
+  delivery_time?: string
 }
 
 /** Samma rad med översatt text, och en flagga som sidan kan visa upp. */
@@ -42,24 +44,39 @@ export function translationAvailable(): boolean {
 }
 
 function sourceHash(item: Translatable): string {
-  return createHash('sha256').update(`${item.title}\u0000${item.description}`).digest('hex')
+  // Leveranstiden ingår bara när den finns, så att uppdragens hash är densamma
+  // som innan den lades till och deras översättningar inte görs om.
+  const extra = item.delivery_time ? `\u0000${item.delivery_time}` : ''
+  return createHash('sha256').update(`${item.title}\u0000${item.description}${extra}`).digest('hex')
 }
 
-interface CacheRow { entity_id: string; source_hash: string; title: string; description: string; source_lang: string }
-interface Answer { title: string; description: string; sourceLang: string }
+interface CacheRow { entity_id: string; source_hash: string; title: string; description: string; source_lang: string; delivery_time: string | null }
+interface Answer { title: string; description: string; sourceLang: string; deliveryTime?: string }
+
+// Falskt när databasen saknar kolumnen delivery_time, dvs. innan migration 037
+// körts. Översättningen fungerar då som förut, utan leveranstid.
+let deliveryColumn = true
 
 async function readCache(type: EntityType, ids: string[], locale: Locale): Promise<Map<string, CacheRow> | null> {
   try {
-    const { data, error } = await createAdminClient()
+    const select = (columns: string) => createAdminClient()
       .from('content_translations')
-      .select('entity_id, source_hash, title, description, source_lang')
+      .select(columns)
       .eq('entity_type', type)
       .eq('lang', locale)
       .in('entity_id', ids)
+    const base = 'entity_id, source_hash, title, description, source_lang'
+    let { data, error } = await select(deliveryColumn ? `${base}, delivery_time` : base)
+    // 42703 är Postgres kod för en okänd kolumn. Andra fel, som att tabellen
+    // saknas, ska inte stänga av leveranstiden för gott.
+    if (error?.code === '42703' && deliveryColumn) {
+      deliveryColumn = false
+      ;({ data, error } = await select(base))
+    }
     // Utan cache (t.ex. tabellen saknas) översätter vi inte alls. Annars hade
     // varje sidvisning kostat ett API-anrop per annons.
     if (error) return null
-    return new Map((data as CacheRow[]).map(row => [row.entity_id, row]))
+    return new Map((data as unknown as CacheRow[]).map(row => [row.entity_id, { ...row, delivery_time: row.delivery_time ?? null }]))
   } catch {
     return null
   }
@@ -77,6 +94,9 @@ async function writeCache(type: EntityType, locale: Locale, rows: { item: Transl
         source_lang: answer.sourceLang,
         title: answer.title.slice(0, 400),
         description: answer.description,
+        // Saknas leveranstiden i svaret sparas originalet, så att raden inte
+        // ser ofullständig ut och översätts om vid varje visning.
+        ...(deliveryColumn ? { delivery_time: (answer.deliveryTime ?? item.delivery_time)?.slice(0, 400) ?? null } : {}),
       })),
       { onConflict: 'entity_type,entity_id,lang' },
     )
@@ -89,8 +109,8 @@ function systemPrompt(locale: Locale): string {
   const target = LANGUAGE_NAMES[locale]
   return [
     `You translate listings from a freelance marketplace into natural, professional ${target}. The listings may be written in any language.`,
-    'You receive a JSON array of {"id", "title", "description"}.',
-    'Return ONLY a JSON array of {"id", "lang", "title", "description"} with the same ids, in the same order.',
+    'You receive a JSON array of {"id", "title", "description"}. Some items also have "delivery_time", a short free-text delivery estimate.',
+    'Return ONLY a JSON array of {"id", "lang", "title", "description"} with the same ids, in the same order, plus a translated "delivery_time" for every item that had one.',
     '"lang" is the ISO 639-1 code of the language the listing is written in (for example "sv", "en", "ru", "uk"), judged from its description.',
     `If a listing is already in ${target}, return it unchanged.`,
     'Keep the meaning, tone, line breaks, lists, numbers, prices, names, URLs and technical terms. Do not add, remove or comment on anything.',
@@ -144,14 +164,17 @@ export function sourceLangOf(value: unknown): string {
 
 async function translateChunk(items: Translatable[], locale: Locale): Promise<Map<string, Answer>> {
   const result = new Map<string, Answer>()
-  const parsed = await askTranslator(systemPrompt(locale), items.map(({ id, title, description }) => ({ id, title, description })))
+  const parsed = await askTranslator(systemPrompt(locale), items.map(({ id, title, description, delivery_time }) => (
+    delivery_time ? { id, title, description, delivery_time } : { id, title, description }
+  )))
   if (!parsed) return result
   const wanted = new Set(items.map(item => item.id))
   for (const entry of parsed) {
     if (!entry || typeof entry !== 'object') continue
-    const { id, lang, title, description } = entry as Record<string, unknown>
+    const { id, lang, title, description, delivery_time } = entry as Record<string, unknown>
     if (typeof id === 'string' && wanted.has(id) && typeof title === 'string' && title.trim() && typeof description === 'string') {
-      result.set(id, { title: title.trim(), description, sourceLang: sourceLangOf(lang) })
+      const deliveryTime = typeof delivery_time === 'string' && delivery_time.trim() ? delivery_time.trim() : undefined
+      result.set(id, { title: title.trim(), description, sourceLang: sourceLangOf(lang), deliveryTime })
     }
   }
   return result
@@ -177,8 +200,8 @@ function chunk(items: Translatable[]): Translatable[][] {
 
 /**
  * Översätter en lista annonser till sidans språk. Annonser som redan är på
- * sidans språk returneras orörda. Raderna behåller alla övriga fält; bara title
- * och description byts.
+ * sidans språk returneras orörda. Raderna behåller alla övriga fält; bara title,
+ * description och, för tjänster, delivery_time byts.
  *
  * Saknas översättningen väntar sidan på den. Det gäller inte svenska listor:
  * nästan alla annonser är redan på svenska, så där översätts det som saknas efter
@@ -201,8 +224,11 @@ export async function translateListings<T extends Translatable>(
   const hits = new Map<string, Answer>()
   for (const row of rows) {
     const cached = cache.get(row.id)
-    if (cached && cached.source_hash === sourceHash(row)) {
-      hits.set(row.id, { title: cached.title, description: cached.description, sourceLang: cached.source_lang })
+    // En tjänst som översattes innan leveranstiden kom med (migration 037)
+    // saknar den i cachen och översätts om en gång.
+    const stale = Boolean(row.delivery_time) && deliveryColumn && cached?.delivery_time == null
+    if (cached && cached.source_hash === sourceHash(row) && !stale) {
+      hits.set(row.id, { title: cached.title, description: cached.description, sourceLang: cached.source_lang, deliveryTime: cached.delivery_time ?? undefined })
     } else missing.push(row)
   }
 
@@ -229,7 +255,9 @@ export async function translateListings<T extends Translatable>(
   return rows.map(row => {
     const hit = hits.get(row.id)
     if (!hit || hit.sourceLang === locale) return row
-    return { ...row, title: hit.title, description: hit.description, autoTranslated: true }
+    const translated = { ...row, title: hit.title, description: hit.description, autoTranslated: true }
+    if (row.delivery_time && hit.deliveryTime) translated.delivery_time = hit.deliveryTime
+    return translated
   })
 }
 

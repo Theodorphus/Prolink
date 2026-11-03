@@ -125,6 +125,27 @@ test('fel från översättningstjänsten ger originaltexten och sparar ingenting
   assert.equal(globalThis.__fakeDb.rows.length, 0)
 })
 
+test('tjänstens leveranstid översätts med och sparas, uppdrag skickar ingen', { skip }, async () => {
+  reset()
+  const calls = mockAnthropic(items => items.map(item => ({ ...translateAll([item])[0], ...(item.delivery_time ? { delivery_time: 'By agreement' } : {}) })))
+  const service = { id: 's1', title: 'Hemsida', description: 'Enkel hemsida', delivery_time: 'Enligt överenskommelse', price: 4500 }
+  const [first] = await loaded.translateListings('service', [service], 'en')
+  assert.equal(first.delivery_time, 'By agreement')
+  assert.equal(calls[0].items[0].delivery_time, 'Enligt överenskommelse')
+  assert.equal(globalThis.__fakeDb.rows[0].delivery_time, 'By agreement')
+
+  const [cached] = await loaded.translateListings('service', [service], 'en')
+  assert.equal(cached.delivery_time, 'By agreement')
+  assert.equal(calls.length, 1, 'andra visningen ska komma ur cachen')
+
+  const [edited] = await loaded.translateListings('service', [{ ...service, delivery_time: '5 dagar' }], 'en')
+  assert.equal(edited.delivery_time, 'By agreement')
+  assert.equal(calls.length, 2, 'ändrad leveranstid ska översättas om')
+
+  await loaded.translateListings('job', [job('1')], 'en')
+  assert.equal('delivery_time' in calls[2].items[0], false)
+})
+
 test('rubriker ur cachen kräver inga API-anrop', { skip }, async () => {
   reset()
   const calls = mockAnthropic(translateAll)
@@ -134,4 +155,19 @@ test('rubriker ur cachen kräver inga API-anrop', { skip }, async () => {
   assert.equal(titles.has('2'), false)
   assert.equal(calls.length, 1)
   assert.equal((await loaded.cachedTitles('job', ['1'], 'sv')).size, 0, 'svenska är ett eget språk i cachen')
+})
+
+// Sist i filen: modulen minns att kolumnen saknas, så tester efter detta skulle
+// köra utan leveranstid.
+test('innan migration 037 fungerar översättningen som förut, utan leveranstid', { skip }, async () => {
+  reset()
+  globalThis.__fakeDb.missingColumns = ['delivery_time']
+  const calls = mockAnthropic(translateAll)
+  const service = { id: 's1', title: 'Hemsida', description: 'Enkel hemsida', delivery_time: 'Enligt överenskommelse' }
+  const [first] = await loaded.translateListings('service', [service], 'en')
+  assert.equal(first.title, 'EN Hemsida')
+  assert.equal(first.delivery_time, 'Enligt överenskommelse')
+  assert.equal('delivery_time' in globalThis.__fakeDb.rows[0], false, 'okänd kolumn skickas inte')
+  await loaded.translateListings('service', [service], 'en')
+  assert.equal(calls.length, 1, 'andra visningen ska komma ur cachen')
 })

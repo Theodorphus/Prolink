@@ -9,13 +9,14 @@ export function createAdminClient() {
   return {
     from(table) {
       return {
-        select() {
+        select(columns = '') {
           const filters = []
           const query = {
             eq(column, value) { filters.push(row => row[column] === value); return query },
             in(column, values) { filters.push(row => values.includes(row[column])); return query },
             then(resolve) {
               if (db().readError) return resolve({ data: null, error: { message: 'relation does not exist' } })
+              if (db().missingColumns?.some(column => columns.includes(column))) return resolve({ data: null, error: { code: '42703', message: 'column does not exist' } })
               return resolve({ data: db().rows.filter(row => row.__table === table && filters.every(f => f(row))), error: null })
             },
           }
