@@ -166,7 +166,9 @@ export default async function ServicePage(props: { params: Promise<{ id: string 
             <h1 className="page-heading mt-4 text-3xl sm:text-4xl">{shown.title}</h1>
             <p className="muted mt-2 text-sm">
               {t('Publicerad')} {formatDate(service.created_at, locale)}
-              {service.edited_at && ` · ${t('Redigerad')} ${formatDate(service.edited_at, locale)}`}
+              {/* Samma datum två gånger säger ingenting, så redigeringen visas
+                  bara när den skett en annan dag än publiceringen. */}
+              {service.edited_at && formatDate(service.edited_at, locale) !== formatDate(service.created_at, locale) && ` · ${t('Redigerad')} ${formatDate(service.edited_at, locale)}`}
             </p>
           </div>
 
@@ -317,7 +319,9 @@ export default async function ServicePage(props: { params: Promise<{ id: string 
               )}
 
               {provider.bio && (
-                <p className="text-sm leading-6 text-slate-600">{provider.bio}</p>
+                // Hela presentationen finns på profilen. Här räcker början, så att
+                // sidokolumnen inte blir längre än själva tjänsten.
+                <p className="line-clamp-5 text-sm leading-6 text-slate-600">{provider.bio}</p>
               )}
 
               {provider.skills && provider.skills.length > 0 && (
