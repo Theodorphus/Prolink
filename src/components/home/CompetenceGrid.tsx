@@ -51,7 +51,7 @@ export default async function CompetenceGrid() {
           </div>
           <Link
             href="/services"
-            className="shrink-0 text-sm font-bold text-slate-600 transition hover:text-indigo-600"
+            className="shrink-0 text-sm font-bold text-slate-600 transition hover:text-blue-700"
           >
             {t('Se alla tjänster →')}
           </Link>
@@ -70,13 +70,13 @@ export default async function CompetenceGrid() {
             >
               <CategoryImage category={category.value} interactive />
               <div className="flex flex-1 flex-col p-5 sm:p-6">
-                <h3 className="font-bold leading-snug tracking-[-0.02em] text-slate-900 transition-colors group-hover:text-indigo-600">
+                <h3 className="font-bold leading-snug tracking-[-0.02em] text-slate-900 transition-colors group-hover:text-blue-700">
                   {t(category.label)}
                 </h3>
                 <p className="mt-2 flex-1 text-[13px] leading-6 text-slate-500">
                   {t(BLURBS[category.value] ?? '')}
                 </p>
-                <p className="mt-4 text-xs font-bold text-indigo-600 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                <p className="mt-4 text-xs font-bold text-blue-700 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
                   {t('Hitta specialist →')}
                 </p>
               </div>

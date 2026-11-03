@@ -220,8 +220,16 @@ export default async function ServicePage(props: { params: Promise<{ id: string 
                 {/* Databasen har ett enda prisfält utan omfattning, så priset
                     märks som frånpris i stället för fast pris. */}
                 <p className="muted mt-1 text-xs font-medium">
-                  {t('frånpris')} · {service.vat_included === true ? t('inklusive moms') : service.vat_included === false ? t('exklusive moms') : t('moms avtalas med leverantören')}
-                  <br />{t('Slutligt pris och omfattning avtalas med leverantören')}
+                  {/* Utan angiven moms blev det "moms avtalas med leverantören"
+                      direkt följt av "... avtalas med leverantören". */}
+                  {service.vat_included == null ? (
+                    <>{t('frånpris')}<br />{t('Slutligt pris, moms och omfattning avtalas med leverantören')}</>
+                  ) : (
+                    <>
+                      {t('frånpris')} · {service.vat_included ? t('inklusive moms') : t('exklusive moms')}
+                      <br />{t('Slutligt pris och omfattning avtalas med leverantören')}
+                    </>
+                  )}
                 </p>
               </div>
 

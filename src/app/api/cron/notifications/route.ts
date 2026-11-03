@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendQueuedNotification } from '@/lib/email'
-import { welcomeContent, pendingOffersContent } from '@/lib/notification-content'
+import { welcomeContent, pendingOffersContent, jobExpiredContent } from '@/lib/notification-content'
+import { refreshPublicJobSurfaces } from '@/lib/revalidate'
 import { premiumConfigured } from '@/lib/stripe'
 import { isLocale, type Locale } from '@/i18n/config'
 import { createT } from '@/i18n/translate'
@@ -19,6 +20,10 @@ export async function GET(request: NextRequest) {
   // Utgångna lyft nollställs här, så att listorna kan sortera på boosted_at.
   const { error: boostError } = await admin.rpc('expire_job_boosts')
   if (boostError) console.error('[lyft] Utgångna lyft kunde inte nollställas:', boostError.message)
+  // Uppdrag som legat öppna i 60 dagar stängs, och kunden får ett mejl.
+  const { data: closedJobs, error: staleError } = await admin.rpc('close_stale_jobs')
+  if (staleError) console.error('[uppdrag] Gamla uppdrag kunde inte stängas:', staleError.message)
+  if (closedJobs) refreshPublicJobSurfaces()
   const { data: items, error } = await admin.rpc('claim_notifications')
   if (error) return NextResponse.json({ error: 'Kön kunde inte läsas' }, { status: 503 })
   let sent = 0
@@ -89,6 +94,10 @@ export async function GET(request: NextRequest) {
         }
         if (!disabled && pendingOffers) {
           message = { ...item, ...pendingOffersContent(pendingOffers.title, pendingOffers.count, createT(locale, messagesFor(locale))) }
+        }
+        // Brödtexten i kön är uppdragets titel; förklaringen skrivs här på mottagarens språk.
+        if (!disabled && item.kind === 'job_expired') {
+          message = { ...item, ...jobExpiredContent(item.body, createT(locale, messagesFor(locale))) }
         }
         if (!disabled) await sendQueuedNotification({ ...message, to: data.user.email, locale })
       }

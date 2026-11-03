@@ -119,8 +119,32 @@ export default async function JobPage(props: { params: Promise<{ id: string }>; 
   // skulle alltid få noll. Siffran visas därför bara för ägaren, där den stämmer.
   const offerCount = isOwner ? offers?.length ?? 0 : null
 
+  // På mobil hamnar sidokolumnen under beskrivningen, som kan vara lång, så
+  // huvudknappen upprepas i en fast list längst ned. Samma val som i sidokolumnen.
+  const mobileAction = isOwner
+    ? null
+    : existingOffer
+      ? { href: `/offers/${existingOffer.id}`, label: t('Visa din offert') }
+      : job.status !== 'open'
+        ? null
+        : isProvider
+          ? { href: `/jobs/${job.id}/offer`, label: t('Lämna offert') }
+          : user
+            ? null
+            : { href: `/login?redirect=/jobs/${job.id}/offer`, label: t('Logga in för att lämna offert') }
+
   return (
-    <div className="px-4 py-12 sm:px-6 lg:px-8">
+    <div className={`px-4 py-12 sm:px-6 lg:px-8 ${mobileAction ? 'pb-28 lg:pb-12' : ''}`}>
+      {mobileAction && (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 p-3 backdrop-blur lg:hidden">
+          <Link
+            href={mobileAction.href}
+            className="block rounded-xl bg-blue-700 px-6 py-3.5 text-center text-sm font-bold text-white transition hover:bg-blue-800"
+          >
+            {mobileAction.label}
+          </Link>
+        </div>
+      )}
       <JsonLd data={breadcrumbList([
         { name: t('Start'), path: localePath(locale, '/') },
         { name: t('Uppdrag'), path: localePath(locale, '/jobs') },

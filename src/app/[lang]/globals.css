@@ -19,7 +19,7 @@
 
   /* Mjuka gradienter. Används stort och lågmält, aldrig som platta färgblock. */
   --gradient-soft: linear-gradient(135deg, #eef2ff 0%, #f0fdf4 100%);
-  --gradient-accent: linear-gradient(135deg, #6366f1 0%, #2dd4bf 100%);
+  --gradient-accent: linear-gradient(135deg, #2563eb 0%, #2dd4bf 100%);
   --gradient-ink: linear-gradient(150deg, #0f172a 0%, #1e1b4b 55%, #0f172a 100%);
 
   /* --- Text ------------------------------------------------------------- */
@@ -33,13 +33,13 @@
   --line-strong: #d7dee9;
 
   /* --- Accent ----------------------------------------------------------- */
-  /* Indigo bär interaktion. Teal används sparsamt som sekundär signal, aldrig
+  /* Blått bär interaktion, samma blå som logotypen. Teal används sparsamt som sekundär signal, aldrig
      som andra knappfärg, så att ögat vet var det ska klicka. */
-  --accent: #4f46e5;
-  --accent-strong: #4f46e5;
-  --accent-deep: #4338ca;
-  --accent-tint: #eef2ff;
-  --accent-ring: rgba(99, 102, 241, .18);
+  --accent: #1d4ed8;
+  --accent-strong: #1d4ed8;
+  --accent-deep: #1e40af;
+  --accent-tint: #eff6ff;
+  --accent-ring: rgba(37, 99, 235, .18);
 
   --teal: #2dd4bf;
   --teal-deep: #0f766e;
@@ -58,7 +58,7 @@
   --shadow-sm: 0 1px 2px rgba(15, 23, 42, .04), 0 4px 12px -6px rgba(15, 23, 42, .08);
   --shadow-md: 0 1px 2px rgba(15, 23, 42, .04), 0 12px 28px -12px rgba(15, 23, 42, .14);
   --shadow-lg: 0 2px 4px rgba(15, 23, 42, .04), 0 24px 48px -20px rgba(15, 23, 42, .20);
-  --shadow-accent: 0 8px 24px -10px rgba(99, 102, 241, .45);
+  --shadow-accent: 0 8px 24px -10px rgba(37, 99, 235, .45);
 
   /* --- Rörelse ----------------------------------------------------------- */
   /* En kort och en lång kurva. Allt som rör sig ska kännas som samma hand. */

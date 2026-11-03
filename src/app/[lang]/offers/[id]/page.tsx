@@ -167,7 +167,7 @@ export default async function OfferPage(
               href={`/messages/${offer.id}`}
               className={`block w-full text-center text-sm font-medium px-4 py-2.5 rounded-lg transition-colors ${
                 offer.status === 'accepted' || offer.status === 'delivered'
-                  ? 'bg-blue-600 text-white hover:bg-blue-700'
+                  ? 'bg-blue-700 text-white hover:bg-blue-800'
                   : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
               }`}
             >

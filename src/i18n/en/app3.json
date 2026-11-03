@@ -271,10 +271,14 @@
   "Se offerterna": "See the quotes",
   "Du får det här mejlet för att du har offerter som väntar på svar på Prolink.": "You are receiving this email because you have quotes waiting for a reply on Prolink.",
   "Cookies för annonsmätning": "Cookies for ad measurement",
-  "Vi använder Google Ads för att mäta vilka annonser som leder till nya användare. Det kräver cookies som du får välja bort. Nödvändiga cookies för inloggning och språk används alltid.": "We use Google Ads to measure which ads bring in new users. This requires cookies that you can decline. Necessary cookies for sign-in and language are always used.",
-  "Läs mer i integritetspolicyn": "Read more in the privacy policy",
   "Godkänn": "Accept",
   "Neka": "Decline",
   "Cookie-inställningar": "Cookie settings",
-  "Kategorier": "Categories"
+  "Kategorier": "Categories",
+  "Vi använder cookies från Google Ads för att mäta våra annonser. Nödvändiga cookies används alltid.": "We use Google Ads cookies to measure our ads. Necessary cookies are always used.",
+  "Slutligt pris, moms och omfattning avtalas med leverantören": "Final price, VAT and scope are agreed with the provider",
+  "Läs mer": "Read more",
+  "Ditt uppdrag har stängts": "Your job has been closed",
+  "Ditt uppdrag \"{title}\" har varit öppet i 60 dagar och har nu stängts automatiskt, så att flödet bara visar aktuella uppdrag.": "Your job \"{title}\" has been open for 60 days and has now been closed automatically, so that the feed only shows current jobs.",
+  "Offerter du redan fått finns kvar på uppdraget. Behöver du fortfarande hjälp kan du publicera uppdraget igen.": "Quotes you have already received remain on the job. If you still need help, you can publish the job again."
 }

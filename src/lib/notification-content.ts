@@ -54,3 +54,13 @@ export function pendingOffersContent(title: string, count: number, t: TFunction)
 ${t('Frilansarna har lagt tid på sina offerter. Ett kort besked räcker, både ett ja, ett nej eller en fråga. Har du redan hittat någon kan du stänga uppdraget, så slipper fler vänta.')}`,
   }
 }
+
+/** Uppdraget stängdes automatiskt efter 60 dagar (migration 036). */
+export function jobExpiredContent(title: string, t: TFunction) {
+  return {
+    subject: t('Ditt uppdrag har stängts'),
+    body: `${t('Ditt uppdrag "{title}" har varit öppet i 60 dagar och har nu stängts automatiskt, så att flödet bara visar aktuella uppdrag.', { title })}
+
+${t('Offerter du redan fått finns kvar på uppdraget. Behöver du fortfarande hjälp kan du publicera uppdraget igen.')}`,
+  }
+}

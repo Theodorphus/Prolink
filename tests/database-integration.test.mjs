@@ -411,4 +411,25 @@ test('real PostgreSQL migration replay and marketplace authorization', async t =
     assert.equal((await reminders()).length, 0)
   })
 
+  await t.test('jobs open for 60 days are closed once, unless they are boosted', async () => {
+    const buyer = 'c3333333-3333-4333-8333-333333333333'
+    await db.query(`insert into auth.users values ($1, '{"name":"Stale","role":"customer"}')`, [buyer])
+    const insert = `insert into jobs(customer_id,title,description,category) values ($1,$2,'A sufficiently long description','design') returning id`
+    const fresh = (await as(buyer, insert, [buyer, 'Fresh job'])).rows[0].id
+    const old = (await as(buyer, insert, [buyer, 'Old job'])).rows[0].id
+    const boosted = (await as(buyer, insert, [buyer, 'Old boosted job'])).rows[0].id
+    await db.query(`update jobs set created_at = now() - interval '61 days' where id = any($1)`, [[old, boosted]])
+    await db.query(`select apply_job_boost('cs_stale', $1, $2, 7)`, [boosted, buyer])
+    await assert.rejects(as(buyer, `select close_stale_jobs()`), { code: '42501' })
+    assert.equal((await db.query(`select close_stale_jobs() as n`)).rows[0].n, 1)
+    assert.equal((await db.query(`select close_stale_jobs() as n`)).rows[0].n, 0)
+    const status = async id => (await db.query(`select status from jobs where id=$1`, [id])).rows[0].status
+    assert.deepEqual([await status(fresh), await status(old), await status(boosted)], ['open', 'closed', 'open'])
+    const mails = (await db.query(`select recipient_id, path from notification_outbox where kind='job_expired' and recipient_id=$1`, [buyer])).rows
+    assert.deepEqual(mails, [{ recipient_id: buyer, path: `/jobs/${old}` }])
+    // När lyftet gått ut stängs även det lyfta uppdraget.
+    await db.query(`update jobs set boosted_until = now() - interval '1 minute' where id=$1`, [boosted])
+    assert.equal((await db.query(`select close_stale_jobs() as n`)).rows[0].n, 1)
+  })
+
 })

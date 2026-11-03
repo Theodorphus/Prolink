@@ -20,12 +20,12 @@ export default function HeroIllustration({ className }: { className?: string }) 
           <stop offset="100%" stopColor="#ffffff" stopOpacity=".05" />
         </linearGradient>
         <linearGradient id="pl-accent" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#6366f1" />
+          <stop offset="0%" stopColor="#2563eb" />
           <stop offset="100%" stopColor="#2dd4bf" />
         </linearGradient>
         <linearGradient id="pl-line" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="#6366f1" stopOpacity=".1" />
-          <stop offset="50%" stopColor="#818cf8" stopOpacity=".85" />
+          <stop offset="0%" stopColor="#2563eb" stopOpacity=".1" />
+          <stop offset="50%" stopColor="#60a5fa" stopOpacity=".85" />
           <stop offset="100%" stopColor="#2dd4bf" stopOpacity=".1" />
         </linearGradient>
         <filter id="pl-blur" x="-50%" y="-50%" width="200%" height="200%">
@@ -34,7 +34,7 @@ export default function HeroIllustration({ className }: { className?: string }) 
       </defs>
 
       {/* Glöd bakom mittkortet */}
-      <ellipse cx="260" cy="210" rx="150" ry="96" fill="#6366f1" opacity=".22" filter="url(#pl-blur)" />
+      <ellipse cx="260" cy="210" rx="150" ry="96" fill="#2563eb" opacity=".22" filter="url(#pl-blur)" />
 
       {/* Förbindelselinje mellan de två sidorna */}
       <path
@@ -51,14 +51,14 @@ export default function HeroIllustration({ className }: { className?: string }) 
         <rect x="58" y="188" width="34" height="6" rx="3" fill="#ffffff" fillOpacity=".55" />
         <rect x="58" y="202" width="60" height="6" rx="3" fill="#ffffff" fillOpacity=".28" />
         <rect x="58" y="216" width="48" height="6" rx="3" fill="#ffffff" fillOpacity=".28" />
-        <rect x="58" y="236" width="40" height="12" rx="6" fill="#6366f1" fillOpacity=".8" />
+        <rect x="58" y="236" width="40" height="12" rx="6" fill="#2563eb" fillOpacity=".8" />
       </g>
 
       {/* Mitten: uppdragskortet */}
       <g className="float-slow">
         <rect x="176" y="118" width="168" height="184" rx="20" fill="url(#pl-card)" stroke="#ffffff" strokeOpacity=".26" />
 
-        <rect x="198" y="142" width="58" height="8" rx="4" fill="#818cf8" />
+        <rect x="198" y="142" width="58" height="8" rx="4" fill="#60a5fa" />
         <rect x="198" y="164" width="120" height="9" rx="4.5" fill="#ffffff" fillOpacity=".82" />
         <rect x="198" y="181" width="96" height="9" rx="4.5" fill="#ffffff" fillOpacity=".82" />
 
@@ -88,7 +88,7 @@ export default function HeroIllustration({ className }: { className?: string }) 
 
       {/* Små accentprickar för djup */}
       <circle cx="150" cy="112" r="4" fill="#2dd4bf" opacity=".7" />
-      <circle cx="372" cy="330" r="5" fill="#818cf8" opacity=".6" />
+      <circle cx="372" cy="330" r="5" fill="#60a5fa" opacity=".6" />
       <circle cx="96" cy="308" r="3" fill="#ffffff" opacity=".4" />
     </svg>
   )

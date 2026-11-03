@@ -176,7 +176,7 @@ export default async function ServicesPage(props: Props) {
                 {isProvider && (
                   <Link
                     href="/services/create"
-                    className="mt-4 inline-flex items-center bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                    className="mt-4 inline-flex items-center bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-800 transition-colors"
                   >
                     {t('Lägg till den första tjänsten')}
                   </Link>

@@ -54,7 +54,7 @@ export default function EditJobForm({ jobId, defaults }: { jobId: string; defaul
         <Link href={`/jobs/${jobId}`} className="rounded-xl border border-slate-200 bg-white px-6 py-4 text-center text-base font-bold text-slate-700 transition hover:border-slate-300">
           {t('Avbryt')}
         </Link>
-        <button type="submit" disabled={loading} className="flex-1 rounded-xl bg-blue-600 py-4 text-base font-black text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60">
+        <button type="submit" disabled={loading} className="flex-1 rounded-xl bg-blue-700 py-4 text-base font-black text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60">
           {loading ? t('Sparar…') : t('Spara ändringar')}
         </button>
       </div>

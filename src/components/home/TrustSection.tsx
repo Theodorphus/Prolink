@@ -97,7 +97,7 @@ export default async function TrustSection({
 
         <p className="muted mt-5 text-center text-sm">
           {t('Siffrorna uppdateras ungefär varje minut.')}{' '}
-          <Link href="/jobs" className="font-semibold text-indigo-600 underline-offset-4 hover:underline">
+          <Link href="/jobs" className="font-semibold text-blue-700 underline-offset-4 hover:underline">
             {t('Se uppdragen själv')}
           </Link>
           .

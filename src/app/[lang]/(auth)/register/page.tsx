@@ -37,8 +37,9 @@ export default async function RegisterPage({ searchParams }: { searchParams: Pro
             </p>
           </div>
         )}
+        {/* Länken för ett nytt bekräftelsemejl ligger på inloggningssidan, dit
+            den som redan registrerat sig går. Här förvirrade den nya besökare. */}
         <RegisterForm action={register} redirect={redirect} />
-        <Link className="mt-4 block text-center text-sm underline" href={`/confirm-email?redirect=${encodeURIComponent(redirect)}`}>{t('Skicka nytt bekräftelsemejl')}</Link>
         <p className="muted mt-6 text-center text-xs">
           {t('Genom att skapa ett konto godkänner du våra')}{' '}
           <Link href="/terms" className="underline underline-offset-2 hover:text-slate-700">{t('användarvillkor')}</Link>

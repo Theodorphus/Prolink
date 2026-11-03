@@ -112,7 +112,7 @@ export default function CreateJobForm({ target, initialCategory, signedIn }: { t
       )}
       {error && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</div>}
       <JobFields defaults={{ title: target?.title ? `${t('Förfrågan:')} ${target.title}`.slice(0, 120) : undefined, category: target?.category ?? initialCategory }} />
-      <button type="submit" disabled={loading} className="w-full rounded-xl bg-blue-600 py-4 text-base font-black text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60">{loading ? t('Publicerar…') : target ? t('Skicka förfrågan') : t('Publicera uppdrag')}</button>
+      <button type="submit" disabled={loading} className="w-full rounded-xl bg-blue-700 py-4 text-base font-black text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60">{loading ? t('Publicerar…') : target ? t('Skicka förfrågan') : t('Publicera uppdrag')}</button>
       <p className="text-center text-xs font-medium text-slate-500">
         {signedIn
           ? t('Du kan granska inkomna offerter och väljer själv vem du vill gå vidare med.')

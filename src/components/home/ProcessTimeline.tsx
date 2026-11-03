@@ -59,7 +59,7 @@ export default async function ProcessTimeline() {
                   </svg>
                 </span>
 
-                <p className="text-sm font-black tracking-wider text-indigo-600 md:mt-6">
+                <p className="text-sm font-black tracking-wider text-blue-700 md:mt-6">
                   {t('STEG {number}', { number: index + 1 })}
                 </p>
               </div>

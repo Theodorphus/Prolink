@@ -57,19 +57,20 @@ export default function ConsentBanner() {
         </>
       )}
       {open && (
-        <div role="dialog" aria-labelledby="cookie-rubrik" className="fixed inset-x-0 bottom-0 z-[90] p-4 sm:p-6">
-          <div className="mx-auto max-w-3xl rounded-2xl border border-slate-200 bg-white p-5 shadow-xl">
-            <h2 id="cookie-rubrik" className="text-sm font-bold text-slate-900">{t('Cookies för annonsmätning')}</h2>
-            <p className="mt-1.5 text-sm leading-relaxed text-slate-600">
-              {t('Vi använder Google Ads för att mäta vilka annonser som leder till nya användare. Det kräver cookies som du får välja bort. Nödvändiga cookies för inloggning och språk används alltid.')}{' '}
-              <Link href="/privacy" className="font-medium text-blue-700 underline">{t('Läs mer i integritetspolicyn')}</Link>
+        // Kompakt: annonsklick landar oftast på mobil, och en hög ruta täckte
+        // hjältens knappar. Båda valen är lika stora och lika nära till hands.
+        <div role="dialog" aria-label={t('Cookies för annonsmätning')} className="fixed inset-x-0 bottom-0 z-[90] p-3 sm:p-4">
+          <div className="mx-auto flex max-w-3xl flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-xl sm:flex-row sm:items-center sm:gap-5">
+            <p className="text-[13px] leading-5 text-slate-600 sm:flex-1">
+              {t('Vi använder cookies från Google Ads för att mäta våra annonser. Nödvändiga cookies används alltid.')}{' '}
+              <Link href="/privacy" className="font-medium text-blue-700 underline">{t('Läs mer')}</Link>
             </p>
-            <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-              <button type="button" onClick={() => decide('granted')} className="rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-bold text-white hover:bg-slate-700">
-                {t('Godkänn')}
-              </button>
-              <button type="button" onClick={() => decide('denied')} className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 hover:bg-slate-50">
+            <div className="flex gap-2 sm:shrink-0">
+              <button type="button" onClick={() => decide('denied')} className="flex-1 rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-bold text-slate-900 hover:bg-slate-50 sm:flex-none">
                 {t('Neka')}
+              </button>
+              <button type="button" onClick={() => decide('granted')} className="flex-1 rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-bold text-white hover:bg-slate-700 sm:flex-none">
+                {t('Godkänn')}
               </button>
             </div>
           </div>

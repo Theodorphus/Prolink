@@ -88,12 +88,12 @@ export default async function LatestJobs() {
               </div>
 
               {job.category && (
-                <p className="mt-5 text-xs font-bold uppercase tracking-wider text-indigo-600">
+                <p className="mt-5 text-xs font-bold uppercase tracking-wider text-blue-700">
                   {getCategoryLabel(job.category, t)}
                 </p>
               )}
 
-              <h3 className="mt-2 line-clamp-2 text-lg font-bold leading-snug tracking-[-0.025em] text-slate-900 transition-colors group-hover:text-indigo-600">
+              <h3 className="mt-2 line-clamp-2 text-lg font-bold leading-snug tracking-[-0.025em] text-slate-900 transition-colors group-hover:text-blue-700">
                 {job.title}
               </h3>
 
@@ -105,7 +105,7 @@ export default async function LatestJobs() {
                 <span className="truncate text-slate-500">
                   {job.customer?.name ?? t('Prolink-kund')} · {timeAgo(job.created_at, locale)}
                 </span>
-                <span className="shrink-0 text-indigo-600 transition-transform duration-200 group-hover:translate-x-0.5">
+                <span className="shrink-0 text-blue-700 transition-transform duration-200 group-hover:translate-x-0.5">
                   {t('Visa uppdrag →')}
                 </span>
               </div>

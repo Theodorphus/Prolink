@@ -87,7 +87,12 @@ export default async function Footer() {
                 nå, inte att de står på varje sida, så sidfoten länkar till
                 villkoren där org.nr, momsreg.nr och adress finns samlade. */}
             <p className="mt-1.5 text-xs text-gray-500">
-              {t('Drivs av')} {COMPANY.name}
+              {/* Företaget nämns en gång, med länk, i stället för både "Drivs
+                  av" här och "Skapad av" till höger. */}
+              {t('Drivs av')}{' '}
+              <a href={COMPANY.url} target="_blank" rel="noopener" className="underline decoration-gray-300 underline-offset-4 transition-colors hover:text-gray-900 hover:decoration-gray-900">
+                {COMPANY.name}
+              </a>
               <span className="mx-2 text-gray-300" aria-hidden>·</span>
               <Link href="/terms#foretagsuppgifter" className="underline decoration-gray-300 underline-offset-4 transition-colors hover:text-gray-900 hover:decoration-gray-900">
                 {t('Företagsuppgifter')}
@@ -97,17 +102,6 @@ export default async function Footer() {
           <p className="flex items-center gap-4 text-xs text-gray-600 font-medium">
             <LanguageSwitcher className="font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 transition-colors hover:decoration-slate-900" />
             <CookieSettingsButton className="font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 transition-colors hover:decoration-slate-900" />
-            <span>
-            {t('Skapad av')}{' '}
-            <a
-              href={COMPANY.url}
-              target="_blank"
-              rel="noopener"
-              className="font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 transition-colors hover:decoration-slate-900"
-            >
-              {COMPANY.name}
-            </a>
-            </span>
           </p>
         </div>
       </div>

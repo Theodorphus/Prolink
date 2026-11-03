@@ -101,7 +101,7 @@ export default async function HomePage() {
             </div>
             <Link
               href="/jobs"
-              className="hidden shrink-0 text-sm font-bold text-slate-600 transition hover:text-indigo-600 sm:block"
+              className="hidden shrink-0 text-sm font-bold text-slate-600 transition hover:text-blue-700 sm:block"
             >
               {t('Alla uppdrag →')}
             </Link>
@@ -128,10 +128,10 @@ export default async function HomePage() {
           >
             <div
               className="mesh mesh-drift"
-              style={{ width: '18rem', height: '18rem', right: '-4rem', top: '-4rem', background: 'rgba(99,102,241,.4)' }}
+              style={{ width: '18rem', height: '18rem', right: '-4rem', top: '-4rem', background: 'rgba(37, 99, 235,.4)' }}
             />
             <div className="relative">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-indigo-300">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-300">
                 {t('För dig som köper tjänster')}
               </p>
               <h2 className="mt-5 text-3xl font-extrabold tracking-[-0.035em]">
@@ -142,7 +142,7 @@ export default async function HomePage() {
               </p>
               <Link
                 href="/jobs/create"
-                className="mt-9 inline-flex rounded-xl bg-white px-6 py-3.5 text-sm font-bold text-slate-900 transition hover:-translate-y-0.5 hover:bg-indigo-50"
+                className="mt-9 inline-flex rounded-xl bg-white px-6 py-3.5 text-sm font-bold text-slate-900 transition hover:-translate-y-0.5 hover:bg-blue-50"
               >
                 {t('Publicera uppdrag')}
               </Link>
@@ -151,22 +151,22 @@ export default async function HomePage() {
 
           <div
             className="relative overflow-hidden rounded-3xl p-9 text-white sm:p-12"
-            style={{ background: 'linear-gradient(140deg, #4f46e5 0%, #6366f1 55%, #14b8a6 140%)' }}
+            style={{ background: 'linear-gradient(140deg, #1d4ed8 0%, #2563eb 55%, #14b8a6 140%)' }}
           >
             <div className="relative">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-indigo-100">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-100">
                 {t('För dig som säljer tjänster')}
               </p>
               <h2 className="mt-5 text-3xl font-extrabold tracking-[-0.035em]">
                 {t('Låt nästa kund hitta dig.')}
               </h2>
-              <p className="mt-4 max-w-lg leading-7 text-indigo-100">
+              <p className="mt-4 max-w-lg leading-7 text-blue-100">
                 {t('Visa vad du erbjuder, hitta relevanta uppdrag och bygg förtroende genom lyckade leveranser.')}
               </p>
               <div className="mt-9 flex flex-wrap gap-3">
                 <Link
                   href="/services/create"
-                  className="inline-flex rounded-xl bg-white px-6 py-3.5 text-sm font-bold text-indigo-700 transition hover:-translate-y-0.5 hover:bg-indigo-50"
+                  className="inline-flex rounded-xl bg-white px-6 py-3.5 text-sm font-bold text-blue-700 transition hover:-translate-y-0.5 hover:bg-blue-50"
                 >
                   {t('Publicera en tjänst')}
                 </Link>

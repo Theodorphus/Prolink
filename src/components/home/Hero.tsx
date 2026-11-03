@@ -11,7 +11,7 @@ export default async function Hero() {
       <div className="absolute inset-0" style={{ background: 'var(--gradient-ink)' }} />
       <div
         className="mesh mesh-drift"
-        style={{ width: '30rem', height: '30rem', right: '-6rem', top: '-4rem', background: 'rgba(99,102,241,.45)' }}
+        style={{ width: '30rem', height: '30rem', right: '-6rem', top: '-4rem', background: 'rgba(37, 99, 235,.45)' }}
       />
       <div
         className="mesh mesh-drift"
@@ -79,7 +79,7 @@ export default async function Hero() {
             {t('Frilansare?')}{' '}
             {/* Förhämtas inte: proxyn omdirigerar inloggade från /register,
                 vilket annars gav en förhämtningsloop (se Footer). */}
-            <Link href="/register" prefetch={false} className="font-semibold text-indigo-300 underline-offset-4 transition hover:text-indigo-200 hover:underline">
+            <Link href="/register" prefetch={false} className="font-semibold text-blue-300 underline-offset-4 transition hover:text-blue-200 hover:underline">
               {t('Skapa en profil och hitta nya kunder')}
             </Link>
           </p>
