@@ -396,7 +396,10 @@ export default async function ProfilePage(props: { params: Promise<{ id: string 
                         <h3 className="font-bold tracking-[-0.02em] text-slate-900 transition-colors group-hover:text-blue-700">
                           {service.title}
                         </h3>
-                        <p className="line-clamp-2 flex-1 text-sm leading-6 text-slate-600">{service.description}</p>
+                        {/* flex-1 på en omslutande div, se ServiceCard. */}
+                        <div className="flex-1">
+                          <p className="line-clamp-2 text-sm leading-6 text-slate-600">{service.description}</p>
+                        </div>
                         <div className="flex items-end justify-between border-t border-slate-100 pt-3">
                           <p className="font-black text-slate-900">{formatCurrency(service.price, locale)}</p>
                           <p className="text-xs font-medium text-slate-500">{service.delivery_time}</p>

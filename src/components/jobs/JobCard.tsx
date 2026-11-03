@@ -61,7 +61,9 @@ export default async function JobCard({
             <div className="min-w-0 flex-1">
               <div className="mb-2.5 flex items-center gap-3">
                 <CategoryThumb category={job.category} size={40} />
-                <h3 className="truncate text-lg font-bold tracking-[-0.02em] text-slate-900 transition-colors group-hover:text-blue-700">
+                {/* Två rader i stället för en: på mobil delar rubriken bredd
+                    med bild och budget, och en rad räckte bara till två ord. */}
+                <h3 className="line-clamp-2 text-lg font-bold leading-snug tracking-[-0.02em] text-slate-900 transition-colors group-hover:text-blue-700">
                   {job.title}
                 </h3>
               </div>
@@ -140,7 +142,10 @@ export default async function JobCard({
           {job.title}
         </h3>
 
-        <p className="mt-3 line-clamp-2 flex-1 text-sm leading-6 text-slate-600">{job.description}</p>
+        {/* flex-1 på en omslutande div, se ServiceCard. */}
+        <div className="mt-3 flex-1">
+          <p className="line-clamp-2 text-sm leading-6 text-slate-600">{job.description}</p>
+        </div>
 
         <div className="mt-6 flex items-center justify-between gap-3 border-t border-slate-100 pt-4 text-xs font-semibold text-slate-500">
           <span className="truncate">{job.customer?.name ?? t('Prolink-kund')}</span>

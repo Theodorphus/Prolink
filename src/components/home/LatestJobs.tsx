@@ -97,9 +97,12 @@ export default async function LatestJobs() {
                 {job.title}
               </h3>
 
-              <p className="mt-3 line-clamp-2 flex-1 text-sm leading-6 text-slate-600">
-                {job.description}
-              </p>
+              {/* flex-1 på en omslutande div, se ServiceCard. */}
+              <div className="mt-3 flex-1">
+                <p className="line-clamp-2 text-sm leading-6 text-slate-600">
+                  {job.description}
+                </p>
+              </div>
 
               <div className="mt-6 flex items-center justify-between gap-3 border-t border-slate-100 pt-4 text-xs font-semibold">
                 <span className="truncate text-slate-500">

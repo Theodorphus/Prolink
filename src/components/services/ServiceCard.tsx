@@ -55,7 +55,12 @@ export default async function ServiceCard({
           {service.title}
         </Heading>
 
-        <p className="line-clamp-3 flex-1 text-sm leading-6 text-slate-600">{service.description}</p>
+        {/* Utfyllnaden ligger på en omslutande div. Med flex-1 direkt på
+            stycket blev det högre än tre rader i sträckta kort, och texten
+            efter klippningen syntes. */}
+        <div className="flex-1">
+          <p className="line-clamp-3 text-sm leading-6 text-slate-600">{service.description}</p>
+        </div>
 
         {showProvider && service.provider && (
           <div className="flex items-center gap-2.5 border-t border-slate-100 pt-3.5">
