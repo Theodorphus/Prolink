@@ -113,7 +113,9 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <CompetenceGrid />
+      <Suspense fallback={<CompetenceGrid pending />}>
+        <CompetenceGrid />
+      </Suspense>
 
       <Suspense fallback={<TrustSection providerCount={0} openJobCount={0} serviceCount={0} pending />}>
         <TrustSectionWithCounts />

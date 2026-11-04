@@ -14,15 +14,6 @@ export const CATEGORIES = [
   { value: 'annat', label: msg('Annat') },
 ] as const
 
-// Kategorierna som lyfts först på mobil. Urvalet speglar de tjänster som
-// oftast köps in av småföretag och som levereras helt på distans.
-export const PRIORITY_CATEGORIES = [
-  'webbutveckling',
-  'design',
-  'marknadsforing',
-  'redovisning',
-] as const
-
 export type CategoryValue = typeof CATEGORIES[number]['value']
 
 /** Kategorierna med etiketterna översatta till sidans språk. */
