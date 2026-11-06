@@ -2,6 +2,12 @@ import type { Metadata } from 'next'
 import { absoluteUrl } from '@/lib/site'
 import { LOCALES, localePath, ogLocale, type Locale } from '@/i18n/config'
 
+/**
+ * Byt bild genom att lägga till en ny fil, men ta aldrig bort en gammal.
+ * Publicerade inlägg på Facebook behåller bildadressen de skrapades med, och
+ * blir en tom ruta om den adressen slutar svara. Därför ligger aktuell bild
+ * kvar även på de tidigare adresserna /og-image.jpg och /og-prolink.jpg.
+ */
 export const DEFAULT_OG_IMAGE = {
   url: '/og-prolink-2.jpg',
   width: 1200,

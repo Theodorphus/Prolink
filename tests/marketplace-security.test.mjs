@@ -390,6 +390,15 @@ test('sidor sätter delningstaggar via pageMetadata så att og:url och bild föl
   assert.ok(!/url:\s*SITE_URL/.test(layout), 'layouten får inte sätta en og:url som alla sidor ärver')
 })
 
+test('tidigare delningsbilder finns kvar för redan publicerade inlägg', async () => {
+  // Facebook behåller bildadressen från när inlägget skrapades. När
+  // /og-prolink.jpg togs bort blev bilden i äldre inlägg en tom ruta.
+  for (const file of ['og-image.jpg', 'og-prolink.jpg', 'og-prolink-2.jpg']) {
+    const image = await readFile(new URL('../public/' + file, import.meta.url))
+    assert.ok(image.length > 0, `public/${file} får inte tas bort`)
+  }
+})
+
 test('mobilmenyn renderas utanför headern', async () => {
   // Inne i headern ärvde länkarna startsidans vita navigeringsfärg (vit text
   // på vit panel), och headerns backdrop-filter gjorde headern till
