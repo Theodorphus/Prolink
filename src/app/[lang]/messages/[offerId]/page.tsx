@@ -71,7 +71,7 @@ export default async function MessagesPage(props: { params: Promise<{ offerId: s
 
       {/* Chatten hör till en offert. Utan den här raden såg kunden bara en tom
           chatt och fick aldrig veta att det fanns en offert att svara på. */}
-      {isCustomer && <MarkOfferRead offerId={offer.id} />}
+      <MarkOfferRead offerId={offer.id} />
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3">
         <div className="flex flex-wrap items-center gap-2 text-sm">
           <span className="font-semibold text-slate-900">

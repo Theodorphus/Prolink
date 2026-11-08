@@ -74,7 +74,7 @@ export default async function OfferPage(
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-12">
-      {isCustomer && <MarkOfferRead offerId={offer.id} />}
+      <MarkOfferRead offerId={offer.id} />
       {searchParams.already === '1' && (
         <div className="mb-6 flex items-start gap-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl px-4 py-3 text-sm">
           <svg className="w-4 h-4 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">

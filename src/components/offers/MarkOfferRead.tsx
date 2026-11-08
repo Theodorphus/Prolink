@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { notifyUnreadChanged } from '@/components/layout/useUnreadCount'
 
-// Markerar offerten som sedd när kunden öppnar den. Görs i webbläsaren och inte
+// Markerar offerten som sedd när kunden öppnar den, och ett nytt besked
+// (accepterad eller avslagen) som sett när frilansaren öppnar den. Görs i webbläsaren och inte
 // vid serverrenderingen, så att en förhämtning inte räknas som att den lästs.
 export default function MarkOfferRead({ offerId }: { offerId: string }) {
   const [supabase] = useState(createClient)

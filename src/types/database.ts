@@ -93,6 +93,7 @@ export interface Offer {
   status: OfferStatus
   provider_read_at: string | null
   customer_read_at: string | null
+  provider_status_seen_at?: string | null
   created_at: string
 }
 
