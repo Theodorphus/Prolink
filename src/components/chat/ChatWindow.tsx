@@ -9,16 +9,18 @@ import { useLocale, useT } from '@/i18n/client'
 import { msg } from '@/i18n/msg.mjs'
 import type { MessageWithSender } from '@/types/database'
 
-export default function ChatWindow({ offerId, currentUserId, initialMessages }: {
-  offerId: string; currentUserId: string; initialMessages: MessageWithSender[]
+export default function ChatWindow({ offerId, currentUserId, initialMessages, initialOtherReadAt }: {
+  offerId: string; currentUserId: string; initialMessages: MessageWithSender[]; initialOtherReadAt: string | null
 }) {
-  return <Conversation key={offerId} offerId={offerId} currentUserId={currentUserId} initialMessages={initialMessages} />
+  return <Conversation key={offerId} offerId={offerId} currentUserId={currentUserId} initialMessages={initialMessages} initialOtherReadAt={initialOtherReadAt} />
 }
 
-function Conversation({ offerId, currentUserId, initialMessages }: { offerId: string; currentUserId: string; initialMessages: MessageWithSender[] }) {
+function Conversation({ offerId, currentUserId, initialMessages, initialOtherReadAt }: { offerId: string; currentUserId: string; initialMessages: MessageWithSender[]; initialOtherReadAt: string | null }) {
   const t = useT()
   const locale = useLocale()
   const [messages, setMessages] = useState(initialMessages)
+  // Motpartens läsmarkör: meddelanden skrivna till och med den tiden är lästa.
+  const [otherReadAt, setOtherReadAt] = useState(initialOtherReadAt)
   const [supabase] = useState(createClient)
   const userId = currentUserId
   const [connection, setConnection] = useState(msg('Ansluter…'))
@@ -146,11 +148,19 @@ function Conversation({ offerId, currentUserId, initialMessages }: { offerId: st
         }
         if (rows.length < 50) break
       }
+      // Läsmarkören hämtas med samma takt som meddelandena, så att "Läst"
+      // dyker upp inom en kvarts minut efter att motparten öppnat chatten.
+      const { data: markers } = await supabase.from('offers').select('provider_id, provider_read_at, customer_read_at').eq('id', offerId).maybeSingle()
+      if (markers) setOtherReadAt(markers.provider_id === userId ? markers.customer_read_at : markers.provider_read_at)
       setError('')
     } catch { setError(msg('Kunde inte uppdatera chatten. Försöker igen automatiskt.')) }
     finally { refreshing.current = false }
 
-  }, [offerId, merge])
+  }, [offerId, merge, supabase, userId])
+
+  // Läst/Oläst visas bara under ens senaste meddelande, som i de flesta chattappar.
+  const lastOwn = messages.findLast(message => message.sender_id === userId)
+  const lastOwnRead = Boolean(lastOwn && otherReadAt && Date.parse(lastOwn.created_at) <= Date.parse(otherReadAt))
 
   useEffect(() => {
     let active = true
@@ -212,7 +222,7 @@ function Conversation({ offerId, currentUserId, initialMessages }: { offerId: st
     <div ref={list} onScroll={() => { const el = list.current; if (el) stickToBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80 }} role="log" aria-label={t('Meddelanden')} aria-live="polite" className="flex-1 overflow-y-auto space-y-4 pr-1">
       {older && <button type="button" disabled={loadingOlder} onClick={loadOlder} className="text-sm underline">{loadingOlder ? t('Hämtar…') : t('Visa äldre meddelanden')}</button>}
       {messages.length === 0 && <p className="py-12 text-center text-slate-500">{t('Inga meddelanden ännu. Har du frågor om offerten kan du skriva här.')}</p>}
-      {messages.map(message => <ChatMessage key={message.id} message={message} isOwn={message.sender_id === userId} translation={translations[message.id]} translating={translating.has(message.id)} auto={auto} onTranslate={() => { void translate([message.id]) }} />)}
+      {messages.map(message => <ChatMessage key={message.id} message={message} isOwn={message.sender_id === userId} receipt={message.id === lastOwn?.id ? (lastOwnRead ? 'read' : 'unread') : undefined} translation={translations[message.id]} translating={translating.has(message.id)} auto={auto} onTranslate={() => { void translate([message.id]) }} />)}
     </div>
     <div className="mt-4 border-t border-gray-200 pt-4"><ChatInput onSend={handleSend} offerId={offerId} /></div>
   </div>

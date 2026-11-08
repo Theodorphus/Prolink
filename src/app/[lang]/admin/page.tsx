@@ -52,7 +52,7 @@ export default async function AdminPage() {
       </div>
 
       <div className="mt-12 space-y-12">
-        <Section id="senaste" title="Senaste aktivitet" description="Det senaste av varje slag, interna konton märkta. Siffrorna gäller senaste sju dagarna utan interna konton. Meddelandenas innehåll visas inte.">
+        <Section id="senaste" title="Senaste aktivitet" description="Det senaste av varje slag, interna konton märkta. Siffrorna gäller senaste sju dagarna utan interna konton. Klicka på en konversation för att läsa den. Att du läser markerar inget som läst för parterna.">
           <div className="grid gap-3 lg:grid-cols-3">
             <RecentList title="Registreringar" count={recent.signups7d} empty="Inga konton ännu.">
               {recent.signups.map(person => (
@@ -76,6 +76,7 @@ export default async function AdminPage() {
                     <time className="tabular-nums">{when(offer.createdAt)}</time>
                     {offer.status === 'pending' && <span className={offer.customerRead ? undefined : 'font-semibold text-amber-800'}>{offer.customerRead ? 'Läst av kunden' : 'Oläst av kunden'}</span>}
                     <StatusBadge status={offer.status} />
+                    <Link href={`/admin/konversation/${offer.id}`} className="font-semibold text-blue-700 hover:underline">Läs offert och chatt</Link>
                   </div>
                 </li>
               ))}
@@ -83,7 +84,7 @@ export default async function AdminPage() {
             <RecentList title="Meddelanden" count={recent.messages7d} empty="Inga chattmeddelanden har skickats ännu.">
               {recent.conversations.map((conversation, index) => (
                 <li key={`${conversation.at}-${index}`} className="px-4 py-3 text-sm">
-                  <span className="text-slate-700">{conversation.text}</span>
+                  {conversation.href ? <Link href={conversation.href} className="text-slate-700 underline decoration-slate-300 underline-offset-2 hover:text-accent-strong">{conversation.text}</Link> : <span className="text-slate-700">{conversation.text}</span>}
                   {conversation.internal && <Badge className="ml-2">Intern</Badge>}
                   <div><time className="text-xs tabular-nums text-slate-500">{when(conversation.at)}</time></div>
                 </li>

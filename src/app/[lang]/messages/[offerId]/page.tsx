@@ -25,7 +25,7 @@ export default async function MessagesPage(props: { params: Promise<{ offerId: s
 
   const { data: offer } = await supabase
     .from('offers')
-    .select('id, status, price, price_type, provider_id, job:jobs(id, title, customer_id, customer:users!jobs_customer_id_fkey(name)), provider:users(name)')
+    .select('id, status, price, price_type, provider_id, provider_read_at, customer_read_at, job:jobs(id, title, customer_id, customer:users!jobs_customer_id_fkey(name)), provider:users(name)')
     .eq('id', params.offerId)
     .single()
 
@@ -88,6 +88,7 @@ export default async function MessagesPage(props: { params: Promise<{ offerId: s
         offerId={params.offerId}
         currentUserId={user.id}
         initialMessages={(messages ?? []) as MessageWithSender[]}
+        initialOtherReadAt={(isCustomer ? offer.provider_read_at : offer.customer_read_at) ?? null}
       />
     </div>
   )

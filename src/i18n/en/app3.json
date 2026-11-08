@@ -284,5 +284,6 @@
   "Öppna uppdrag": "Open jobs",
   "Inga tjänster ännu": "No services yet",
   "1 tjänst": "1 service",
-  "{count} tjänster": "{count} services"
+  "{count} tjänster": "{count} services",
+  "Läst": "Read"
 }

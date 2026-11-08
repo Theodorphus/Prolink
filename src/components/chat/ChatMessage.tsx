@@ -15,6 +15,8 @@ interface ChatMessageProps {
   translating?: boolean
   auto?: boolean
   onTranslate?: () => void
+  /** Om motparten läst meddelandet. Sätts bara på ens senaste meddelande. */
+  receipt?: 'read' | 'unread'
 }
 
 function safeLegacyAttachmentUrl(value: string | null): string | null {
@@ -32,7 +34,7 @@ function safeLegacyAttachmentUrl(value: string | null): string | null {
   }
 }
 
-export default function ChatMessage({ message, isOwn, translation, translating, auto, onTranslate }: ChatMessageProps) {
+export default function ChatMessage({ message, isOwn, translation, translating, auto, onTranslate, receipt }: ChatMessageProps) {
   const t = useT()
   const locale = useLocale()
   const [attachmentError, setAttachmentError] = useState('')
@@ -141,7 +143,10 @@ export default function ChatMessage({ message, isOwn, translation, translating, 
             )}
           </p>
         )}
-        <p className="text-xs text-gray-500 mx-1">{formatDateTime(message.created_at, locale)}</p>
+        <p className="text-xs text-gray-500 mx-1">
+          {formatDateTime(message.created_at, locale)}
+          {receipt && <> · <span className={receipt === 'read' ? 'font-semibold text-blue-700' : undefined}>{receipt === 'read' ? t('Läst') : t('Oläst')}</span></>}
+        </p>
       </div>
     </div>
   )

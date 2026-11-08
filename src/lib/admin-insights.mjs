@@ -314,7 +314,7 @@ function summariseConversations(messages, offersById, jobsById, nameOf, isIntern
       at: group.at,
       kind: 'message',
       text: `${group.count} ${group.count === 1 ? 'meddelande' : 'meddelanden'} mellan ${participants}${job ? ` om ${job.title}` : ''}`,
-      href: null,
+      href: `/admin/konversation/${group.offerId}`,
       internal: [...group.senders].every(isInternal),
     }
   })
