@@ -52,7 +52,8 @@ export default async function AdminPage() {
       </div>
 
       <div className="mt-12 space-y-12">
-        <Section id="senaste" title="Senaste aktivitet" description="Det senaste av varje slag, interna konton märkta. Siffrorna gäller senaste sju dagarna utan interna konton. Klicka på en konversation för att läsa den. Att du läser markerar inget som läst för parterna.">
+        <Section id="senaste" title="Senaste aktivitet" description="Det senaste av varje slag, interna konton märkta. Siffrorna gäller senaste sju dagarna utan interna konton. Klicka på en konversation för att läsa den, eller se alla under Konversationer. Att du läser markerar inget som läst för parterna.">
+          <Link href="/admin/konversationer" className="mb-3 inline-block text-sm font-semibold text-blue-700 hover:underline">Alla konversationer →</Link>
           <div className="grid gap-3 lg:grid-cols-3">
             <RecentList title="Registreringar" count={recent.signups7d} empty="Inga konton ännu.">
               {recent.signups.map(person => (

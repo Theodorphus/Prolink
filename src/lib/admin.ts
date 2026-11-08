@@ -30,7 +30,7 @@ export async function requireAdmin() {
 // så tabeller som kan växa förbi det hämtas sida för sida.
 const PAGE = 1000
 
-async function selectAll<T>(fetchPage: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>) {
+export async function selectAll<T>(fetchPage: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>) {
   const rows: T[] = []
   for (let from = 0; ; from += PAGE) {
     const { data, error } = await fetchPage(from, from + PAGE - 1)
