@@ -432,4 +432,43 @@ test('real PostgreSQL migration replay and marketplace authorization', async t =
     assert.equal((await db.query(`select close_stale_jobs() as n`)).rows[0].n, 1)
   })
 
+  await t.test('closing a request tells waiting providers once, and its offers stop counting as unread', async () => {
+    const buyer = 'c4444444-4444-4444-8444-444444444444'
+    const first = 'c5555555-5555-4555-8555-555555555555'
+    const second = 'c6666666-6666-4666-8666-666666666666'
+    await db.query(`insert into auth.users values ($1, '{"name":"Closer","role":"customer"}'), ($2, '{"name":"First","role":"provider"}'), ($3, '{"name":"Second","role":"provider"}')`, [buyer, first, second])
+    const insertJob = `insert into jobs(customer_id,title,description,category) values ($1,$2,'A sufficiently long description','design') returning id`
+    const insertOffer = `insert into offers(job_id,provider_id,price,timeline,description) values ($1,$2,100,'Two days','A sufficiently long offer') returning id`
+    const closedMails = async jobTitle => (await db.query(`select recipient_id from notification_outbox where kind='job_closed' and body=$1 order by recipient_id`, [jobTitle])).rows.map(row => row.recipient_id)
+    const unread = async () => (await as(buyer, `select unread_count() as n`)).rows[0].n
+
+    // Stängt utan val: båda väntande frilansarna får besked, en gång, även om uppdraget öppnas och stängs igen.
+    const job = (await as(buyer, insertJob, [buyer, 'Closed without choice'])).rows[0].id
+    await as(first, insertOffer, [job, first])
+    await as(second, insertOffer, [job, second])
+    assert.equal(await unread(), 2)
+    await as(buyer, `update jobs set status='closed' where id=$1`, [job])
+    assert.deepEqual(await closedMails('Closed without choice'), [first, second])
+    assert.equal(await unread(), 0)
+    await as(buyer, `update jobs set status='open' where id=$1`, [job])
+    assert.equal(await unread(), 2)
+    await as(buyer, `update jobs set status='closed' where id=$1`, [job])
+    assert.equal((await closedMails('Closed without choice')).length, 2)
+    const listed = (await as(first, `select status, job_open from conversation_list(1) where title='Closed without choice'`)).rows
+    assert.deepEqual(listed, [{ status: 'pending', job_open: false }])
+
+    // Accept: den andra får "gick inte vidare", inte också "uppdraget har stängts".
+    const accepted = (await as(buyer, insertJob, [buyer, 'Closed by accept'])).rows[0].id
+    const winner = (await as(first, insertOffer, [accepted, first])).rows[0].id
+    await as(second, insertOffer, [accepted, second])
+    await as(buyer, `select transition_offer($1,'accepted')`, [winner])
+    assert.deepEqual(await closedMails('Closed by accept'), [])
+
+    // Arkivering av ett öppet uppdrag räknas också som stängning.
+    const archived = (await as(buyer, insertJob, [buyer, 'Archived open'])).rows[0].id
+    await as(second, insertOffer, [archived, second])
+    await as(buyer, `select archive_job($1)`, [archived])
+    assert.deepEqual(await closedMails('Archived open'), [second])
+  })
+
 })

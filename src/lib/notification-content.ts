@@ -64,3 +64,16 @@ export function jobExpiredContent(title: string, t: TFunction) {
 ${t('Offerter du redan fått finns kvar på uppdraget. Behöver du fortfarande hjälp kan du publicera uppdraget igen.')}`,
   }
 }
+
+/**
+ * Till en frilansare vars offert väntade när kunden stängde uppdraget utan att
+ * välja någon (migration 039). Brödtexten i kön är uppdragets titel.
+ */
+export function jobClosedContent(title: string, t: TFunction) {
+  return {
+    subject: t('Uppdraget har stängts'),
+    body: `${t('Kunden har stängt uppdraget "{title}" utan att välja någon offert.', { title })}
+
+${t('Din offert ligger kvar. Öppnar kunden uppdraget igen gäller den fortfarande, och annars behöver du inte göra något. Det kommer nya uppdrag hela tiden.')}`,
+  }
+}

@@ -46,7 +46,10 @@ const DOTS: Record<BadgeVariant, string> = {
   info: 'bg-accent',
 }
 
-export function StatusBadge({ status }: { status: string }) {
+// jobClosed: en väntande offert på ett uppdrag som stängts utan att någon
+// offert valts. Den kan inte längre accepteras, men avslås inte heller, så
+// "Inväntar svar" vore missvisande.
+export function StatusBadge({ status, jobClosed = false }: { status: string; jobClosed?: boolean }) {
   const t = useT()
   const map: Record<string, { label: string; variant: BadgeVariant }> = {
     open: { label: msg('Öppet'), variant: 'success' },
@@ -56,8 +59,9 @@ export function StatusBadge({ status }: { status: string }) {
     rejected: { label: msg('Avslagen'), variant: 'danger' },
     delivered: { label: msg('Levererad'), variant: 'info' },
     completed: { label: msg('Slutförd'), variant: 'success' },
+    job_closed: { label: msg('Uppdraget stängt'), variant: 'default' },
   }
-  const config = map[status] ?? { label: status, variant: 'default' as BadgeVariant }
+  const config = map[status === 'pending' && jobClosed ? 'job_closed' : status] ?? { label: status, variant: 'default' as BadgeVariant }
 
   return (
     <Badge variant={config.variant}>

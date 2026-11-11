@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendQueuedNotification } from '@/lib/email'
-import { welcomeContent, pendingOffersContent, jobExpiredContent } from '@/lib/notification-content'
+import { welcomeContent, pendingOffersContent, jobExpiredContent, jobClosedContent } from '@/lib/notification-content'
 import { refreshPublicJobSurfaces } from '@/lib/revalidate'
 import { premiumConfigured } from '@/lib/stripe'
 import { isLocale, type Locale } from '@/i18n/config'
@@ -83,6 +83,14 @@ export async function GET(request: NextRequest) {
           }
           disabled = true
         }
+        // Beskedet om stängt uppdrag är inaktuellt om kunden öppnat uppdraget
+        // igen eller svarat på offerten sedan raden köades.
+        if (!disabled && item.kind === 'job_closed') {
+          const { data: closed, error: closedError } = await admin.from('offers').select('status, job:jobs(status)').eq('id', String(item.path).split('/').pop()!).maybeSingle()
+          if (closedError) throw closedError
+          const closedJob = Array.isArray(closed?.job) ? closed.job[0] : closed?.job
+          disabled = !closed || closed.status !== 'pending' || closedJob?.status === 'open'
+        }
         // Mottagarens språk avgör vilket språk mejlet skrivs på.
         const locale: Locale = isLocale(preferences?.locale) ? preferences.locale : 'sv'
         // Välkomstmejlet formuleras nu, efter kontots roll i dag.
@@ -98,6 +106,9 @@ export async function GET(request: NextRequest) {
         // Brödtexten i kön är uppdragets titel; förklaringen skrivs här på mottagarens språk.
         if (!disabled && item.kind === 'job_expired') {
           message = { ...item, ...jobExpiredContent(item.body, createT(locale, messagesFor(locale))) }
+        }
+        if (!disabled && item.kind === 'job_closed') {
+          message = { ...item, ...jobClosedContent(item.body, createT(locale, messagesFor(locale))) }
         }
         if (!disabled) await sendQueuedNotification({ ...message, to: data.user.email, locale })
       }

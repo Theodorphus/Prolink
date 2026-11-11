@@ -10,7 +10,7 @@ import { localePath } from '@/i18n/config'
 export async function generateMetadata() {
   return { title: (await getT())('Konversationer'), robots: { index: false, follow: false } }
 }
-type Conversation = { id: string; title: string; other_name: string; last_content: string | null; last_sender: string | null; last_at: string; unread: boolean; total: number; price: number; price_type: 'fixed' | 'hourly'; status: string; is_customer: boolean }
+type Conversation = { id: string; title: string; other_name: string; last_content: string | null; last_sender: string | null; last_at: string; unread: boolean; total: number; price: number; price_type: 'fixed' | 'hourly'; status: string; is_customer: boolean; job_open?: boolean }
 export default async function MessagesOverviewPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
   const params = await searchParams
   const locale = await getLocale()
@@ -33,7 +33,7 @@ export default async function MessagesOverviewPage({ searchParams }: { searchPar
         <p className="text-sm text-slate-500">{c.title}</p>
         <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
           <span className="font-semibold text-slate-900">{c.is_customer ? t('Offert') : t('Din offert')}: {formatCurrency(c.price, locale)}{c.price_type === 'hourly' ? t('/tim') : ''}</span>
-          <StatusBadge status={c.status} />
+          <StatusBadge status={c.status} jobClosed={c.job_open === false} />
         </div>
         <p className="mt-2 truncate text-sm">{c.last_sender ? `${c.last_sender === user.id ? t('Du: ') : ''}${c.last_content || t('Bilaga')}` : c.is_customer ? t('Öppna för att läsa offerten och svara') : t('Inga meddelanden ännu')}</p>
       </Link>

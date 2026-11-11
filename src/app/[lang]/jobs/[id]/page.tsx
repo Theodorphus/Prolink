@@ -87,7 +87,7 @@ export default async function JobPage(props: { params: Promise<{ id: string }>; 
     isOwner
       ? supabase
           .from('offers')
-          .select('id, price, price_type, timeline, description, status, provider:users(name, avatar_url)')
+          .select('id, price, price_type, timeline, description, status, customer_read_at, provider:users(name, avatar_url)')
           .eq('job_id', job.id)
           .order('created_at', { ascending: false })
       : Promise.resolve({ data: null }),
@@ -263,7 +263,13 @@ export default async function JobPage(props: { params: Promise<{ id: string }>; 
                                 </span>
                               )}
                               <div>
-                                <p className="font-bold">{provider?.name ?? t('Leverantör')}</p>
+                                <p className="font-bold">
+                                  {provider?.name ?? t('Leverantör')}
+                                  {/* Med tio-femton offerter per uppdrag behöver kunden se vilka som är nya. */}
+                                  {!offer.customer_read_at && job.status === 'open' && !isArchived && (
+                                    <span className="ml-2 rounded-full bg-blue-600 px-2 py-0.5 text-xs font-bold text-white">{t('Ny')}</span>
+                                  )}
+                                </p>
                                 <p className="text-xs text-slate-500">{offer.timeline}</p>
                               </div>
                             </div>
@@ -273,7 +279,7 @@ export default async function JobPage(props: { params: Promise<{ id: string }>; 
                                 {offer.price_type === 'hourly' ? t('/tim') : ''}
                               </p>
                               <div className="mt-1.5">
-                                <StatusBadge status={offer.status} />
+                                <StatusBadge status={offer.status} jobClosed={job.status !== 'open' || isArchived} />
                               </div>
                             </div>
                           </div>
