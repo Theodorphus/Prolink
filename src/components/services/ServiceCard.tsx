@@ -68,7 +68,8 @@ export default async function ServiceCard({
               {service.provider.avatar_url ? (
                 <Image
                   src={service.provider.avatar_url}
-                  alt={service.provider.name}
+                  // Namnet står bredvid, så bilden är dekorativ här.
+                  alt=""
                   fill
                   sizes="28px"
                   className="object-cover"

@@ -36,8 +36,9 @@ export default async function Hero() {
           </p>
 
           {/* 48–64px på desktop, nedskalad på mobil så ingressen och båda
-              knapparna ryms ovanför vecket. */}
-          <h1 className="reveal reveal-1 mt-7 max-w-[16ch] text-[2.75rem] font-extrabold leading-[1.04] tracking-[-0.042em] sm:text-[3.5rem] lg:text-[4rem]">
+              knapparna ryms ovanför vecket. Ingen intoning: rubriken är
+              sidans största element, och en osynlig start fördröjde LCP. */}
+          <h1 className="mt-7 max-w-[16ch] text-[2.75rem] font-extrabold leading-[1.04] tracking-[-0.042em] sm:text-[3.5rem] lg:text-[4rem]">
             {t('Hitta rätt frilansare för ditt företag')}
           </h1>
 

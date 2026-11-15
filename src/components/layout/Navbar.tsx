@@ -15,15 +15,18 @@ export default async function Navbar() {
     { href: '/jobs/create', label: t('Publicera uppdrag') },
   ]
   return (
-    <header className="w-full bg-white/95 backdrop-blur-sm border-b border-gray-100 nav-header">
+    <header className="w-full bg-white/95 backdrop-blur-sm border-b border-gray-100 nav-header transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
 
           <div className="flex items-center gap-10">
             <Link href="/" className="shrink-0">
-              <Image src="/brand/prolink-logo.png" alt="Prolink" width={593} height={160} priority className="nav-logo-dark block h-7 w-auto" />
-              {/* Över den mörka hjälten på startsidan syns bara den ljusa varianten. */}
-              <Image src="/brand/prolink-logo-light.png" alt="Prolink" width={593} height={160} className="nav-logo-light block h-7 w-auto" />
+              {/* Över den mörka hjälten på startsidan syns bara den ljusa varianten.
+                  Båda är lata med hög prioritet i stället för priority/preload:
+                  en dold lat bild hämtas aldrig, så bara den som syns laddas,
+                  och det blir rätt logga som hämtas först på varje sida. */}
+              <Image src="/brand/prolink-logo.png" alt="Prolink" width={593} height={160} fetchPriority="high" className="nav-logo-dark block h-7 w-auto" />
+              <Image src="/brand/prolink-logo-light.png" alt="Prolink" width={593} height={160} fetchPriority="high" className="nav-logo-light block h-7 w-auto" />
             </Link>
             <nav className="hidden md:flex items-center gap-8">
               {NAV_LINKS.map(({ href, label }) => (

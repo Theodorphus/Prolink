@@ -1,5 +1,5 @@
 import Link from '@/components/i18n/Link'
-import { getT } from '@/i18n/server'
+import { getLocale, getT } from '@/i18n/server'
 
 /**
  * Förtroendeavsnitt.
@@ -22,15 +22,23 @@ export default async function TrustSection({
   // neutral platshållare i stället för nollor, som annars hade hunnit läsas
   // som riktiga värden innan de byttes ut.
   pending = false,
+  // Gick siffrorna inte att hämta visas ett meddelande i deras ställe. Resten
+  // av avsnittet, garantierna, behöver inte databasen och visas ändå.
+  unavailable = false,
 }: {
   providerCount: number
   openJobCount: number
   serviceCount: number
   pending?: boolean
+  unavailable?: boolean
 }) {
   const t = await getT()
+  const locale = await getLocale()
   const stats = [
-    { value: providerCount, label: providerCount === 1 ? t('frilansare').replace(/s$/, '') : t('frilansare') },
+    // "Frilansare" är samma ord i singular och plural på svenska, så ordlistan
+    // kan inte skilja dem åt med den svenska texten som nyckel. Engelskans
+    // singular anges därför här.
+    { value: providerCount, label: providerCount === 1 && locale === 'en' ? 'freelancer' : t('frilansare') },
     { value: openJobCount, label: openJobCount === 1 ? t('öppet uppdrag') : t('öppna uppdrag') },
     { value: serviceCount, label: serviceCount === 1 ? t('publicerad tjänst') : t('publicerade tjänster') },
   ]
@@ -81,6 +89,9 @@ export default async function TrustSection({
 
         {/* Verkliga siffror, hämtade live. Inga påhittade volymer. På mobil
             ligger de på en rad; tre fullbreda kort tog nära en skärmhöjd. */}
+        {unavailable ? (
+          <p className="surface mt-10 p-6 text-center text-sm text-slate-500 sm:mt-12">{t('Aktuella siffror kunde inte hämtas just nu.')}</p>
+        ) : (<>
         <div className="mt-10 grid grid-cols-3 gap-2.5 sm:mt-12 sm:gap-4">
           {stats.map((stat, index) => (
             <div key={stat.label} className={`reveal reveal-${index + 1} surface px-2 py-5 text-center sm:p-8`}>
@@ -102,6 +113,7 @@ export default async function TrustSection({
           </Link>
           .
         </p>
+        </>)}
 
         {/* Garantier i stället för testimonials: påståenden vi kan stå för. */}
         <div className="mt-14 grid gap-4 md:grid-cols-2">

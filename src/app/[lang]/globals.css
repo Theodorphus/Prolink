@@ -319,6 +319,11 @@
   color: rgba(255, 255, 255, 0.88) !important;
 }
 
+/* Initialen i profilbilden ligger på ljusgrå botten och ska inte bli vit. */
+[data-transparent='true'] .nav-header .nav-avatar {
+  color: #475569 !important;
+}
+
 [data-transparent='true'] .nav-header a:hover,
 [data-transparent='true'] .nav-header button:hover {
   color: #ffffff !important;
