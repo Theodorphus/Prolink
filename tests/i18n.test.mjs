@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile, readdir } from 'node:fs/promises'
-import { extractKeys, loadDictionary } from '../scripts/i18n-keys.mjs'
+import { SERVER_ONLY_FILE, extractKeys, extractServerOnlyKeys, loadDictionary } from '../scripts/i18n-keys.mjs'
 
 const placeholders = text => [...text.matchAll(/\{(\w+)\}/g)].map(match => match[1]).sort()
 
@@ -10,6 +10,17 @@ test('varje text i koden har en engelsk översättning', async () => {
   const keys = await extractKeys()
   const missing = [...keys].filter(([key]) => !(key in en)).map(([key, file]) => `${file}: ${key}`)
   assert.deepEqual(missing, [], `Saknar engelsk översättning. Lägg till dem i src/i18n/en/*.json:\n${missing.join('\n')}`)
+})
+
+test('listan över texter som bara översätts på servern är aktuell', async () => {
+  // Står en text i listan men används i en klientkomponent visas den på
+  // svenska för engelska besökare, utan något fel. Därför jämförs listan med
+  // en ny genomgång av koden.
+  const saved = JSON.parse(await readFile(SERVER_ONLY_FILE, 'utf8'))
+  const current = await extractServerOnlyKeys()
+  const wrongly = saved.filter(key => !current.includes(key))
+  assert.deepEqual(wrongly, [], `De här texterna används nu i webbläsaren men skickas inte dit. Kör node scripts/i18n-keys.mjs --server-only:\n${wrongly.join('\n')}`)
+  assert.deepEqual(saved, current, 'Listan är inaktuell. Kör node scripts/i18n-keys.mjs --server-only')
 })
 
 test('översättningarna är ifyllda och behåller samma platshållare som originalet', async () => {
