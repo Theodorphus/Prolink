@@ -28,7 +28,9 @@ export default async function Navbar() {
               <Image src="/brand/prolink-logo.png" alt="Prolink" width={593} height={160} fetchPriority="high" className="nav-logo-dark block h-7 w-auto" />
               <Image src="/brand/prolink-logo-light.png" alt="Prolink" width={593} height={160} fetchPriority="high" className="nav-logo-light block h-7 w-auto" />
             </Link>
-            <nav className="hidden md:flex items-center gap-8">
+            {/* Från lg, inte md: vid 768 px fick länkarna och kontoknapparna
+                inte plats och bröts på två rader. Surfplattor får mobilmenyn. */}
+            <nav className="hidden lg:flex items-center gap-8">
               {NAV_LINKS.map(({ href, label }) => (
                 <Link
                   key={href}
@@ -43,7 +45,7 @@ export default async function Navbar() {
           </div>
 
           <div className="flex items-center gap-1">
-            <LanguageSwitcher className="hidden md:inline-block text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors px-3 py-1.5" />
+            <LanguageSwitcher className="hidden lg:inline-block text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors px-3 py-1.5" />
             <NavAuth links={NAV_LINKS} />
           </div>
         </div>

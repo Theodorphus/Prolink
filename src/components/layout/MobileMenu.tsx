@@ -74,7 +74,7 @@ function Menu({
   // headerns backdrop-filter gjorde headern till referensram för
   // position: fixed, så bakgrunden täckte bara headerns 64 pixlar.
   const layerContent = (
-    <div ref={layer} className="md:hidden">
+    <div ref={layer} className="lg:hidden">
       <div
         onClick={close}
         aria-hidden="true"
@@ -177,7 +177,7 @@ function Menu({
   )
 
   return (
-    <div className="md:hidden">
+    <div className="lg:hidden">
       <button
         ref={toggle}
         type="button"

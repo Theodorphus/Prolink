@@ -24,12 +24,20 @@ const featuredServices = unstable_cache(async () => {
   return onePerProvider(data, FEATURED_SERVICE_COUNT)
 }, ['public-featured-services-one-per-provider'], { revalidate: 60, tags: [PUBLIC_SERVICES_TAG] })
 
+// Sex kort staplade på mobil blev nära 1 400 px. Tre räcker där, som de två
+// uppdragen i Senaste uppdragen; resten nås via Alla tjänster.
+const MOBILE_VISIBLE = 3
+
 /** Gemensamt omslag, så att skelettet tar samma plats som den färdiga sektionen. */
 function Section({ header, children }: { header: ReactNode; children: ReactNode }) {
   return (
-    <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-      <div className="mb-6 flex items-center justify-between gap-4">{header}</div>
-      {children}
+    // Utfyllnaden ligger utanför max-w-7xl, som i övriga sektioner. Inuti
+    // blev innehållet 64 px smalare och linjerade inte med resten av sidan.
+    <section className="px-4 py-12 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-6 flex items-center justify-between gap-4">{header}</div>
+        {children}
+      </div>
     </section>
   )
 }
@@ -41,7 +49,7 @@ export async function FeaturedServicesSkeleton() {
     <Section header={<h2 className="page-heading text-2xl">{t('Tjänster att börja med')}</h2>}>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-hidden>
         {Array.from({ length: FEATURED_SERVICE_COUNT }, (_, i) => (
-          <div key={i} className="surface flex flex-col gap-3 p-6">
+          <div key={i} className={`surface flex-col gap-3 p-6 ${i >= MOBILE_VISIBLE ? 'hidden sm:flex' : 'flex'}`}>
             <div className="skeleton h-6 w-28 rounded-full" />
             <div className="skeleton h-5 w-full rounded" />
             <div className="skeleton h-3 w-full rounded" />
@@ -81,7 +89,11 @@ export default async function FeaturedServices() {
       </>}
     >
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {services.map(service => <ServiceCard key={service.id} service={service} />)}
+        {services.map((service, index) => (
+          <div key={service.id} className={`min-w-0 ${index >= MOBILE_VISIBLE ? 'hidden sm:block' : ''}`}>
+            <ServiceCard service={service} />
+          </div>
+        ))}
       </div>
     </Section>
   )

@@ -61,7 +61,7 @@ export default function NavAuth({ links }: { links: NavLink[] }) {
 
   return (
     <>
-      <div className="hidden md:flex items-center gap-1">
+      <div className="hidden lg:flex items-center gap-1">
         {user === undefined ? (
           // Håller platsen tills läget är känt, så att knapparna inte hoppar.
           <span className="block h-9 w-44" aria-hidden />
