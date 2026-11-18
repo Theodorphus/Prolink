@@ -4,7 +4,7 @@ import Pagination from '@/components/ui/Pagination'
 import JsonLd from '@/components/seo/JsonLd'
 import { metaDescription, pageMetadata } from '@/lib/seo'
 import { absoluteUrl } from '@/lib/site'
-import { pageNumber, PAGE_SIZE } from '@/lib/pagination'
+import { emptyBeyondLastPage, pageNumber, PAGE_SIZE } from '@/lib/pagination'
 import { notFound } from 'next/navigation'
 import Link from '@/components/i18n/Link'
 import Image from 'next/image'
@@ -101,7 +101,7 @@ export default async function ProfilePage(props: { params: Promise<{ id: string 
       // som att arkiveringen inte hade fungerat.
       .is('archived_at', null)
       .order('created_at', { ascending: false })
-      .order('id').range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1),
+      .order('id').range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1).then(emptyBeyondLastPage),
     // reviews har två främmande nycklar till users, reviewer_id och
     // reviewee_id, så en inbäddning som bara säger users är tvetydig och
     // avvisas av PostgREST med 300, vilket tog ner hela profilsidan.
@@ -109,12 +109,12 @@ export default async function ProfilePage(props: { params: Promise<{ id: string 
       .from('reviews')
       .select('*, reviewer:users!reviews_reviewer_id_fkey(id, name, avatar_url)', { count: 'exact' })
       .eq('reviewee_id', params.id)
-      .order('created_at', { ascending: false }).order('id').range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1),
+      .order('created_at', { ascending: false }).order('id').range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1).then(emptyBeyondLastPage),
     supabase
       .from('services')
       .select('id, title, description, price, delivery_time, category', { count: 'exact' })
       .eq('provider_id', params.id)
-      .order('created_at', { ascending: false }).order('id').range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1),
+      .order('created_at', { ascending: false }).order('id').range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1).then(emptyBeyondLastPage),
   ])
 
   if (jobError || reviewError || serviceError) throw new Error('Profilens innehåll kunde inte hämtas.')
