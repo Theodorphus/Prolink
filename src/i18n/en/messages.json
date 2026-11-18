@@ -130,5 +130,6 @@
   "Tjänsten kunde inte tas bort.": "The service could not be removed.",
   "Lyft är inte tillgängligt just nu.": "Boosting is not available right now.",
   "Uppdraget hittades inte.": "The assignment was not found.",
-  "Bara öppna uppdrag kan lyftas.": "Only open assignments can be boosted."
+  "Bara öppna uppdrag kan lyftas.": "Only open assignments can be boosted.",
+  "En förfrågan till en frilansare kan inte lyftas.": "A request to a freelancer cannot be boosted."
 }

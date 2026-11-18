@@ -44,7 +44,7 @@ const latestJobs = unstable_cache(async () => {
     .select(`${PUBLIC_JOB_FIELDS}, customer:users!jobs_customer_id_fkey(name)`)
     .eq('status', 'open'))
     .order('created_at', { ascending: false })
-    .limit(6)
+    .limit(3)
 
   if (error) throw new Error('Uppdragen kunde inte hämtas.')
   return data
@@ -63,7 +63,22 @@ export default async function LatestJobs() {
     customer: Array.isArray(row.customer) ? row.customer[0] ?? null : row.customer,
   })) as FeaturedJob[]
 
-  if (jobs.length === 0) return null
+  // Rubriken ligger utanför komponenten, så ett tomt läge behövs i stället
+  // för null. Annars stod "Senaste uppdragen" över en tom yta.
+  if (jobs.length === 0) {
+    return (
+      <div className="surface mt-11 flex flex-col items-start gap-4 p-7 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-[15px] leading-7 text-slate-600">{t('Inga öppna uppdrag just nu. Publicera det första och få offerter från frilansare.')}</p>
+        <Link
+          href="/jobs/create"
+          className="shrink-0 rounded-xl px-5 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5"
+          style={{ background: 'var(--accent)', boxShadow: 'var(--shadow-accent)' }}
+        >
+          {t('Publicera uppdrag')}
+        </Link>
+      </div>
+    )
+  }
   const shown = await translateListings('job', jobs, locale)
 
   return (

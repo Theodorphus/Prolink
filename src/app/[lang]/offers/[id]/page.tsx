@@ -45,7 +45,7 @@ export default async function OfferPage(
 
   const { data: offer } = await supabase
     .from('offers')
-    .select('*, provider:users(id, name, bio, avatar_url, skills, hourly_rate), job:jobs(id, title, description, budget, customer_id, customer:users!jobs_customer_id_fkey(id, name))')
+    .select('*, provider:users(id, name, bio, avatar_url, skills, hourly_rate), job:jobs(id, title, description, budget, customer_id, status, archived_at, customer:users!jobs_customer_id_fkey(id, name))')
     .eq('id', params.id)
     .single()
 
@@ -62,6 +62,8 @@ export default async function OfferPage(
 
   const isCustomer = user.id === job.customer_id
   const isProvider = user.id === offer.provider_id
+  // En väntande offert på ett stängt uppdrag kan varken accepteras eller ändras.
+  const jobClosed = job.status !== 'open' || job.archived_at != null
 
   // Load existing reviews for this offer
   const { data: reviews } = offer.status === 'completed'
@@ -93,7 +95,7 @@ export default async function OfferPage(
               </Link>
               <h1 className="page-heading mt-2 text-2xl">{t('Offert')}</h1>
             </div>
-            <StatusBadge status={offer.status} />
+            <StatusBadge status={offer.status} jobClosed={jobClosed} />
           </div>
 
           <Card>
@@ -123,12 +125,20 @@ export default async function OfferPage(
           </Card>
 
           {/* Accept / Reject (only customer, only pending) */}
-          {isCustomer && offer.status === 'pending' && (
+          {offer.status === 'pending' && jobClosed && (
+            <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+              {isCustomer
+                ? t('Uppdraget är stängt, så offerten kan inte längre accepteras.')
+                : t('Kunden har stängt uppdraget utan att välja någon offert. Öppnas uppdraget igen gäller din offert fortfarande.')}
+            </p>
+          )}
+
+          {isCustomer && offer.status === 'pending' && !jobClosed && (
             <AcceptRejectButtons offerId={offer.id} version={offer.edited_at ?? null} />
           )}
 
           {/* Provider: ändra en offert som ännu inte besvarats */}
-          {isProvider && offer.status === 'pending' && (
+          {isProvider && offer.status === 'pending' && !jobClosed && (
             <Link href={`/offers/${offer.id}/edit`} className="inline-flex rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 transition hover:border-slate-300 hover:shadow-sm">
               {t('Redigera offert')}
             </Link>

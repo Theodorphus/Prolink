@@ -43,7 +43,9 @@ export default async function ServiceCard({
   const locale = await getLocale()
   const t = await getT()
   return (
-    <Link href={`/services/${service.id}`} className="group block h-full">
+    // min-w-0: kortet är ett rutnätsbarn, och utan det växer kolumnen till
+    // den längsta oradbrytbara texten i stället för att följa skärmbredden.
+    <Link href={`/services/${service.id}`} className="group block h-full min-w-0">
       <article className="surface surface-interactive flex h-full flex-col gap-3 p-6">
         {service.category && (
           <span className="self-start rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 ring-1 ring-inset ring-blue-100">
@@ -68,7 +70,8 @@ export default async function ServiceCard({
               {service.provider.avatar_url ? (
                 <Image
                   src={service.provider.avatar_url}
-                  alt={service.provider.name}
+                  // Namnet står bredvid, så bilden är dekorativ här.
+                  alt=""
                   fill
                   sizes="28px"
                   className="object-cover"
@@ -101,13 +104,19 @@ export default async function ServiceCard({
         )}
 
         <div className="flex items-end justify-between gap-3">
-          <div>
+          <div className="shrink-0">
             <p className="text-lg font-black tracking-[-0.02em] text-slate-900">
               {formatCurrency(service.price, locale)}
             </p>
             <p className="text-xs font-medium text-slate-500">{t('från')}</p>
           </div>
-          <span className="shrink-0 rounded-full bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-600 ring-1 ring-inset ring-slate-200">
+          {/* Leveranstiden är fritext. Med shrink-0 gjorde en lång text kortet,
+              och därmed hela sidan, bredare än skärmen på mobil. Nu klipps den
+              och syns i sin helhet vid hovring. */}
+          <span
+            title={service.delivery_time}
+            className="min-w-0 truncate rounded-full bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-600 ring-1 ring-inset ring-slate-200"
+          >
             {service.delivery_time}
           </span>
         </div>

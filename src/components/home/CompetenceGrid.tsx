@@ -3,6 +3,7 @@ import { unstable_cache } from 'next/cache'
 import Link from '@/components/i18n/Link'
 import { CATEGORIES, getCategoryImage } from '@/lib/categories'
 import { createPublicClient } from '@/lib/supabase/public'
+import { PUBLIC_SERVICES_TAG } from '@/lib/revalidate'
 import { getT } from '@/i18n/server'
 import { msg } from '@/i18n/msg.mjs'
 import type { TFunction } from '@/i18n/translate'
@@ -39,7 +40,7 @@ const categoryCounts = unstable_cache(async () => {
   ))
   if (results.some(result => result.error)) throw new Error('Category counts unavailable')
   return Object.fromEntries(GRID_CATEGORIES.map((category, index) => [category.value, results[index].count ?? 0]))
-}, ['public-category-counts'], { revalidate: 60 })
+}, ['public-category-counts'], { revalidate: 60, tags: [PUBLIC_SERVICES_TAG] })
 
 function serviceCountLabel(count: number, t: TFunction) {
   if (count === 0) return t('Inga tjänster ännu')
@@ -124,10 +125,10 @@ export default async function CompetenceGrid({ pending }: { pending?: boolean })
           ))}
         </div>
 
-        <details className="group mt-3 sm:hidden">
+        <details className="group/more mt-3 sm:hidden">
           <summary className="flex cursor-pointer items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-3.5 text-sm font-bold text-slate-800 shadow-sm marker:content-none">
-            <span className="group-open:hidden">{t('Visa alla kategorier')}</span>
-            <span className="hidden group-open:inline">{t('Visa färre')}</span>
+            <span className="group-open/more:hidden">{t('Visa alla kategorier')}</span>
+            <span className="hidden group-open/more:inline">{t('Visa färre')}</span>
           </summary>
           <div className="mt-3 grid gap-3">
             {categories.slice(MOBILE_VISIBLE).map(category => (

@@ -3,7 +3,7 @@ import { warmTranslation } from '@/lib/content-translation'
 import { createClient } from '@/lib/supabase/server'
 import { InputValidationError, isUuid } from '@/lib/validation'
 import { parseServiceContent } from '@/lib/service-input'
-import { refreshPublicJobSurfaces } from '@/lib/revalidate'
+import { refreshPublicServiceSurfaces } from '@/lib/revalidate'
 
 // Frilansaren redigerar sin egen tjänst. Raden filtreras på provider_id, och
 // databasen tillåter dessutom bara innehållskolumnerna att ändras.
@@ -36,6 +36,7 @@ export async function PATCH(request: NextRequest, props: { params: Promise<{ id:
 
   if (error) return NextResponse.json({ error: 'Tjänsten kunde inte uppdateras.' }, { status: 500 })
   if (!data) return NextResponse.json({ error: 'Tjänsten hittades inte.' }, { status: 404 })
+  refreshPublicServiceSurfaces()
   after(() => warmTranslation('service', data))
   return NextResponse.json({ id: data.id })
 }
@@ -61,6 +62,6 @@ export async function DELETE(_: NextRequest, props: { params: Promise<{ id: stri
   if (error) return NextResponse.json({ error: 'Tjänsten kunde inte tas bort.' }, { status: 500 })
   if (!data) return NextResponse.json({ error: 'Tjänsten hittades inte.' }, { status: 404 })
   // Startsidan och kategorisidorna visar tjänster och ska inte vänta ut cachen.
-  refreshPublicJobSurfaces()
+  refreshPublicServiceSurfaces()
   return NextResponse.json({ success: true })
 }

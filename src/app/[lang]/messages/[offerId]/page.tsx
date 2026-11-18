@@ -25,7 +25,7 @@ export default async function MessagesPage(props: { params: Promise<{ offerId: s
 
   const { data: offer } = await supabase
     .from('offers')
-    .select('id, status, price, price_type, provider_id, provider_read_at, customer_read_at, job:jobs(id, title, customer_id, customer:users!jobs_customer_id_fkey(name)), provider:users(name)')
+    .select('id, status, price, price_type, provider_id, provider_read_at, customer_read_at, job:jobs(id, title, customer_id, status, archived_at, customer:users!jobs_customer_id_fkey(name)), provider:users(name)')
     .eq('id', params.offerId)
     .single()
 
@@ -77,10 +77,10 @@ export default async function MessagesPage(props: { params: Promise<{ offerId: s
           <span className="font-semibold text-slate-900">
             {isCustomer ? t('Offert från {name}', { name: provider?.name ?? t('leverantören') }) : t('Din offert')}: {formatCurrency(offer.price, locale)}{offer.price_type === 'hourly' ? t('/tim') : ''}
           </span>
-          <StatusBadge status={offer.status} />
+          <StatusBadge status={offer.status} jobClosed={job?.status !== 'open' || job?.archived_at != null} />
         </div>
         <Link href={`/offers/${offer.id}`} className="text-sm font-bold text-blue-700 hover:underline">
-          {isCustomer && offer.status === 'pending' ? t('Läs offerten och svara') : t('Visa offerten')}
+          {isCustomer && offer.status === 'pending' && job?.status === 'open' && job?.archived_at == null ? t('Läs offerten och svara') : t('Visa offerten')}
         </Link>
       </div>
 

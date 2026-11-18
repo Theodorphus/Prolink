@@ -29,7 +29,7 @@ export function NavAvatar({ user, size }: { user: NavUser; size: number }) {
   return (
     <span
       style={{ width: size, height: size }}
-      className="flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-200 text-xs font-bold text-gray-600"
+      className="nav-avatar flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-200 text-xs font-bold text-gray-600"
     >
       {user.avatarUrl ? (
         <Image src={user.avatarUrl} alt="" width={size} height={size} className="h-full w-full object-cover" />
@@ -61,7 +61,7 @@ export default function NavAuth({ links }: { links: NavLink[] }) {
 
   return (
     <>
-      <div className="hidden md:flex items-center gap-1">
+      <div className="hidden lg:flex items-center gap-1">
         {user === undefined ? (
           // Håller platsen tills läget är känt, så att knapparna inte hoppar.
           <span className="block h-9 w-44" aria-hidden />
@@ -73,12 +73,6 @@ export default function NavAuth({ links }: { links: NavLink[] }) {
             >
               {t('Meddelanden')}
               <UnreadBadge count={unread} />
-            </Link>
-            <Link
-              href="/jobs/create"
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors px-3 py-1.5"
-            >
-              {t('+ Publicera uppdrag')}
             </Link>
             <Link
               href={`/profile/${user.id}`}

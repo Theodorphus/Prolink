@@ -4,7 +4,7 @@ import { createPublicClient } from '@/lib/supabase/public'
 import { unstable_cache } from 'next/cache'
 import Hero from '@/components/home/Hero'
 import ProcessTimeline from '@/components/home/ProcessTimeline'
-import FeaturedServices from '@/components/home/FeaturedServices'
+import FeaturedServices, { FeaturedServicesSkeleton } from '@/components/home/FeaturedServices'
 import CompetenceGrid from '@/components/home/CompetenceGrid'
 import TrustSection from '@/components/home/TrustSection'
 import AudienceCards from '@/components/home/AudienceCards'
@@ -12,7 +12,7 @@ import LatestJobs, { LatestJobsSkeleton } from '@/components/home/LatestJobs'
 import JsonLd from '@/components/seo/JsonLd'
 import { pageMetadata } from '@/lib/seo'
 import { CONTACT_EMAIL, SITE_URL } from '@/lib/site'
-import { PUBLIC_JOBS_TAG } from '@/lib/revalidate'
+import { PUBLIC_JOBS_TAG, PUBLIC_SERVICES_TAG } from '@/lib/revalidate'
 import { getLocale, getT } from '@/i18n/server'
 
 // Startsidan förrenderas och byggs om högst en gång i minuten, i takt med
@@ -68,12 +68,11 @@ const publicCounts = unstable_cache(async () => {
   ])
   if (results.some(result => result.error)) throw new Error('Public counts unavailable')
   return results.map(result => result.count ?? 0)
-}, ['public-home-counts'], { revalidate: 60, tags: [PUBLIC_JOBS_TAG] })
+}, ['public-home-counts'], { revalidate: 60, tags: [PUBLIC_JOBS_TAG, PUBLIC_SERVICES_TAG] })
 async function TrustSectionWithCounts() {
-  const t = await getT()
   let counts: number[]
   try { counts = await publicCounts() }
-  catch { return <p className="py-8 text-center text-sm text-slate-500">{t('Aktuella siffror kunde inte hämtas just nu.')}</p> }
+  catch { return <TrustSection providerCount={0} openJobCount={0} serviceCount={0} unavailable /> }
   return (
     <TrustSection
       providerCount={counts[0]}
@@ -90,7 +89,7 @@ export default async function HomePage() {
     <>
       <JsonLd data={organization(locale)} />
       <Hero />
-      <Suspense fallback={<LatestJobsSkeleton />}><FeaturedServices /></Suspense>
+      <Suspense fallback={<FeaturedServicesSkeleton />}><FeaturedServices /></Suspense>
       <ProcessTimeline />
 
       <section className="border-b border-slate-200/70 bg-white px-4 py-14 sm:px-6 sm:py-24 lg:px-8">

@@ -285,5 +285,13 @@
   "Inga tjänster ännu": "No services yet",
   "1 tjänst": "1 service",
   "{count} tjänster": "{count} services",
-  "Läst": "Read"
+  "Läst": "Read",
+  "Ny": "New",
+  "Uppdraget är stängt, så offerten kan inte längre accepteras.": "The request is closed, so this quote can no longer be accepted.",
+  "Kunden har stängt uppdraget utan att välja någon offert. Öppnas uppdraget igen gäller din offert fortfarande.": "The client closed the request without choosing a quote. If the request is reopened, your quote still stands.",
+  "Uppdraget stängt": "Request closed",
+  "Uppdraget har stängts": "The request has been closed",
+  "Kunden har stängt uppdraget \"{title}\" utan att välja någon offert.": "The client has closed the request \"{title}\" without choosing a quote.",
+  "Din offert ligger kvar. Öppnar kunden uppdraget igen gäller den fortfarande, och annars behöver du inte göra något. Det kommer nya uppdrag hela tiden.": "Your quote remains. If the client reopens the request it still stands; otherwise there is nothing you need to do. New requests come in all the time.",
+  "Inga öppna uppdrag just nu. Publicera det första och få offerter från frilansare.": "No open requests right now. Publish the first one and get quotes from freelancers."
 }

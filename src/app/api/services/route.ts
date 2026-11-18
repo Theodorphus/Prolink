@@ -2,6 +2,7 @@ import { PAGE_SIZE, pageNumber } from '@/lib/pagination'
 import { after, NextRequest, NextResponse } from 'next/server'
 import { warmTranslation } from '@/lib/content-translation'
 import { createClient } from '@/lib/supabase/server'
+import { refreshPublicServiceSurfaces } from '@/lib/revalidate'
 import { InputValidationError, uuidValue } from '@/lib/validation'
 import { parseServiceContent, type ServiceContent } from '@/lib/service-input'
 import { msg } from '@/i18n/msg.mjs'
@@ -67,6 +68,7 @@ export async function POST(request: NextRequest) {
   if (error?.code === '54000') return NextResponse.json({ error: 'För många försök. Vänta en stund och försök igen.' }, { status: 429, headers: { 'Retry-After': '3600' } })
 
   if (error) return NextResponse.json({ error: 'Tjänsten kunde inte sparas' }, { status: 500 })
+  refreshPublicServiceSurfaces()
   after(() => warmTranslation('service', data))
   return NextResponse.json(data, { status: 201 })
 }
