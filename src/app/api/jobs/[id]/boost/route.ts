@@ -20,10 +20,12 @@ export async function POST(_: NextRequest, props: { params: Promise<{ id: string
   if (!user) return NextResponse.json({ error: 'Ej inloggad' }, { status: 401 })
 
   const { data: job, error } = await supabase.from('jobs')
-    .select('id, title, status, archived_at').eq('id', params.id).eq('customer_id', user.id).maybeSingle()
+    .select('id, title, status, archived_at, requested_provider_id').eq('id', params.id).eq('customer_id', user.id).maybeSingle()
   if (error) return NextResponse.json({ error: 'Något gick fel. Försök igen.' }, { status: 500 })
   if (!job) return NextResponse.json({ error: 'Uppdraget hittades inte.' }, { status: 404 })
   if (job.status !== 'open' || job.archived_at) return NextResponse.json({ error: 'Bara öppna uppdrag kan lyftas.' }, { status: 409 })
+  // En förfrågan visas inte i den publika listan, så ett lyft ger ingenting.
+  if (job.requested_provider_id) return NextResponse.json({ error: 'En förfrågan till en frilansare kan inte lyftas.' }, { status: 409 })
 
   try {
     const locale = await getRequestLocale()

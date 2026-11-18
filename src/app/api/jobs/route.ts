@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
     .from('jobs')
     .select(`${PUBLIC_JOB_FIELDS}, customer:users!jobs_customer_id_fkey(id, name, avatar_url)`)
     .eq('status', status)
+    .is('requested_provider_id', null)
     .order('created_at', { ascending: false }).order('id', { ascending: false })
     .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1)
 

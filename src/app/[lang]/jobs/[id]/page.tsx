@@ -1,12 +1,13 @@
 import LinkifiedText from '@/components/ui/LinkifiedText'
 import type { Metadata } from 'next'
 import { isUuid } from '@/lib/validation'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import JsonLd from '@/components/seo/JsonLd'
 import { breadcrumbList, metaDescription, pageMetadata } from '@/lib/seo'
 import Link from '@/components/i18n/Link'
 import Image from 'next/image'
 import { createClient, getUser } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { Card, CardBody } from '@/components/ui/Card'
 import { StatusBadge } from '@/components/ui/Badge'
 import { formatCurrency, formatDate } from '@/lib/utils'
@@ -61,11 +62,18 @@ export default async function JobPage(props: { params: Promise<{ id: string }>; 
   // Literalen behålls här eftersom .single() förlorar typinferensen med en mall-literal.
   const { data: job, error: detailError } = await supabase
     .from('jobs')
-    .select('id, customer_id, title, description, budget, status, archived_at, created_at, edited_at, category, location, work_type, boosted_until, customer:users!jobs_customer_id_fkey(id, name, bio, avatar_url, created_at)')
+    .select('id, customer_id, requested_provider_id, title, description, budget, status, archived_at, created_at, edited_at, category, location, work_type, boosted_until, customer:users!jobs_customer_id_fkey(id, name, bio, avatar_url, created_at)')
     .eq('id', id)
     .single()
 
   if (detailError && detailError.code !== 'PGRST116') throw new Error('Sidan kunde inte hämtas.')
+  // En förfrågan till en viss frilansare syns bara för parterna. Mejlet om den
+  // länkar hit, så en utloggad mottagare får logga in i stället för en 404.
+  // Bara id:t läses med serverklienten, så inget om förfrågan läcker.
+  if (!job && !user) {
+    const { data: inquiry } = await createAdminClient().from('jobs').select('id').eq('id', id).not('requested_provider_id', 'is', null).maybeSingle()
+    if (inquiry) redirect(localePath(locale, `/login?redirect=/jobs/${id}`))
+  }
   if (!job) notFound()
   const shown = await translateListing('job', job, locale, { original: original === '1' })
 
@@ -323,7 +331,7 @@ export default async function JobPage(props: { params: Promise<{ id: string }>; 
                           <CloseJobButton jobId={job.id} />
                         </>
                       )}
-                      {job.status === 'open' && paymentsConfigured() && (
+                      {job.status === 'open' && !job.requested_provider_id && paymentsConfigured() && (
                         <div className="space-y-2 rounded-xl border border-blue-100 bg-blue-50/50 p-4">
                           <p className="text-sm font-bold text-slate-900">{t('Få fler offerter')}</p>
                           {isBoosted(job) && job.boosted_until ? (

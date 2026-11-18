@@ -37,6 +37,8 @@ export default async function JobsPage(props: Props) {
     .from('jobs')
     .select(`${PUBLIC_JOB_FIELDS}, customer:users!jobs_customer_id_fkey(name)`, { count: 'exact' })
     .eq('status', 'open')
+    // Privata förfrågningar syns för parterna genom RLS, men hör inte hemma i listan.
+    .is('requested_provider_id', null)
 
   const safeQuery = searchTerm(q)
   if (safeQuery) query = query.or(`title.ilike.%${safeQuery}%,description.ilike.%${safeQuery}%`)
