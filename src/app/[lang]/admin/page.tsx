@@ -71,7 +71,7 @@ export default async function AdminPage() {
                   <Link href={`/profile/${offer.providerId}`} className="font-semibold text-slate-900 hover:text-accent-strong">{offer.providerName}</Link>
                   {offer.internal && <Badge className="ml-2">Intern</Badge>}
                   <div className="text-xs text-slate-500">
-                    på <Link href={`/jobs/${offer.jobId}`} className="hover:text-accent-strong">{offer.jobTitle}</Link> ({offer.customerName}) · {formatCurrency(offer.price)}{offer.priceType === 'hourly' ? '/tim' : ''}
+                    på <Link href={offer.jobHref} className="hover:text-accent-strong">{offer.jobTitle}</Link> ({offer.customerName}) · {formatCurrency(offer.price)}{offer.priceType === 'hourly' ? '/tim' : ''}
                   </div>
                   <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
                     <time className="tabular-nums">{when(offer.createdAt)}</time>
@@ -229,7 +229,8 @@ export default async function AdminPage() {
           </Table>
         </Section>
 
-        <Section id="tjanster" title="Tjänster" description="Förfrågningar = hur många kunder som klickat Skicka förfrågan på tjänsten.">
+        <Section id="tjanster" title="Tjänster" description="Förfrågningar = hur många kunder som klickat Skicka förfrågan på tjänsten. Klicka på siffran för att läsa dem. Parterna kan inte se att du läst.">
+          <Link href="/admin/konversationer?typ=forfragningar" className="mb-3 inline-block text-sm font-semibold text-blue-700 hover:underline">Alla förfrågningar →</Link>
           {data.services.length === 0 ? <p className="surface p-5 text-sm text-slate-600">Inga tjänster ännu.</p> : (
             <Table caption="Tjänster">
               <thead><tr>
@@ -244,7 +245,11 @@ export default async function AdminPage() {
                     <td className={td}>{getCategoryLabel(service.category)}</td>
                     <td className={`${td} ${num} whitespace-nowrap`}>{formatCurrency(service.price)}</td>
                     <td className={`${td} whitespace-nowrap`}>{when(service.createdAt)}</td>
-                    <td className={`${td} ${num}`}>{service.inquiries}</td>
+                    <td className={`${td} ${num}`}>
+                      {service.inquiries > 0
+                        ? <Link href={`/admin/konversationer?tjanst=${service.id}`} className="font-semibold text-blue-700 hover:underline" aria-label={`Läs ${service.inquiries} ${service.inquiries === 1 ? 'förfrågan' : 'förfrågningar'} på ${service.title}`}>{service.inquiries}</Link>
+                        : 0}
+                    </td>
                   </tr>
                 ))}
               </tbody>

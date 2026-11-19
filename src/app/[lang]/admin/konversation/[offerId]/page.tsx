@@ -5,6 +5,7 @@ import { requireAdmin } from '@/lib/admin'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { formatCurrency, formatDateTime } from '@/lib/utils'
 import { StatusBadge } from '@/components/ui/Badge'
+import { InquiryRequest } from '@/components/admin/AdminUi'
 
 export const metadata: Metadata = { title: 'Konversation – Admin', robots: { index: false, follow: false } }
 
@@ -21,11 +22,15 @@ export default async function AdminConversationPage(props: { params: Promise<{ o
   const db = createAdminClient()
   const { data: offer } = await db
     .from('offers')
-    .select('id, status, price, price_type, timeline, description, created_at, provider_id, job:jobs(id, title, customer_id)')
+    .select('id, status, price, price_type, timeline, description, created_at, provider_id, job:jobs(id, title, customer_id, requested_provider_id, service_id, description, budget, category, location, work_type, created_at, edited_at, service:services(title))')
     .eq('id', offerId)
     .maybeSingle()
   if (!offer) notFound()
   const job = Array.isArray(offer.job) ? offer.job[0] : offer.job
+  // Började konversationen som en förfrågan visas kundens text överst. Den
+  // syns annars bara för parterna.
+  const service = job && (Array.isArray(job.service) ? job.service[0] : job.service)
+  const inquiry = job?.requested_provider_id ? { ...job, serviceTitle: service?.title ?? null } : null
 
   const participantIds = [offer.provider_id, job?.customer_id].filter((id): id is string => Boolean(id))
   const [{ data: people }, { data: messages }] = await Promise.all([
@@ -48,12 +53,14 @@ export default async function AdminConversationPage(props: { params: Promise<{ o
     <div className="mx-auto max-w-3xl px-4 py-10 sm:py-12">
       <Link href="/admin#senaste" className="text-sm font-semibold text-slate-600 hover:text-slate-900">← Tillbaka till admin</Link>
       <p className="page-eyebrow mt-6">Admin · Konversation</p>
-      <h1 className="page-heading mt-2 text-2xl">{job ? <Link href={`/jobs/${job.id}`} className="hover:text-accent-strong">{job.title}</Link> : 'Okänt uppdrag'}</h1>
+      <h1 className="page-heading mt-2 text-2xl">{job ? (inquiry ? job.title : <Link href={`/jobs/${job.id}`} className="hover:text-accent-strong">{job.title}</Link>) : 'Okänt uppdrag'}</h1>
 
       <dl className="mt-4 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
         {job && <div><dt className="text-slate-500">Uppdragsgivare</dt><dd><Link href={`/profile/${job.customer_id}`} className="font-semibold text-slate-900 hover:text-accent-strong">{nameOf(job.customer_id)}</Link></dd></div>}
         <div><dt className="text-slate-500">Frilansare</dt><dd><Link href={`/profile/${offer.provider_id}`} className="font-semibold text-slate-900 hover:text-accent-strong">{nameOf(offer.provider_id)}</Link></dd></div>
       </dl>
+
+      {inquiry && <InquiryRequest inquiry={inquiry} customerName={nameOf(inquiry.customer_id)} />}
 
       <section className="surface mt-6 p-5">
         <div className="flex flex-wrap items-center gap-2 text-sm">

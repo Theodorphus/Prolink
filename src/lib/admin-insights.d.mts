@@ -50,6 +50,10 @@ export interface AdminJob {
   budget: number | null
   status: 'open' | 'closed' | 'archived'
   direct: boolean
+  /** Adminens läsvy för en förfrågan, annars den publika uppdragssidan. */
+  href: string
+  serviceId: string | null
+  serviceTitle: string | null
   createdAt: string
   customerId: string
   customerName: string
@@ -100,7 +104,7 @@ export interface AdminInsights {
     offers7d: number
     messages7d: number
     signups: { id: string; name: string; email: string | null; role: 'customer' | 'provider'; internal: boolean; createdAt: string }[]
-    offers: { id: string; jobId: string; jobTitle: string; customerName: string; providerId: string; providerName: string; internal: boolean; price: number; priceType: 'fixed' | 'hourly'; status: string; customerRead: boolean; createdAt: string }[]
+    offers: { id: string; jobId: string; jobHref: string; jobTitle: string; customerName: string; providerId: string; providerName: string; internal: boolean; price: number; priceType: 'fixed' | 'hourly'; status: string; customerRead: boolean; createdAt: string }[]
     conversations: AdminEvent[]
   }
   funnels: { providers: { label: string; count: number }[]; customers: { label: string; count: number }[] }

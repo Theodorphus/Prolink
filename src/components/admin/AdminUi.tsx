@@ -119,6 +119,47 @@ export function Funnel({ title, steps }: { title: string; steps: { label: string
   )
 }
 
+const WORK_TYPE: Record<string, string> = { remote: 'Distans', onsite: 'På plats', hybrid: 'Hybrid' }
+
+export type InquiryDetails = {
+  description: string
+  budget: number | null
+  category: string | null
+  location: string | null
+  work_type: string | null
+  created_at: string
+  edited_at: string | null
+  service_id: string | null
+  serviceTitle: string | null
+}
+
+// Kundens förfrågan som den skickades, för adminens läsvyer. Själva texten
+// syns annars bara för parterna.
+export function InquiryRequest({ inquiry, customerName }: { inquiry: InquiryDetails; customerName: string }) {
+  const details = [
+    getCategoryLabel(inquiry.category),
+    inquiry.budget ? `budget ${formatCurrency(inquiry.budget)}` : null,
+    inquiry.location,
+    inquiry.work_type ? WORK_TYPE[inquiry.work_type] ?? inquiry.work_type : null,
+    inquiry.edited_at ? `redigerad ${when(inquiry.edited_at)}` : null,
+  ].filter(Boolean)
+  return (
+    <section className="surface mt-6 p-5">
+      <div className="flex flex-wrap items-center gap-2 text-sm">
+        <span className="font-semibold text-slate-900">Förfrågan från {customerName}</span>
+        <time className="ml-auto text-xs tabular-nums text-slate-500">{when(inquiry.created_at)}</time>
+      </div>
+      <p className="mt-1 text-xs text-slate-500">
+        {inquiry.serviceTitle && inquiry.service_id
+          ? <>Om tjänsten <Link href={`/services/${inquiry.service_id}`} className="font-semibold text-blue-700 hover:underline">{inquiry.serviceTitle}</Link></>
+          : 'Ingen kopplad tjänst (skickad från profilen, eller tjänsten är borttagen)'}
+      </p>
+      {details.length > 0 && <p className="mt-1 text-xs text-slate-500">{details.join(' · ')}</p>}
+      <p className="mt-3 whitespace-pre-wrap break-words text-sm text-slate-700">{inquiry.description}</p>
+    </section>
+  )
+}
+
 const JOB_STATUS: Record<AdminJob['status'], string> = { open: 'open', closed: 'closed', archived: 'closed' }
 
 export function JobActivity({ jobs, empty }: { jobs: AdminJob[]; empty: string }) {
@@ -130,11 +171,12 @@ export function JobActivity({ jobs, empty }: { jobs: AdminJob[]; empty: string }
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <Link href={`/jobs/${job.id}`} className="font-bold text-slate-900 hover:text-accent-strong">{job.title}</Link>
+                <Link href={job.href} className="font-bold text-slate-900 hover:text-accent-strong">{job.title}</Link>
                 {job.direct && <Badge variant="info">Förfrågan till {job.requestedProviderName}</Badge>}
                 {job.status === 'archived' ? <Badge>Arkiverat</Badge> : <StatusBadge status={JOB_STATUS[job.status]} />}
               </div>
               <p className="mt-1 text-xs text-slate-500">
+                {job.serviceTitle ? `Tjänsten ${job.serviceTitle} · ` : ''}
                 {getCategoryLabel(job.category)} · {job.customerName}{job.customerEmail ? ` (${job.customerEmail})` : ''} · {when(job.createdAt)}
                 {job.budget ? ` · budget ${formatCurrency(job.budget)}` : ''}
               </p>
