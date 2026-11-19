@@ -93,6 +93,18 @@ test('profile gaps, services and weekly buckets are computed', () => {
   assert.ok(insights.events.every(event => !/Hej/.test(event.text)))
 })
 
+test('förfrågningar visar tjänsten och länkar till adminens läsvy', () => {
+  const insights = buildAdminInsights(fixture(), now)
+  const [inquiry] = insights.externalJobs
+  assert.equal(inquiry.serviceTitle, 'Webbplats')
+  assert.equal(inquiry.href, '/admin/forfragan/real')
+  assert.equal(insights.internalJobs[0].href, '/jobs/fake')
+  const event = insights.events.find(item => item.kind === 'inquiry')
+  assert.equal(event.href, '/admin/forfragan/real')
+  assert.match(event.text, /till early om tjänsten Webbplats: Riktig förfrågan/)
+  assert.equal(insights.recent.offers[0].jobHref, '/jobs/fake')
+})
+
 test('accounts that cannot sign in are internal, not real customers', () => {
   const input = fixture()
   input.users.push(user('seeded', 'customer', daysAgo(120)))

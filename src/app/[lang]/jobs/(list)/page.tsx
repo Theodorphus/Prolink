@@ -2,6 +2,8 @@ import Pagination from '@/components/ui/Pagination'
 import { pageNumber, PAGE_SIZE } from '@/lib/pagination'
 import Link from '@/components/i18n/Link'
 import { Suspense } from 'react'
+import { redirect } from 'next/navigation'
+import { localePath } from '@/i18n/config'
 import { createClient } from '@/lib/supabase/server'
 import { PUBLIC_JOB_FIELDS, boostedFirst } from '@/lib/jobs'
 import JobFilters from '@/components/jobs/JobFilters'
@@ -52,6 +54,12 @@ export default async function JobsPage(props: Props) {
     : boostedFirst(query).order('created_at', { ascending: false })
 
   const { data: jobs, count, error } = await query.order('id', { ascending: false }).range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1)
+  // En sida bortom listan, till exempel en gammal länk sedan uppdrag stängts,
+  // ger ett range-fel från PostgREST. Då visas första sidan med samma filter.
+  if (error?.code === 'PGRST103') {
+    const rest = new URLSearchParams(Object.entries(searchParams).filter(([key, value]) => key !== 'page' && typeof value === 'string') as [string, string][])
+    redirect(localePath(locale, `/jobs${rest.size ? `?${rest}` : ''}`))
+  }
   if (error) throw new Error('Listan kunde inte hämtas. Försök igen.')
   const shown = await translateListings('job', jobs ?? [], locale)
 

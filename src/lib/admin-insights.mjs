@@ -22,6 +22,12 @@ function countBy(rows, key) {
   return counts
 }
 
+// En förfrågan till en viss frilansare syns bara för parterna på /jobs, så
+// admin läser den i en egen vy.
+function jobHref(job) {
+  return job.requested_provider_id ? `/admin/forfragan/${job.id}` : `/jobs/${job.id}`
+}
+
 function within(date, now, days) {
   const time = Date.parse(date)
   return Number.isFinite(time) && now - time <= days * DAY
@@ -41,6 +47,7 @@ export function buildAdminInsights(input, now = Date.now()) {
   const usersById = new Map(users.map(user => [user.id, user]))
   const jobsById = new Map(jobs.map(job => [job.id, job]))
   const offersById = new Map(offers.map(offer => [offer.id, offer]))
+  const servicesById = new Map(services.map(service => [service.id, service]))
   // Ett konto som Supabase Auth inte kan läsa in (t.ex. skapat direkt med SQL
   // som seed-data) kan inte logga in och är därför inte en riktig användare.
   const isInternal = id => !authById.has(id) || internal.has((authById.get(id)?.email ?? '').toLowerCase())
@@ -110,6 +117,9 @@ export function buildAdminInsights(input, now = Date.now()) {
       budget: job.budget,
       status: job.archived_at ? 'archived' : job.status,
       direct: Boolean(job.requested_provider_id),
+      href: jobHref(job),
+      serviceId: job.service_id,
+      serviceTitle: (job.service_id && servicesById.get(job.service_id)?.title) || null,
       createdAt: job.created_at,
       customerId: job.customer_id,
       customerName: nameOf(job.customer_id),
@@ -234,6 +244,7 @@ export function buildAdminInsights(input, now = Date.now()) {
     offers: [...offers].sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 10).map(o => ({
       id: o.id,
       jobId: o.job_id,
+      jobHref: jobHref(jobsById.get(o.job_id) ?? { id: o.job_id }),
       jobTitle: jobsById.get(o.job_id)?.title ?? 'Okänt uppdrag',
       customerName: nameOf(jobsById.get(o.job_id)?.customer_id),
       providerId: o.provider_id,
@@ -251,8 +262,8 @@ export function buildAdminInsights(input, now = Date.now()) {
   // Händelselogg. Meddelandens innehåll lämnas medvetet utanför.
   const events = [
     ...people.map(p => ({ at: p.createdAt, kind: 'user', text: `${p.name} registrerade sig som ${p.role === 'customer' ? 'köpare' : 'frilansare'}`, href: `/profile/${p.id}`, internal: p.internal })),
-    ...allJobs.map(j => ({ at: j.createdAt, kind: j.direct ? 'inquiry' : 'job', text: j.direct ? `${j.customerName} skickade en förfrågan till ${j.requestedProviderName}: ${j.title}` : `${j.customerName} publicerade uppdraget ${j.title}`, href: `/jobs/${j.id}`, internal: isInternal(j.customerId) })),
-    ...offers.map(o => ({ at: o.created_at, kind: 'offer', text: `${nameOf(o.provider_id)} skickade en offert på ${jobsById.get(o.job_id)?.title ?? 'ett uppdrag'}`, href: `/jobs/${o.job_id}`, internal: isInternal(o.provider_id) })),
+    ...allJobs.map(j => ({ at: j.createdAt, kind: j.direct ? 'inquiry' : 'job', text: j.direct ? `${j.customerName} skickade en förfrågan till ${j.requestedProviderName}${j.serviceTitle ? ` om tjänsten ${j.serviceTitle}` : ''}: ${j.title}` : `${j.customerName} publicerade uppdraget ${j.title}`, href: j.href, internal: isInternal(j.customerId) })),
+    ...offers.map(o => ({ at: o.created_at, kind: 'offer', text: `${nameOf(o.provider_id)} skickade en offert på ${jobsById.get(o.job_id)?.title ?? 'ett uppdrag'}`, href: jobHref(jobsById.get(o.job_id) ?? { id: o.job_id }), internal: isInternal(o.provider_id) })),
     ...serviceRows.map(s => ({ at: s.createdAt, kind: 'service', text: `${s.providerName} publicerade tjänsten ${s.title}`, href: `/services/${s.id}`, internal: s.internal })),
     ...reviews.map(r => ({ at: r.created_at, kind: 'review', text: `${nameOf(r.reviewer_id)} gav ${nameOf(r.reviewee_id)} ${r.rating}/5`, href: `/profile/${r.reviewee_id}`, internal: isInternal(r.reviewer_id) })),
     ...conversations,
